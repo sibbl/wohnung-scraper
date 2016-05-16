@@ -1,0 +1,4 @@
+!.gitkeep
+/node_modules
+/npm-debug.log
+/wohnungen.db
