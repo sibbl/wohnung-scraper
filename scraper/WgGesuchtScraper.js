@@ -92,13 +92,44 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
       }else{
         var result = {};
 
+        // latitude + longitude
         var latitude = body.match(/gmap_mitte_lat\s*=\s*"([0-9\.]*)/)[1];
         result.latitude = parseFloat(latitude);
         var longitude = body.match(/gmap_mitte_lng\s*=\s*"([0-9\.]*)/)[1];
         result.longitude = parseFloat(longitude);
 
-        //TODO: parse from body
-        
+        // alle Kosten
+        var $ = cheerio.load(body);
+        var kosten = $('.headline-detailed-view-panel-title:contains("Kosten")+table');
+        var miete = kosten.find("td:contains('Miete')+td").text().trim().replace('€', '');
+        var nebenkosten = kosten.find("td:contains('Nebenkosten')+td").text().trim().replace('€', '');
+        var sonstigeKosten = kosten.find("td:contains('Sonstige Kosten')+td").text().trim().replace('€', '');
+        var kaution = kosten.find("td:contains('Kaution')+td").text().trim().replace('€', '');
+        miete = parseInt(miete);
+        if(Number.isNaN(miete)){
+          miete = null;
+        }
+        nebenkosten = parseInt(nebenkosten);
+        if(Number.isNaN(nebenkosten)){
+          nebenkosten = null;
+        }
+        sonstigeKosten = parseInt(sonstigeKosten);
+        if(Number.isNaN(sonstigeKosten)){
+          sonstigeKosten = null;
+        }
+        kaution = parseInt(kaution);
+        if(Number.isNaN(kaution)){
+          kaution = null;
+        }
+        result.data = {
+          miete: miete,
+          nebenkosten: nebenkosten,
+          sonstigeKosten: sonstigeKosten,
+          kaution: kaution
+        }
+
+        // Adresse: TODO
+
         defer.resolve(result);
       }
     });
