@@ -1,4 +1,5 @@
 module.exports = {
+  frequency: 30 * 60 * 1000, //every 30 min
   database: "wohnungen.db",
   httpOptions: {
     headers: {
