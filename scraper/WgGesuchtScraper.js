@@ -4,7 +4,8 @@ var AbstractScraper = require('./AbstractScraper'),
     cheerio = require('cheerio'),
     urlLib = require('url'),
     moment = require('moment'),
-    q = require('q');
+    q = require('q'),
+    geocoder = require('geocoder');
 
 module.exports = class WgGesuchtScraper extends AbstractScraper {
   constructor() {
@@ -128,7 +129,6 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
         adresse.find("span").html("");
         adresse = adresse.text().trim();
 
-
         result.data = {
           miete: miete,
           nebenkosten: nebenkosten,
@@ -137,7 +137,16 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
           adresse: adresse
         }
 
-        defer.resolve(result);
+        if(Number.isNaN(result.latitude) || Number.isNaN(result.longitude)) {
+          // console.log("get address for " + url)
+          this._getLocationOfAddress('13347 Berlin Wedding\nOudenarder Straße 21').then(res => {
+            result.latitude = res.latitude;
+            result.longitude = res.longitude;
+            defer.resolve(result);
+          });
+        }else{
+          defer.resolve(result);
+        }
       }
     });
     return defer.promise;
@@ -158,6 +167,22 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
         }
       }
     });
+  }
+  _getLocationOfAddress(address) {
+    const defer = q.defer();
+    geocoder.geocode(address, function ( err, data ) {
+      if(err) {
+        console.error("Failed to geocode address: " + address);
+        defer.reject();
+      }else{
+        const location = data.results[0].geometry.location;
+        defer.resolve({
+          latitude: location.lat,
+          longitude: location.lng
+        });
+      }      
+    });
+    return defer.promise;
   }
   scrape() {
     this.scrapeSiteCounter = 1;
