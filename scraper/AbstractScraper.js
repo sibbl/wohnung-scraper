@@ -54,7 +54,7 @@ module.exports = class AbstractScraper {
       $websiteId: id
     }, (error, result) => {
       if(error) {
-        console.error("Error while cehcking existing items", this.id, error);
+        console.error("Error while checking existing items", this.id, error);
         defer.reject();
       }else{
         defer.resolve(result.count > 0);
