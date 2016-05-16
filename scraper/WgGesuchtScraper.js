@@ -90,9 +90,14 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
         console.error("error while scraping item details", url, error);
       }else{
         var result = {};
+
+        var latitude = body.match(/gmap_mitte_lat\s*=\s*"([0-9\.]*)/)[1];
+        result.latitude = parseFloat(latitude);
+        var longitude = body.match(/gmap_mitte_lng\s*=\s*"([0-9\.]*)/)[1];
+        result.longitude = parseFloat(longitude);
+
         //TODO: parse from body
-        //fill result.data with specific data like description etc.
-        //fill result.latitude + result.longitude with geolocation (floats!)
+        
         defer.resolve(result);
       }
     });
