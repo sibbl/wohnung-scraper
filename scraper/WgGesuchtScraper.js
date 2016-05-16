@@ -33,51 +33,62 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
       return false;
     }
   }
-  _scrapeItem(url, tableRow) {
-    if(this._isTagesmiete(tableRow)) {
-      // console.log("skip... Tagesmiete");
-    }else if(this._isVermietet(tableRow)) {
-      // console.log("skip... vermietet");
-    }else if(this._isTauschangebot(tableRow)) {
-      // console.log("skip... Tauschangebot");
-    }else if(this._isTeaser(tableRow)) {
-      // console.log("skip... Teaser");
+  _getDbObject(url, tableRow, itemId) {
+    var defer = q.defer();
+    // const stadtteil = tableRow.find(".ang_spalte_stadt").text().trim();
+    const miete = tableRow.find(".ang_spalte_miete").text().trim().replace("€","");
+    const zimmer = tableRow.find(".ang_spalte_zimmer").text().trim();
+    const freiab_str = tableRow.find(".ang_spalte_freiab").text().trim();
+    let freiab;
+    if(freiab_str.indexOf("sofort") >= 0) {
+      freiab = moment();
     }else{
-      const freiBis = tableRow.find(".ang_spalte_freibis").text().trim();
-      if(freiBis.length > 0) {
-        // console.log("skip... befristet");
-      }else{
-        // const stadtteil = tableRow.find(".ang_spalte_stadt").text().trim();
-        const miete = tableRow.find(".ang_spalte_miete").text().trim().replace("€","");
-        const zimmer = tableRow.find(".ang_spalte_zimmer").text().trim();
-        const freiab_str = tableRow.find(".ang_spalte_freiab").text().trim();
-        let freiab;
-        if(freiab_str.indexOf("sofort") >= 0) {
-          freiab = moment();
-        }else{
-          freiab = moment(freiab_str, "DD.MM.YYYY");
+      freiab = moment(freiab_str, "DD.MM.YYYY");
+    }
+    const groesse = tableRow.find(".ang_spalte_groesse").text().trim().replace("m²", "");
+    const relativeItemUrl = tableRow.attr("adid");
+    const itemUrl = urlLib.resolve(url, relativeItemUrl);
+
+    this._scrapeItemDetails(itemUrl).then(data => {
+      data.id = itemId;
+      data.rooms = parseInt(zimmer);
+      data.size = parseInt(groesse);
+      data.price = parseInt(miete);
+      data.url = itemUrl;
+      data.free_from = freiab.toISOString();
+      data.active = !this._isVermietet(tableRow);
+
+      defer.resolve(data);
+    });
+    return defer.promise;
+  }
+  _scrapeItem(url, tableRow) {
+    const relativeItemUrl = tableRow.attr("adid");
+    const urlParts = relativeItemUrl.match(/[^\.]+\.([0-9]+)\.html/);
+    if(urlParts == null || urlParts.length < 2) {
+      return;
+    }
+    const itemId = urlParts[1];
+    const freiBis = tableRow.find(".ang_spalte_freibis").text().trim();
+    this.hasItemInDb(itemId).then(isInDb => {
+      var ignore = this._isTagesmiete(tableRow) || this._isTauschangebot(tableRow) || this._isTeaser(tableRow) || freiBis.length > 0;
+      if(ignore) {
+        if(isInDb) {
+          this.removeFromDb(itemId);
         }
-        const groesse = tableRow.find(".ang_spalte_groesse").text().trim().replace("m²", "");
-        const relativeItemUrl = tableRow.attr("adid");
-        const itemId = relativeItemUrl.match(/[^\.]+\.([0-9]+)\.html/)[1];
-        const itemUrl = urlLib.resolve(url, relativeItemUrl);
-
-        this.hasItemInDb(itemId).then(hasItem => {
-          if(!hasItem) {
-            this._scrapeItemDetails(itemUrl).then(data => {
-              data.id = itemId;
-              data.rooms = parseInt(zimmer);
-              data.size = parseInt(groesse);
-              data.price = parseInt(miete);
-              data.url = itemUrl;
-              data.free_from = freiab.toISOString();
-
-              this.insertIntoDb(data);
-            })
-          }
+        return;
+      }else if(this._isVermietet(tableRow)) {
+        if(isInDb) {
+          this._getDbObject(url, tableRow, itemId).then(data => {
+            this.updateInDb(data);
+          });
+        }
+      }else{
+        this._getDbObject(url, tableRow, itemId).then(data => {
+          this.insertIntoDb(data);
         });
       }
-    }
+    });
   }
   _getRequestOptions() {
     return Object.assign({
