@@ -1,4 +1,14 @@
-var WgGesuchtScraper = require('./scraper/WgGesuchtScraper');
+var config = require('./config');
 
-const scraper = new WgGesuchtScraper();
-scraper.scrape();
+var scraper = [
+  require('./scraper/WgGesuchtScraper')
+];
+
+var scrape = () => {
+  console.log("scrape...");
+  scraper.forEach(s => {
+    new s().scrape();
+  });
+}
+scrape();
+setInterval(scrape, config.frequency);
