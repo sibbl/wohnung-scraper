@@ -10,4 +10,5 @@ CREATE TABLE [wohnungen](
     [price] FLOAT, 
     [data] TEXT,
     [free_from] DATETIME,
+    [active] BOOLEAN DEFAULT FALSE,
     [added] DATETIME DEFAULT CURRENT_TIMESTAMP);
