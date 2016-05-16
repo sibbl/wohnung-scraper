@@ -9,6 +9,7 @@ var AbstractScraper = require('./AbstractScraper'),
 module.exports = class WgGesuchtScraper extends AbstractScraper {
   constructor() {
     super("wgGesucht");
+    this.cookieJar = request.jar();
   }
   _isTeaser(trElement) {
     return trElement.hasClass("inlistTeaser");
@@ -24,8 +25,8 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
   }
   _getNextPage(url, $) {
     const bottomPagination = $('#main_column .pagination-bottom-wrapper');
-    const nextLink = $("ul li:last-child a", bottomPagination);
-    if(nextLink.text().indexOf("»") >= 0) {
+    const nextLink = $("ul li a:contains('»')", bottomPagination);
+    if(nextLink.length > 0) {
       return urlLib.resolve(url, nextLink.attr("href"));
     }else{
       return false;
@@ -33,17 +34,17 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
   }
   _scrapeItem(url, tableRow) {
     if(this._isTagesmiete(tableRow)) {
-      console.log("skip... Tagesmiete");
+      // console.log("skip... Tagesmiete");
     }else if(this._isVermietet(tableRow)) {
-      console.log("skip... vermietet");
+      // console.log("skip... vermietet");
     }else if(this._isTauschangebot(tableRow)) {
-      console.log("skip... Tauschangebot");
+      // console.log("skip... Tauschangebot");
     }else if(this._isTeaser(tableRow)) {
-      console.log("skip... Teaser");
+      // console.log("skip... Teaser");
     }else{
       const freiBis = tableRow.find(".ang_spalte_freibis").text().trim();
       if(freiBis.length > 0) {
-        console.log("skip... befristet");
+        // console.log("skip... befristet");
       }else{
         // const stadtteil = tableRow.find(".ang_spalte_stadt").text().trim();
         const miete = tableRow.find(".ang_spalte_miete").text().trim().replace("€","");
@@ -61,10 +62,8 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
         const itemUrl = urlLib.resolve(url, relativeItemUrl);
 
         this.hasItemInDb(itemId).then(hasItem => {
-          console.log("has item?", itemId, hasItem);
           if(!hasItem) {
             this._scrapeItemDetails(itemUrl).then(data => {
-              console.log("got details", itemId, data);
               data.id = itemId;
               data.rooms = parseInt(zimmer);
               data.size = parseInt(groesse);
@@ -79,14 +78,14 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
       }
     }
   }
+  _getRequestOptions() {
+    return Object.assign({
+      jar: this.cookieJar
+    }, config.httpOptions);
+  }
   _scrapeItemDetails(url) {
     var defer = q.defer();
-    console.log("scrape details");
-    request.get(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
-      }
-    }, (error, response, body) => {
+    request.get(url, this._getRequestOptions(), (error, response, body) => {
       if(error) {
         console.error("error while scraping item details", url, error);
       }else{
@@ -100,26 +99,24 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     return defer.promise;
   }
   _scrapeSite(url) {
-    request.get(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
-      }
-    }, (error, response, body) => {
+    request.get(url, this._getRequestOptions(), (error, response, body) => {
       if(error) {
-        console.error("Error while getting URL", this.id);
+        console.error("Error while getting URL", url);
       }else{
         const $ = cheerio.load(body);
         $("#table-compact-list tbody tr").each((index, element) => {
           this._scrapeItem(url, $(element));
         });
         const nextPageUrl = this._getNextPage(url, $);
-        // if(nextPageUrl !== false) {
-        //   this._scrapeSite(url);
-        // }
+        if(nextPageUrl !== false && this.scrapeSiteCounter < this.config.maxPages) {
+          this.scrapeSiteCounter++;
+          this._scrapeSite(nextPageUrl);
+        }
       }
     });
   }
   scrape() {
+    this.scrapeSiteCounter = 1;
     this._scrapeSite(this.config.url);
   };
 }
