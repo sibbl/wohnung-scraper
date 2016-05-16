@@ -97,8 +97,10 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
         var longitude = body.match(/gmap_mitte_lng\s*=\s*"([0-9\.]*)/)[1];
         result.longitude = parseFloat(longitude);
 
-        // alle Kosten
+
         var $ = cheerio.load(body);
+
+        // alle Kosten
         var kosten = $('.headline-detailed-view-panel-title:contains("Kosten")+table');
         var miete = kosten.find("td:contains('Miete')+td").text().trim().replace('€', '');
         var nebenkosten = kosten.find("td:contains('Nebenkosten')+td").text().trim().replace('€', '');
@@ -120,14 +122,20 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
         if(Number.isNaN(kaution)){
           kaution = null;
         }
+
+        // Adresse:
+        var adresse = $('.headline-detailed-view-panel-title:contains("Adresse")+p');
+        adresse.find("span").html("");
+        adresse = adresse.text().trim();
+
+
         result.data = {
           miete: miete,
           nebenkosten: nebenkosten,
           sonstigeKosten: sonstigeKosten,
-          kaution: kaution
+          kaution: kaution,
+          adresse: adresse
         }
-
-        // Adresse: TODO
 
         defer.resolve(result);
       }
