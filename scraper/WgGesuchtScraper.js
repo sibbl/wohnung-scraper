@@ -150,9 +150,11 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
 
         if(Number.isNaN(result.latitude) || Number.isNaN(result.longitude)) {
           // console.log("get address for " + url)
-          this._getLocationOfAddress('13347 Berlin Wedding\nOudenarder Straße 21').then(res => {
+          this._getLocationOfAddress(result.data.adresse).then(res => {
             result.latitude = res.latitude;
             result.longitude = res.longitude;
+            defer.resolve(result);
+          }).catch(error => {
             defer.resolve(result);
           });
         }else{
