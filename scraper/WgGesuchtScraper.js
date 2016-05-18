@@ -8,8 +8,8 @@ var AbstractScraper = require('./AbstractScraper'),
     geocoder = require('geocoder');
 
 module.exports = class WgGesuchtScraper extends AbstractScraper {
-  constructor() {
-    super("wgGesucht");
+  constructor(db) {
+    super(db, "wgGesucht");
     this.cookieJar = request.jar();
   }
   _isTeaser(trElement) {
