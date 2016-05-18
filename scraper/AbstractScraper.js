@@ -1,10 +1,8 @@
 var config = require('../config'),
-    sqlite = require('sqlite3').verbose(),
-    db = new sqlite.Database(config.database),
     q = require('q');
 
 module.exports = class AbstractScraper {
-  constructor(scraperId) {
+  constructor(db, scraperId) {
     if (typeof(scraperId) === "undefined") {
       throw new TypeError("Constructor of scraper needs a ID.");
     }
@@ -12,6 +10,7 @@ module.exports = class AbstractScraper {
       throw new TypeError("Scraper must override method scrape.");
     }
 
+    this.db = db;
     this.id = scraperId;
     this.config = config.scraper[this.id];
 
