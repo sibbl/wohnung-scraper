@@ -10,6 +10,10 @@ module.exports = {
     wgGesucht: {
       url: "http://www.wg-gesucht.de/wohnungen-in-Berlin.8.2.0.0.html",
       maxPages: 5
+    },
+    studentenWg: {
+      url: "https://www.studenten-wg.de/angebote_lesen.html?preismode=2&newsort=&stadt=Berlin&fuer=Wohnungen&mietart=1&zimin=2&zimax=4&lmode=2",
+      maxPages: 1
     }
   }
 }
