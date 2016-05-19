@@ -5,7 +5,7 @@ var config = require('./config'),
 
 var scraper = [
   // require('./scraper/WgGesuchtScraper'),
-  require('./scraper/StudentWgScraper'),
+  require('./scraper/StudentenWgScraper'),
 ];
 
 var scrape = () => {

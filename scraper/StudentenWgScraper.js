@@ -5,7 +5,10 @@ var AbstractScraper = require('./AbstractScraper'),
     urlLib = require('url'),
     moment = require('moment'),
     q = require('q'),
-    geocoder = require('geocoder');
+    geocoder = require('geocoder'),
+    iconv = require("iconv-lite");
+
+iconv.skipDecodeWarning = true;
 
 module.exports = class WgGesuchtScraper extends AbstractScraper {
   constructor(db) {
@@ -19,6 +22,9 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     }
     return false;
   }
+  _isVermietet() {
+    return false;
+  }
   _getNextPage(url, $) {
     const nextLink = $("#innercontent .wg-blaetternbox a:contains('»')");
     if(nextLink.length > 0) {
@@ -29,43 +35,46 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
   }
   _getDbObject(url, tableRow, itemId) {
     var defer = q.defer();
-    // const stadtteil = tableRow.find(".ang_spalte_stadt").text().trim();
-    // const miete = tableRow.find(".ang_spalte_miete").text().trim().replace("€","");
-    // const zimmer = tableRow.find(".ang_spalte_zimmer").text().trim();
-    // const freiab_str = tableRow.find(".ang_spalte_freiab").text().trim();
-    // let freiab;
-    // if(freiab_str.indexOf("sofort") >= 0) {
-    //   freiab = moment();
-    // }else{
-    //   freiab = moment(freiab_str, "DD.MM.YYYY");
-    // }
-    // const groesse = tableRow.find(".ang_spalte_groesse").text().trim().replace("m²", "");
-    // const relativeItemUrl = tableRow.attr("adid");
-    // const itemUrl = urlLib.resolve(url, relativeItemUrl);
+    const miete = tableRow.find("td:nth-child(3)").text().replace("€","").trim();
+    const groesse = tableRow.find("td:nth-child(4)").text().replace("m²","").trim();
+    const freiab_str = tableRow.find("td:nth-child(7)").text().trim();
 
-    // this._scrapeItemDetails(itemUrl).then(data => {
-    //   data.id = itemId;
-    //   data.rooms = parseInt(zimmer);
-    //   data.size = parseInt(groesse);
-    //   data.price = parseInt(miete);
-    //   data.url = itemUrl;
-    //   data.free_from = freiab.toISOString();
-    //   data.active = !this._isVermietet(tableRow);
 
-    // });
-    defer.resolve(data);
+    let freiab;
+    if(freiab_str.indexOf("sofort") >= 0) {
+      freiab = moment();
+    }else{
+      freiab = moment(freiab_str, "DD.MM.YYYY");
+    }
+
+    const relativeItemUrl = tableRow.find("a").attr("href");
+    const urlParts = relativeItemUrl.match(/_([0-9]+)\.html/);
+    const itemUrl = urlLib.resolve(url, relativeItemUrl);
+
+    this._scrapeItemDetails(itemUrl).then(data => {
+      data.id = itemId;
+      data.size = parseInt(groesse);
+      data.price = parseInt(miete);
+      data.url = itemUrl;
+      data.free_from = freiab.toISOString();
+      data.active = !this._isVermietet(tableRow);
+
+      defer.resolve(data);
+    });
     return defer.promise;
   }
   _scrapeItem(url, tableRow) {
-    const relativeItemUrl = tableRow.attr("adid");
-    const urlParts = relativeItemUrl.match(/[^\.]+\.([0-9]+)\.html/);
+    const relativeItemUrl = tableRow.find("a").attr("href");
+    if(relativeItemUrl == null) {
+      return;
+    }
+    const urlParts = relativeItemUrl.match(/_([0-9]+)\.html/);
     if(urlParts == null || urlParts.length < 2) {
       return;
     }
     const itemId = urlParts[1];
-    const freiBis = tableRow.find(".ang_spalte_freibis").text().trim();
     this.hasItemInDb(itemId).then(isInDb => {
-      var ignore = this._isTagesmiete(tableRow) || this._isTauschangebot(tableRow) || this._isTeaser(tableRow) || freiBis.length > 0;
+      var ignore = !this._isAngebot(tableRow);
       if(ignore) {
         if(isInDb) {
           this.removeFromDb(itemId);
@@ -74,19 +83,20 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
       }else if(this._isVermietet(tableRow)) {
         if(isInDb) {
           this._getDbObject(url, tableRow, itemId).then(data => {
-            // this.updateInDb(data);
+            this.updateInDb(data);
           });
         }
       }else{
         this._getDbObject(url, tableRow, itemId).then(data => {
-          // this.insertIntoDb(data);
+          this.insertIntoDb(data);
         });
       }
     });
   }
   _getRequestOptions() {
     return Object.assign({
-      jar: this.cookieJar
+      jar: this.cookieJar,
+      encoding: null
     }, config.httpOptions);
   }
   _scrapeItemDetails(url) {
@@ -97,61 +107,44 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
       }else{
         var result = {};
 
-        // latitude + longitude
-        var latitude = body.match(/gmap_mitte_lat\s*=\s*"([0-9\.]*)/)[1];
-        result.latitude = parseFloat(latitude);
-        var longitude = body.match(/gmap_mitte_lng\s*=\s*"([0-9\.]*)/)[1];
-        result.longitude = parseFloat(longitude);
+        // var $ = cheerio.load(body);
+        var $ = cheerio.load(iconv.decode(body, 'iso-8859-1'));
 
+        var infoBlock = $(".wg-detailinfoblock");
 
-        var $ = cheerio.load(body);
+        const ort = infoBlock.find("tr.wg-inforow:nth-child(2) td:nth-child(2)").text().trim();
+        const strasse = infoBlock.find("tr.wg-inforowb:nth-child(3) td:nth-child(2)").text().trim();
+        let adresse = "Berlin, " + strasse;
 
-        // alle Kosten
-        var kosten = $('.headline-detailed-view-panel-title:contains("Kosten")+table');
-        var miete = kosten.find("td:contains('Miete')+td").text().trim().replace('€', '');
-        var nebenkosten = kosten.find("td:contains('Nebenkosten')+td").text().trim().replace('€', '');
-        var sonstigeKosten = kosten.find("td:contains('Sonstige Kosten')+td").text().trim().replace('€', '');
-        var kaution = kosten.find("td:contains('Kaution')+td").text().trim().replace('€', '');
-        miete = parseInt(miete);
-        if(Number.isNaN(miete)){
-          miete = null;
-        }
-        nebenkosten = parseInt(nebenkosten);
-        if(Number.isNaN(nebenkosten)){
-          nebenkosten = null;
-        }
-        sonstigeKosten = parseInt(sonstigeKosten);
-        if(Number.isNaN(sonstigeKosten)){
-          sonstigeKosten = null;
-        }
-        kaution = parseInt(kaution);
-        if(Number.isNaN(kaution)){
-          kaution = null;
+        const zimmer_str = infoBlock.find("tr td:contains('Zimmer')").text();
+        const zimmer = parseInt(zimmer_str.match(/^([0-9]+)\-/)[1]);
+        if(Number.isNaN(zimmer)) {
+          zimmer = null;
         }
 
-        // Adresse:
-        var adresse = $('.headline-detailed-view-panel-title:contains("Adresse")+p');
-        adresse.find("span").html("");
-        adresse = adresse.text().trim();
+        var [kaltmiete, nebenkosten, kaution] = ["Kaltmiete", "Nebenkosten", "Kaution"].map(item => {
+          let preis = infoBlock.find("tr td:contains('" + item + "')").text().trim();
+          const preis_index = preis.indexOf(item);
+          const preis_int = parseInt(preis.substr(0, preis_index).replace("€", "").trim());
+          if(Number.isNaN(preis_int)) {
+            return null;
+          }
+          return preis_int;
+        });
 
+        result.rooms = zimmer;
         result.data = {
-          miete: miete,
+          miete: kaltmiete,
           nebenkosten: nebenkosten,
-          sonstigeKosten: sonstigeKosten,
           kaution: kaution,
           adresse: adresse
         }
 
-        if(Number.isNaN(result.latitude) || Number.isNaN(result.longitude)) {
-          // console.log("get address for " + url)
-          this._getLocationOfAddress('13347 Berlin Wedding\nOudenarder Straße 21').then(res => {
-            result.latitude = res.latitude;
-            result.longitude = res.longitude;
-            defer.resolve(result);
-          });
-        }else{
+        this.getLocationOfAddress(adresse).then(res => {
+          result.latitude = res.latitude;
+          result.longitude = res.longitude;
           defer.resolve(result);
-        }
+        });
       }
     });
     return defer.promise;
@@ -162,7 +155,7 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
         console.error("Error while getting URL", url);
       }else{
         const $ = cheerio.load(body);
-        $("#wg-ergtable tbody tr").each((index, element) => {
+        $("#wg-ergtable tr").each((index, element) => {
           this._scrapeItem(url, $(element));
         });
         const nextPageUrl = this._getNextPage(url, $);
@@ -172,22 +165,6 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
         }
       }
     });
-  }
-  _getLocationOfAddress(address) {
-    const defer = q.defer();
-    geocoder.geocode(address, function ( err, data ) {
-      if(err) {
-        console.error("Failed to geocode address: " + address);
-        defer.reject();
-      }else{
-        const location = data.results[0].geometry.location;
-        defer.resolve({
-          latitude: location.lat,
-          longitude: location.lng
-        });
-      }      
-    });
-    return defer.promise;
   }
   scrape() {
     this.scrapeSiteCounter = 1;
