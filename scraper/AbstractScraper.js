@@ -1,5 +1,6 @@
 var config = require('../config'),
-    q = require('q');
+    q = require('q'),
+    geocoder = require('geocoder');
 
 module.exports = class AbstractScraper {
   constructor(db, scraperId) {
@@ -101,6 +102,22 @@ module.exports = class AbstractScraper {
         defer.resolve(result.count > 0);
       }
     })
+    return defer.promise;
+  }
+  getLocationOfAddress(address) {
+    const defer = q.defer();
+    geocoder.geocode(address, function ( err, data ) {
+      if(err || !Array.isArray(data.results) || data.results.length == 0) {
+        console.error("Failed to geocode address: " + address);
+        defer.reject();
+      }else{
+        const location = data.results[0].geometry.location;
+        defer.resolve({
+          latitude: location.lat,
+          longitude: location.lng
+        });
+      }      
+    }, {key: config.geocoder.apiKey});
     return defer.promise;
   }
 }
