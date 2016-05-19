@@ -83,7 +83,7 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
             this.updateInDb(data);
           });
         }
-      }else{
+     }else if(!isInDb) {
         this._getDbObject(url, tableRow, itemId).then(data => {
           this.insertIntoDb(data);
         });
