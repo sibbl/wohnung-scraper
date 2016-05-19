@@ -8,8 +8,8 @@ var AbstractScraper = require('./AbstractScraper'),
     geocoder = require('geocoder');
 
 module.exports = class WgGesuchtScraper extends AbstractScraper {
-  constructor() {
-    super("wgGesucht");
+  constructor(db) {
+    super(db, "wgGesucht");
     this.cookieJar = request.jar();
   }
   _isTeaser(trElement) {
@@ -83,7 +83,7 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
             this.updateInDb(data);
           });
         }
-      }else{
+     }else if(!isInDb) {
         this._getDbObject(url, tableRow, itemId).then(data => {
           this.insertIntoDb(data);
         });
@@ -150,9 +150,11 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
 
         if(Number.isNaN(result.latitude) || Number.isNaN(result.longitude)) {
           // console.log("get address for " + url)
-          this._getLocationOfAddress('13347 Berlin Wedding\nOudenarder Straße 21').then(res => {
+          this._getLocationOfAddress(result.data.adresse).then(res => {
             result.latitude = res.latitude;
             result.longitude = res.longitude;
+            defer.resolve(result);
+          }).catch(error => {
             defer.resolve(result);
           });
         }else{
