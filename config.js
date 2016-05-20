@@ -1,5 +1,5 @@
 module.exports = {
-  frequency: 30 * 60 * 1000, //every 30 min
+  cronTime: '0,30 * * * *',
   database: "wohnungen.db",
   geocoder: {
     apiKey: "AIzaSyD5FHeDK6vsPXFmP9kTszJ-crNVHBcRRWY", //see https://developers.google.com/maps/documentation/geocoding/get-api-key
@@ -16,7 +16,7 @@ module.exports = {
     },
     studentenWg: {
       url: "https://www.studenten-wg.de/angebote_lesen.html?preismode=2&newsort=&stadt=Berlin&fuer=Wohnungen&mietart=1&zimin=2&zimax=4&lmode=2&proseite=50",
-      maxPages: 1
+      maxPages: 5
     }
   }
 }

@@ -6,12 +6,19 @@
   "license": "",
   "devDependencies": {
     "cheerio": "^0.20.0",
+    "cron": "^1.1.0",
     "express": "^4.13.4",
     "geocoder": "^0.2.2",
     "iconv-lite": "^0.4.13",
     "moment": "^2.13.0",
     "q": "^1.4.1",
     "request": "^2.72.0",
-    "sqlite3": "^3.1.4"
+    "sqlite3": "^3.1.4",
+    "supervisor": "^0.10.0"
+  },
+  "scripts": {
+    "prestart": "npm install && bower update",
+    "start": "npm run server",
+    "server": "supervisor index.js"
   }
 }

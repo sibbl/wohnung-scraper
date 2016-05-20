@@ -64,34 +64,45 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     return defer.promise;
   }
   _scrapeItem(url, tableRow) {
+    const defer = q.defer();
     const relativeItemUrl = tableRow.find("a").attr("href");
     if(relativeItemUrl == null) {
-      return;
+      defer.resolve(false);
+      return defer.promise;
     }
     const urlParts = relativeItemUrl.match(/_([0-9]+)\.html/);
     if(urlParts == null || urlParts.length < 2) {
-      return;
+      defer.resolve(false);
+      return defer.promise;
     }
     const itemId = urlParts[1];
     this.hasItemInDb(itemId).then(isInDb => {
       var ignore = !this._isAngebot(tableRow);
       if(ignore) {
         if(isInDb) {
-          this.removeFromDb(itemId);
+          this.removeFromDb(itemId).then(() => defer.resolve(true));
+        }else{
+          defer.resolve(false);
         }
-        return;
       }else if(this._isVermietet(tableRow)) {
         if(isInDb) {
           this._getDbObject(url, tableRow, itemId).then(data => {
-            this.updateInDb(data);
+            this.updateInDb(data).then(() => defer.resolve(true));
           });
+        }else{
+          defer.resolve(false);
         }
       }else{
-        this._getDbObject(url, tableRow, itemId).then(data => {
-          this.insertIntoDb(data);
-        });
+        if(!isInDb) {
+          this._getDbObject(url, tableRow, itemId).then(data => {
+            this.insertIntoDb(data).then(() => defer.resolve(true));
+          });
+        }else{
+          defer.resolve(false);
+        }
       }
     });
+    return defer.promise;
   }
   _getRequestOptions() {
     return Object.assign({
@@ -150,24 +161,34 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     return defer.promise;
   }
   _scrapeSite(url) {
+    const defer = q.defer();
     request.get(url, this._getRequestOptions(), (error, response, body) => {
       if(error) {
         console.error("Error while getting URL", url);
       }else{
         const $ = cheerio.load(body);
+        const defers = [];
         $("#wg-ergtable tr").each((index, element) => {
-          this._scrapeItem(url, $(element));
+          defers.push(this._scrapeItem(url, $(element)));
         });
         const nextPageUrl = this._getNextPage(url, $);
         if(nextPageUrl !== false && this.scrapeSiteCounter < this.config.maxPages) {
           this.scrapeSiteCounter++;
-          this._scrapeSite(nextPageUrl);
+          defers.push(this._scrapeSite(nextPageUrl));
         }
+        q.all(defers).then(() => defer.resolve());
       }
     });
+    return defer.promise;
   }
   scrape() {
+    const defer = q.defer();
+    console.log("Start scraping " + this.id);
     this.scrapeSiteCounter = 1;
-    this._scrapeSite(this.config.url);
+    this._scrapeSite(this.config.url).then(() => {
+      console.log("Finish scraping " + this.id);
+      defer.resolve();
+    });
+    return defer.promise;
   };
 }
