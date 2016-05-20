@@ -1,0 +1,8 @@
+{
+  "name": "wohnung-scraper",
+  "description": "",
+  "private": true,
+  "dependencies": {
+    "leaflet-dvf": "^0.3.0"
+  }
+}

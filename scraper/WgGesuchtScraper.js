@@ -63,10 +63,12 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     return defer.promise;
   }
   _scrapeItem(url, tableRow) {
+    const defer = q.defer();
     const relativeItemUrl = tableRow.attr("adid");
     const urlParts = relativeItemUrl.match(/[^\.]+\.([0-9]+)\.html/);
     if(urlParts == null || urlParts.length < 2) {
-      return;
+      defer.resolve(false);
+      return defer.promise;
     }
     const itemId = urlParts[1];
     const freiBis = tableRow.find(".ang_spalte_freibis").text().trim();
@@ -74,21 +76,29 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
       var ignore = this._isTagesmiete(tableRow) || this._isTauschangebot(tableRow) || this._isTeaser(tableRow) || freiBis.length > 0;
       if(ignore) {
         if(isInDb) {
-          this.removeFromDb(itemId);
+          this.removeFromDb(itemId).then(() => defer.resolve(true));
+        }else{
+          defer.resolve(false);
         }
-        return;
       }else if(this._isVermietet(tableRow)) {
         if(isInDb) {
           this._getDbObject(url, tableRow, itemId).then(data => {
-            this.updateInDb(data);
+            this.updateInDb(data).then(() => defer.resolve(true));
           });
+        }else{
+          defer.resolve(false);
         }
-     }else if(!isInDb) {
-        this._getDbObject(url, tableRow, itemId).then(data => {
-          this.insertIntoDb(data);
-        });
+      }else{
+        if(!isInDb) {
+          this._getDbObject(url, tableRow, itemId).then(data => {
+            this.insertIntoDb(data).then(() => defer.resolve(true));
+          });
+        }else{
+          defer.resolve(false);
+        }
       }
     });
+    return defer.promise;
   }
   _getRequestOptions() {
     return Object.assign({
@@ -164,24 +174,34 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     return defer.promise;
   }
   _scrapeSite(url) {
+    const defer = q.defer();
     request.get(url, this._getRequestOptions(), (error, response, body) => {
       if(error) {
         console.error("Error while getting URL", url);
       }else{
         const $ = cheerio.load(body);
+        const defers = [];
         $("#table-compact-list tbody tr").each((index, element) => {
-          this._scrapeItem(url, $(element));
+          defers.push(this._scrapeItem(url, $(element)));
         });
         const nextPageUrl = this._getNextPage(url, $);
         if(nextPageUrl !== false && this.scrapeSiteCounter < this.config.maxPages) {
           this.scrapeSiteCounter++;
-          this._scrapeSite(nextPageUrl);
+          defers.push(this._scrapeSite(nextPageUrl));
         }
+        q.all(defers).then(() => defer.resolve());
       }
     });
+    return defer.promise;
   }
   scrape() {
+    const defer = q.defer();
+    console.log("Start scraping " + this.id);
     this.scrapeSiteCounter = 1;
-    this._scrapeSite(this.config.url);
+    this._scrapeSite(this.config.url).then(() => {
+      console.log("Finish scraping " + this.id);
+      defer.resolve();
+    });
+    return defer.promise;
   };
 }

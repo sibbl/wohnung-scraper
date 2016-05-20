@@ -1,20 +1,25 @@
 var config = require('./config'),
     app = require('./app'),
     sqlite = require('sqlite3').verbose(),
-    db = new sqlite.Database(config.database);
+    db = new sqlite.Database(config.database),
+    CronJob = require('cron').CronJob;
 
-var scraper = [
-  // require('./scraper/WgGesuchtScraper'),
-  require('./scraper/StudentenWgScraper'),
-];
+const scraper = [
+  'WgGesuchtScraper',
+  'StudentenWgScraper',
+].map(scraper => {
+  const s = require('./scraper/' + scraper);
+  return new s(db);
+});
 
-var scrape = () => {
-  console.log("scrape...");
-  scraper.forEach(s => {
-    new s(db).scrape();
-  });
-}
-scrape();
-setInterval(scrape, config.frequency);
+var job = new CronJob({
+  cronTime: config.cronTime,
+  onTick: function() {
+    scraper.forEach(s => s.scrape());
+  },
+  start: true,
+  timeZone: 'Europe/Berlin'
+});
+job.start();
 
-var appInstance = new app(db);
+var appInstance = new app(db, scraper);
