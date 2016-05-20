@@ -17,7 +17,8 @@
     "supervisor": "^0.10.0"
   },
   "scripts": {
-    "prestart": "npm install && bower update",
+    "postinstall": "bower update",
+    "prestart": "npm install",
     "start": "npm run server",
     "server": "supervisor index.js"
   }
