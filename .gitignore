@@ -1,5 +1,5 @@
 !.gitkeep
-/node_modules
-/bower_components
-/npm-debug.log
+node_modules
+bower_components
+npm-debug.log
 /wohnungen.db
