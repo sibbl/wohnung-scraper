@@ -29,9 +29,19 @@ $.getJSON("/data", function(result) {
       console.log("inactive: " + wohnung.id);
       return;
     }
-    var pricePerSquareMeters = 12;
-    var sizeFunc = new L.LinearFunction([0, 0], [80, 30]); //[input, output]
-    var priceFunc = new L.HSLHueFunction(new L.Point(0, 120), new L.Point(pricePerSquareMeters - 3, 0)); //green (hue of 120) and red (hue of 0)
+    //[input, output]
+    var sizeFunc = new L.LinearFunction([0, 0], [80, 30], {
+      constrainX:true,
+      preProcess: function(value) {
+        return this.constrainX(value);
+      }
+    });
+    var priceFunc = new L.HSLHueFunction(new L.Point(6, 120), new L.Point(20, 0), {
+      constrainX:true,
+      preProcess: function(value) {
+        return this.constrainX(value);
+      }
+    }); //green (hue of 120) and red (hue of 0)
     var key = wohnung.price + "€, " + wohnung.size + "m²";
     var data = {};
     data[key] = 1;
@@ -39,7 +49,7 @@ $.getJSON("/data", function(result) {
     var pricePerSqM = wohnung.price / wohnung.size;
     var text = wohnung.rooms + "Z, " + pricePerSqM.toFixed(2) + "€/m²";
     chartOptions[key] = {
-      fillColor: priceFunc.evaluate(Math.abs(pricePerSquareMeters - pricePerSqM)),
+      fillColor: priceFunc.evaluate(pricePerSqM),
       minValue: 0,
       maxValue: 600,
       maxHeight: 20,
@@ -55,6 +65,9 @@ $.getJSON("/data", function(result) {
         data: data,
         chartOptions: chartOptions
     });
+    marker.on('click', function() {
+      window.open(wohnung.url);
+    })
     marker.addTo(map);
   });
 });
