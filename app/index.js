@@ -21,7 +21,10 @@ module.exports = class App {
         if(error) {
           res.send(JSON.stringify(error));
         }else{
-          res.send(JSON.stringify(result));
+          res.send(JSON.stringify(result.map(item => {
+            item.data = JSON.parse(item.data);
+            return item;
+          })));
         }
       });
     });
