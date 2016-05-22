@@ -1,4 +1,11 @@
 module.exports = {
+  map: {
+    initialView: {
+      lat: 52.504703,
+      lng: 13.324861,
+      zoom: 12,
+    },
+  },
   cronTime: '0,30 * * * *',
   database: "wohnungen.db",
   geocoder: {
@@ -11,10 +18,12 @@ module.exports = {
   },
   scraper: {
     wgGesucht: {
+      name: "wg-gesucht.de",
       url: "http://www.wg-gesucht.de/wohnungen-in-Berlin.8.2.0.0.html",
       maxPages: 5
     },
     studentenWg: {
+      name: "studenten-wg.de",
       url: "https://www.studenten-wg.de/angebote_lesen.html?preismode=2&newsort=&stadt=Berlin&fuer=Wohnungen&mietart=1&zimin=2&zimax=4&lmode=2&proseite=50",
       maxPages: 5
     }

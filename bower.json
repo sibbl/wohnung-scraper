@@ -3,6 +3,11 @@
   "description": "",
   "private": true,
   "dependencies": {
-    "leaflet-dvf": "^0.3.0"
+    "leaflet-dvf": "^0.3.0",
+    "ui-leaflet": "^1.0.0"
+  },
+  "resolutions": {
+    "leaflet": "~1.0.x",
+    "ui-leaflet": "^1.0.0"
   }
 }
