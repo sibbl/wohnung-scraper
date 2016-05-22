@@ -1,5 +1,6 @@
 var express = require('express')
-    q = require('q');
+    q = require('q'),
+    config = require('../config.js');
 
 module.exports = class App {
   constructor(db, scraper) {
@@ -15,6 +16,10 @@ module.exports = class App {
         res.send(JSON.stringify({status: "ok"}));
       });
     });
+
+    this.app.get('/config', (req, res) => {
+      res.send('window.appConfig = ' + JSON.stringify(config) + ";");
+    })
 
     this.app.get('/data', (req, res) => {
       db.all('SELECT * FROM "wohnungen" ORDER BY added DESC', (error, result) => {
