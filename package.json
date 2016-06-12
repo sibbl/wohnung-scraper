@@ -5,6 +5,8 @@
   "homepage": "",
   "license": "",
   "devDependencies": {
+    "babel-eslint": "^6.0.4",
+    "body-parser": "^1.15.1",
     "cheerio": "^0.20.0",
     "cron": "^1.1.0",
     "express": "^4.13.4",
@@ -20,6 +22,6 @@
     "postinstall": "bower update",
     "prestart": "npm install",
     "start": "npm run server",
-    "server": "supervisor index.js"
+    "server": "supervisor -w index.js,config.js,scraper,app/index.js,node_modules,bower_components index.js"
   }
 }
