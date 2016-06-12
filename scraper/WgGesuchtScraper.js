@@ -56,7 +56,8 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
       data.price = parseInt(miete);
       data.url = itemUrl;
       data.free_from = freiab.toISOString();
-      data.active = !this._isVermietet(tableRow);
+      data.active = true;
+      data.gone = this._isVermietet(tableRow);
 
       defer.resolve(data);
     });

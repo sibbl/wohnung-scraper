@@ -20,8 +20,8 @@ module.exports = class AbstractScraper {
     }
 
     this.statements = {
-      insert: db.prepare('INSERT INTO "wohnungen" (website, websiteId, url, latitude, longitude, rooms, size, price, free_from, active, data) VALUES ($website, $websiteId, $url, $latitude, $longitude, $rooms, $size, $price, $free_from, $active, $data)'),
-      update: db.prepare('UPDATE "wohnungen" SET url = $url, latitude = $latitude, longitude = $longitude, rooms = $rooms, size = $size, price = $price, free_from = $free_from, active = $active, data = $data WHERE website = $website AND websiteId = $websiteId'),
+      insert: db.prepare('INSERT INTO "wohnungen" (website, websiteId, url, latitude, longitude, rooms, size, price, free_from, active, gone, data) VALUES ($website, $websiteId, $url, $latitude, $longitude, $rooms, $size, $price, $free_from, $active, $gone, $data)'),
+      update: db.prepare('UPDATE "wohnungen" SET url = $url, latitude = $latitude, longitude = $longitude, rooms = $rooms, size = $size, price = $price, free_from = $free_from, active = $active, gone = $gone, data = $data WHERE website = $website AND websiteId = $websiteId'),
       hasId: db.prepare('SELECT COUNT(*) AS count FROM "wohnungen" WHERE website = $website AND websiteId = $websiteId'),
       delete: db.prepare('DELETE FROM "wohnungen" WHERE website = $website AND websiteId = $websiteId'),
     };
@@ -39,6 +39,7 @@ module.exports = class AbstractScraper {
         $free_from: row.free_from,
         $url: row.url,
         $active: row.active,
+        $gone: row.gone,
         $data: JSON.stringify(row.data)
       }, error => {
         if(error) {
@@ -63,6 +64,7 @@ module.exports = class AbstractScraper {
         $free_from: row.free_from,
         $url: row.url,
         $active: row.active,
+        $gone: row.gone,
         $data: JSON.stringify(row.data)
       }, error => {
         if(error) {
