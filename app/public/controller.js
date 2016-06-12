@@ -2,7 +2,11 @@
 angular.module('dataVis')
 .controller('MainController', ['$scope', '$rootScope', '$window', '$http', '$q', 'Config', 'leafletData', function($scope, $rootScope, $window, $http, $q, config, leafletData) {
   var map;
+  var markers = {};
   $scope.data = [];
+  $scope.filter = {
+    showAll: false
+  }
 
   $scope.center = config.map.initialView;
   $scope.layers = {
@@ -65,11 +69,7 @@ angular.module('dataVis')
   }
 
   $scope.$watch('data', function(newValue, oldValue) {
-    $scope.data.forEach(function(wohnung) {
-      if(!wohnung.active) {
-        console.log("inactive: " + wohnung.id);
-        return;
-      }
+    angular.forEach($scope.data, function(wohnung) {
       //[input, output]
       var sizeFunc = new L.LinearFunction([0, 0], [80, 30], {
         constrainX:true,
@@ -122,7 +122,50 @@ angular.module('dataVis')
       marker.on('click', function() {
         $scope.selectedFlat = wohnung;
       })
-      marker.addTo(map);
+      if(wohnung.active == true || $scope.filter.showAll) {
+        marker.addTo(map);
+      }
+      markers[wohnung.id] = marker;
     });
   });
+
+  $scope.$watch('filter.showAll', function(showAll) {
+    angular.forEach(markers, function(marker, markerId) {
+      if(showAll) {
+        if(!map.hasLayer(marker)) {
+          map.addLayer(marker);
+        }
+      }else{
+        if($scope.data[markerId].active == true) {
+          if(!map.hasLayer(marker)) {
+            map.addLayer(marker);
+          }
+        }else if($scope.data[markerId].active != true) {
+          if(map.hasLayer(marker)) {
+            map.removeLayer(marker);
+          }
+        }
+      }
+    })
+  })
+
+  $scope.toggleActive = function(flat) {
+    flat.active = !(flat.active == true);
+    if(flat.active == true || $scope.filter.showAll) {
+      if(!map.hasLayer(markers[flat.id])) {
+        map.addLayer(markers[flat.id]);
+      }
+    }else if(flat.active != true) {
+      if(!$scope.filter.showAll && map.hasLayer(markers[flat.id])) {
+        map.removeLayer(markers[flat.id]);
+      }
+    }
+    $http.post("/" + flat.id + "/active", {
+      active: flat.active
+    }).then(response => {
+      if(!response.data.success) {
+        alert("Failed to change active, please reload the page.");
+      }
+    })
+  }
 }]);

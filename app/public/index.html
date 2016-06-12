@@ -11,8 +11,6 @@
   <link rel="stylesheet" href="bower_components/leaflet-dvf/dist/css/dvf.css" type="text/css" media="screen" />
   <link rel="stylesheet" href="bower_components/leaflet/dist/leaflet.css" type="text/css" media="screen" />
   <link rel="stylesheet" href="style.css">
-  <!--<script src="bower_components/jsts/javascript.util.js"></script>
-  <script src="bower_components/jsts/jsts.js"></script> -->
   <script src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
   <script src="bower_components/angular-simple-logger/dist/angular-simple-logger.js"></script>
   <script src="bower_components/ui-leaflet/dist/ui-leaflet.js"></script>
@@ -24,14 +22,24 @@
 </head>
 <body ng-app="dataVis">
     <div class="row full-height" ng-controller="MainController">
-      <div class="col-xs-10 full-height">
+      <div class="col-xs-10 full-height" style="padding-right: 0">
         <leaflet lf-center="center"
                  layers="layers"
                  class="map"></leaflet>
       </div>
-      <aside class="col-xs-2 full-height" id="sidebar">
+      <aside class="col-xs-2 full-height" id="sidebar" style="padding-right: 30px">
+
+        <div class="filter">
+            <h4>Filter</h4>
+            <button class="btn btn-default" ng-class="{active: filter.showAll}" ng-click="filter.showAll = !filter.showAll">
+              <span class="glyphicon glyphicon glyphicon-asterisk" title="" aria-hidden="true"></span>
+              auch inaktive anzeigen
+            </button>
+        </div>
         
         <div class="currentObjectContainer" ng-if="selectedFlat">
+          <hr/>
+          <h4>Ausgewählte Wohnung</h4>
           <dl>
             <dt>Miete</dt>
             <dd>{{selectedFlat.price}} m²</dd>
@@ -42,7 +50,9 @@
             <dt>Zimmer</dt>
             <dd>{{selectedFlat.rooms}}</dd>
           </dl>
-          <a class="btn btn-default" href="{{selectedFlat.url}}" target="_blank">Auf {{getWebsiteName(selectedFlat.website)}} öffnen</a>
+          <a class="btn btn-primary" href="{{selectedFlat.url}}" target="_blank">Auf {{getWebsiteName(selectedFlat.website)}} öffnen</a>
+
+          <a class="btn btn-default" ng-click="toggleActive(selectedFlat)">{{ selectedFlat.active ? "deaktivieren" : "aktivieren" }}</a>
         </div>
       </aside>
     </div>

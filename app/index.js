@@ -1,4 +1,5 @@
-var express = require('express')
+var express = require('express'),
+    bodyParser = require('body-parser'),
     q = require('q'),
     config = require('../config.js');
 
@@ -9,6 +10,7 @@ module.exports = class App {
     this.port = process.env.PORT || 3000;
     
     this.app.use(express.static('./app/public'));
+    this.app.use(bodyParser.json());
 
     this.app.get('/scrape', (req, res) => {
       const promises = scraper.map(s => s.scrape());
@@ -26,10 +28,15 @@ module.exports = class App {
         if(error) {
           res.send(JSON.stringify(error));
         }else{
-          res.send(JSON.stringify(result.map(item => {
+          var resultArr = result.map(item => {
             item.data = JSON.parse(item.data);
             return item;
-          })));
+          });
+          var resultObj = {};
+          resultArr.forEach(item => {
+            resultObj[item.id] = item;
+          })
+          res.send(JSON.stringify(resultObj));
         }
       });
     });
@@ -41,6 +48,30 @@ module.exports = class App {
         }));
       });
     });
+
+    this.app.post('/:id/active', (req, res) => {
+      var active = req.body.active;
+      if(typeof(active) !== "boolean") {
+        res.send(JSON.stringify({success: false, message: "missing body"}));
+      }else{
+        db
+          .prepare('UPDATE "wohnungen" SET active = $active WHERE id = $id')
+          .run({
+            $active: active,
+            $id: req.params.id
+          }, error => {
+            if(error) {
+              res.send(JSON.stringify({
+                success: false,
+                message: 'database error',
+                details: error
+              }));
+            }else{
+              res.send(JSON.stringify({success:true}));
+            }
+          });
+      }
+    })
 
     this.app.listen(this.port, () => {
       console.log('App listening on port ' + this.port);
