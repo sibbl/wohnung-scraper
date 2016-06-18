@@ -1,6 +1,7 @@
 var config = require('../config'),
     q = require('q'),
-    geocoder = require('geocoder');
+    geocoder = require('geocoder'),
+    moment = require('moment');
 
 module.exports = class AbstractScraper {
   constructor(db, scraperId) {
@@ -9,6 +10,9 @@ module.exports = class AbstractScraper {
     }
     if (typeof(this.scrape) !== "function") {
       throw new TypeError("Scraper must override method scrape.");
+    }
+    if (typeof(this.scrapeItemDetails) !== "function") {
+      throw new TypeError("Scraper must override method scrapeItemDetails.");
     }
 
     this.db = db;
@@ -21,16 +25,17 @@ module.exports = class AbstractScraper {
 
     this.statements = {
       insert: db.prepare('INSERT INTO "wohnungen" (website, websiteId, url, latitude, longitude, rooms, size, price, free_from, active, gone, data) VALUES ($website, $websiteId, $url, $latitude, $longitude, $rooms, $size, $price, $free_from, $active, $gone, $data)'),
-      update: db.prepare('UPDATE "wohnungen" SET url = $url, latitude = $latitude, longitude = $longitude, rooms = $rooms, size = $size, price = $price, free_from = $free_from, active = $active, gone = $gone, data = $data WHERE website = $website AND websiteId = $websiteId'),
+      update: db.prepare('UPDATE "wohnungen" SET url = $url, latitude = $latitude, longitude = $longitude, rooms = $rooms, size = $size, price = $price, free_from = $free_from, active = $active, gone = $gone, data = $data, website = $website, websiteId = $websiteId, removed = $removed, comment = $comment, favorite = $favorite WHERE id = $id'),
       hasId: db.prepare('SELECT COUNT(*) AS count FROM "wohnungen" WHERE website = $website AND websiteId = $websiteId'),
       delete: db.prepare('DELETE FROM "wohnungen" WHERE website = $website AND websiteId = $websiteId'),
+      getActiveItems: db.prepare('SELECT * FROM "wohnungen" WHERE website = $website AND gone = 0'),
     };
   }
   insertIntoDb(row) {
     var defer = q.defer();
     this.statements.insert.run({
         $website: this.id,
-        $websiteId: row.id,
+        $websiteId: row.websiteId,
         $latitude: row.latitude,
         $longitude: row.longitude,
         $rooms: row.rooms,
@@ -40,7 +45,7 @@ module.exports = class AbstractScraper {
         $url: row.url,
         $active: row.active,
         $gone: row.gone,
-        $data: JSON.stringify(row.data)
+        $data: typeof(row.data) === 'string' ? row.data : JSON.stringify(row.data)
       }, error => {
         if(error) {
           console.error("Error while inserting into database", this.id, error);
@@ -54,8 +59,9 @@ module.exports = class AbstractScraper {
   updateInDb(row) {
     var defer = q.defer();
     this.statements.update.run({
+        $id: row.id,
         $website: this.id,
-        $websiteId: row.id,
+        $websiteId: row.websiteId,
         $latitude: row.latitude,
         $longitude: row.longitude,
         $rooms: row.rooms,
@@ -65,7 +71,10 @@ module.exports = class AbstractScraper {
         $url: row.url,
         $active: row.active,
         $gone: row.gone,
-        $data: JSON.stringify(row.data)
+        $removed: row.removed == null ? null : moment(row.removed).toISOString(),
+        $comment: row.comment,
+        $favorite: row.favorite,
+        $data: typeof(row.data) === 'string' ? row.data : JSON.stringify(row.data)
       }, error => {
         if(error) {
           console.error("Error while updating in database", this.id, error);
@@ -120,6 +129,67 @@ module.exports = class AbstractScraper {
         });
       }      
     }, {key: config.geocoder.apiKey});
+    return defer.promise;
+  }
+  getActiveItems(id) {
+    var defer = q.defer();
+    this.statements.getActiveItems.all({
+        $website: this.id
+      }, (error, rows) => {
+        if(error) {
+          console.error("Error while getting all active items from database", this.id, id, error);
+          defer.reject();
+        }else{
+          defer.resolve(rows);
+        }
+    });
+    return defer.promise;
+  }
+
+
+  _updateItemsAsync(rows) {
+    const defer = q.defer();
+    const promises = [];
+    rows.forEach(row => {
+      const innerPromise = q.defer();
+      promises.push(innerPromise.promise);
+      this.scrapeItemDetails(row.url).then(data => {
+        row = Object.assign(row, data);
+        console.log("update?", row.id, row.gone);
+        this.updateInDb(row).then(() => innerPromise.resolve(true));
+      });
+    });
+    q.all(promises).then(defer.resolve);
+    return defer.promise;
+  }
+  _updateItemsSync(rows) {
+    const defer = q.defer();
+
+    const promises = [];
+    let promise = null;
+    rows.forEach(row => {
+      var step = () => {
+        var def = q.defer();
+        promises.push(def.promise);
+        this.scrapeItemDetails(row.url).then(data => {
+          row = Object.assign(row, data);
+          this.updateInDb(row).then(() => def.resolve(true));
+        });
+      }
+      if(promise == null) {
+        promise = step();
+      }else{
+        promise.then(step);
+      }
+    });
+    promise.then(defer.resolve);
+    return defer.promise;
+  }
+  updateItems() {
+    const defer = q.defer();
+    this.getActiveItems().then(rows => {
+      this._updateItemsAsync(rows).then(() => defer.resolve(true));
+    });
     return defer.promise;
   }
 }

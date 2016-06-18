@@ -19,6 +19,13 @@ module.exports = class App {
       });
     });
 
+    this.app.get('/update', (req, res) => {
+      const promises = scraper.map(s => s.updateItems());
+      q.all(promises).then(() => {
+        res.send(JSON.stringify({status: "ok"}));
+      });
+    });
+
     this.app.get('/config', (req, res) => {
       res.send('window.appConfig = ' + JSON.stringify(config) + ";");
     })
