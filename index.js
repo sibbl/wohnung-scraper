@@ -7,6 +7,7 @@ var config = require('./config'),
 const scraper = [
   'WgGesuchtScraper',
   'StudentenWgScraper',
+  'ImmoscoutScraper',
 ].map(scraper => {
   const s = require('./scraper/' + scraper);
   return new s(db);

@@ -30,6 +30,11 @@ module.exports = {
       name: "studenten-wg.de",
       url: "https://www.studenten-wg.de/angebote_lesen.html?preismode=2&newsort=&stadt=Berlin&fuer=Wohnungen&mietart=1&zimin=2&zimax=4&lmode=2&proseite=50",
       maxPages: 5
+    },
+    immoscout24: {
+      name: "immobilienscout24.de",
+      url: "https://www.immobilienscout24.de/Suche/S-2/Wohnung-Miete/Berlin/Berlin/-/-/-/-/-/-/false",
+      maxPages: 5
     }
   }
 }
