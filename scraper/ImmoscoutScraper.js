@@ -101,10 +101,13 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
 
           const freiab_str = getStrValue(".is24qa-bezugsfrei-ab");
           let freiab;
-          if(freiab_str.indexOf("sofort") >= 0) {
+          if(freiab_str.toLowerCase().indexOf("sofort") >= 0 || freiab_str.toLowerCase().indexOf("bezugfrei") >= 0) {
             freiab = moment();
           }else{
             freiab = moment(freiab_str, "DD.MM.YYYY");
+            if(!freiab.isValid()) {
+              freiab = moment(); //fallback
+            }
           }
           result.free_from = freiab.toISOString();
           
