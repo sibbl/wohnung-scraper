@@ -12,4 +12,7 @@ CREATE TABLE [wohnungen](
     [free_from] DATETIME,
     [active] BOOLEAN DEFAULT TRUE,
     [gone] BOOLEAN DEFAULT FALSE,
-    [added] DATETIME DEFAULT CURRENT_TIMESTAMP);
+    [favorite] BOOLEAN DEFAULT FALSE,
+    [comment] TEXT,
+    [added] DATETIME DEFAULT CURRENT_TIMESTAMP,
+    [removed] DATETIME DEFAULT NULL);

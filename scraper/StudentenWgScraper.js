@@ -22,8 +22,8 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     }
     return false;
   }
-  _isVermietet() {
-    return false;
+  _isVermietetByTableRow() {
+    return false; //unfortunately we cannot get this from the table row, we need to update it via updateItems
   }
   _getNextPage(url, $) {
     const nextLink = $("#innercontent .wg-blaetternbox a:contains('»')");
@@ -51,14 +51,13 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     const urlParts = relativeItemUrl.match(/_([0-9]+)\.html/);
     const itemUrl = urlLib.resolve(url, relativeItemUrl);
 
-    this._scrapeItemDetails(itemUrl).then(data => {
-      data.id = itemId;
+    this.scrapeItemDetails(itemUrl).then(data => {
+      data.websiteId = itemId;
       data.size = parseInt(groesse);
       data.price = parseInt(miete);
       data.url = itemUrl;
       data.free_from = freiab.toISOString();
       data.active = true;
-      data.gone = this._isVermietet(tableRow);
 
       defer.resolve(data);
     });
@@ -85,7 +84,7 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
         }else{
           defer.resolve(false);
         }
-      }else if(this._isVermietet(tableRow)) {
+      }else if(this._isVermietetByTableRow(tableRow)) {
         if(isInDb) {
           this._getDbObject(url, tableRow, itemId).then(data => {
             this.updateInDb(data).then(() => defer.resolve(true));
@@ -111,52 +110,66 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
       encoding: null
     }, config.httpOptions);
   }
-  _scrapeItemDetails(url) {
+  scrapeItemDetails(url) {
     var defer = q.defer();
     request.get(url, this._getRequestOptions(), (error, response, body) => {
       if(error) {
         console.error("error while scraping item details", url, error);
+        defer.reject();
       }else{
         var result = {};
 
         // var $ = cheerio.load(body);
         var $ = cheerio.load(iconv.decode(body, 'iso-8859-1'));
 
-        var infoBlock = $(".wg-detailinfoblock");
+        let adresse = null;
+        result.gone = false;
+        try{
+          var infoBlock = $(".wg-detailinfoblock");
 
-        const ort = infoBlock.find("tr.wg-inforow:nth-child(2) td:nth-child(2)").text().trim();
-        const strasse = infoBlock.find("tr.wg-inforowb:nth-child(3) td:nth-child(2)").text().trim();
-        let adresse = "Berlin, " + strasse;
+          const ort = infoBlock.find("tr.wg-inforow:nth-child(2) td:nth-child(2)").text().trim();
+          const strasse = infoBlock.find("tr.wg-inforowb:nth-child(3) td:nth-child(2)").text().trim();
+          adresse = config.city + ", " + strasse;
 
-        const zimmer_str = infoBlock.find("tr td:contains('Zimmer')").text();
-        const zimmer = parseInt(zimmer_str.match(/^([0-9]+)\-/)[1]);
-        if(Number.isNaN(zimmer)) {
-          zimmer = null;
-        }
-
-        var [kaltmiete, nebenkosten, kaution] = ["Kaltmiete", "Nebenkosten", "Kaution"].map(item => {
-          let preis = infoBlock.find("tr td:contains('" + item + "')").text().trim();
-          const preis_index = preis.indexOf(item);
-          const preis_int = parseInt(preis.substr(0, preis_index).replace("€", "").trim());
-          if(Number.isNaN(preis_int)) {
-            return null;
+          const zimmer_str = infoBlock.find("tr td:contains('Zimmer')").text();
+          const zimmer = parseInt(zimmer_str.match(/^([0-9]+)\-/)[1]);
+          if(Number.isNaN(zimmer)) {
+            zimmer = null;
           }
-          return preis_int;
-        });
 
-        result.rooms = zimmer;
-        result.data = {
-          miete: kaltmiete,
-          nebenkosten: nebenkosten,
-          kaution: kaution,
-          adresse: adresse
+          var [kaltmiete, nebenkosten, kaution] = ["Kaltmiete", "Nebenkosten", "Kaution"].map(item => {
+            let preis = infoBlock.find("tr td:contains('" + item + "')").text().trim();
+            const preis_index = preis.indexOf(item);
+            const preis_int = parseInt(preis.substr(0, preis_index).replace("€", "").trim());
+            if(Number.isNaN(preis_int)) {
+              return null;
+            }
+            return preis_int;
+          });
+
+          result.rooms = zimmer;
+          result.data = {
+            miete: kaltmiete,
+            nebenkosten: nebenkosten,
+            kaution: kaution,
+            adresse: adresse
+          }
+        }catch(ex) {
+          console.log("CATCHED error while scraping item", this.id, url, ex);
+          result.gone = true;
+          if(result.removed == null) {
+            result.removed = new Date();
+          }
         }
-
-        this.getLocationOfAddress(adresse).then(res => {
-          result.latitude = res.latitude;
-          result.longitude = res.longitude;
+        if(result.gone || adresse == null) {
           defer.resolve(result);
-        });
+        }else{
+          this.getLocationOfAddress(adresse).then(res => {
+            result.latitude = res.latitude;
+            result.longitude = res.longitude;
+            defer.resolve(result);
+          });
+        }
       }
     });
     return defer.promise;

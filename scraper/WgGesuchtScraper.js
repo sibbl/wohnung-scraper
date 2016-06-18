@@ -49,8 +49,8 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     const relativeItemUrl = tableRow.attr("adid");
     const itemUrl = urlLib.resolve(url, relativeItemUrl);
 
-    this._scrapeItemDetails(itemUrl).then(data => {
-      data.id = itemId;
+    this.scrapeItemDetails(itemUrl).then(data => {
+      data.websiteId = itemId;
       data.rooms = parseInt(zimmer);
       data.size = parseInt(groesse);
       data.price = parseInt(miete);
@@ -106,69 +106,81 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
       jar: this.cookieJar
     }, config.httpOptions);
   }
-  _scrapeItemDetails(url) {
+  scrapeItemDetails(url) {
     var defer = q.defer();
     request.get(url, this._getRequestOptions(), (error, response, body) => {
       if(error) {
         console.error("error while scraping item details", url, error);
       }else{
         var result = {};
+        result.gone = false;
+        try {
+          // latitude + longitude
+          const latitude = body.match(/gmap_mitte_lat\s*=\s*"([0-9\.]*)/)[1];
+          result.latitude = parseFloat(latitude);
+          const longitude = body.match(/gmap_mitte_lng\s*=\s*"([0-9\.]*)/)[1];
+          result.longitude = parseFloat(longitude);
 
-        // latitude + longitude
-        var latitude = body.match(/gmap_mitte_lat\s*=\s*"([0-9\.]*)/)[1];
-        result.latitude = parseFloat(latitude);
-        var longitude = body.match(/gmap_mitte_lng\s*=\s*"([0-9\.]*)/)[1];
-        result.longitude = parseFloat(longitude);
 
+          const $ = cheerio.load(body);
 
-        var $ = cheerio.load(body);
+          // alle Kosten
+          let kosten = $('.headline-detailed-view-panel-title:contains("Kosten")+table');
+          let miete = kosten.find("td:contains('Miete')+td").text().trim().replace('€', '');
+          let nebenkosten = kosten.find("td:contains('Nebenkosten')+td").text().trim().replace('€', '');
+          let sonstigeKosten = kosten.find("td:contains('Sonstige Kosten')+td").text().trim().replace('€', '');
+          let kaution = kosten.find("td:contains('Kaution')+td").text().trim().replace('€', '');
+          miete = parseInt(miete);
+          if(Number.isNaN(miete)){
+            miete = null;
+          }
+          nebenkosten = parseInt(nebenkosten);
+          if(Number.isNaN(nebenkosten)){
+            nebenkosten = null;
+          }
+          sonstigeKosten = parseInt(sonstigeKosten);
+          if(Number.isNaN(sonstigeKosten)){
+            sonstigeKosten = null;
+          }
+          kaution = parseInt(kaution);
+          if(Number.isNaN(kaution)){
+            kaution = null;
+          }
 
-        // alle Kosten
-        var kosten = $('.headline-detailed-view-panel-title:contains("Kosten")+table');
-        var miete = kosten.find("td:contains('Miete')+td").text().trim().replace('€', '');
-        var nebenkosten = kosten.find("td:contains('Nebenkosten')+td").text().trim().replace('€', '');
-        var sonstigeKosten = kosten.find("td:contains('Sonstige Kosten')+td").text().trim().replace('€', '');
-        var kaution = kosten.find("td:contains('Kaution')+td").text().trim().replace('€', '');
-        miete = parseInt(miete);
-        if(Number.isNaN(miete)){
-          miete = null;
+          // Adresse:
+          let adresse = $('.headline-detailed-view-panel-title:contains("Adresse")+p');
+          adresse.find("span").html("");
+          adresse = adresse.text().trim();
+
+          result.data = {
+            miete: miete,
+            nebenkosten: nebenkosten,
+            sonstigeKosten: sonstigeKosten,
+            kaution: kaution,
+            adresse: adresse
+          }
+
+        }catch(ex) {
+          console.log("CATCHED error while scraping item", this.id, url, ex);
+          result.gone = true;
+          if(result.removed == null) {
+            result.removed = new Date();
+          }
         }
-        nebenkosten = parseInt(nebenkosten);
-        if(Number.isNaN(nebenkosten)){
-          nebenkosten = null;
-        }
-        sonstigeKosten = parseInt(sonstigeKosten);
-        if(Number.isNaN(sonstigeKosten)){
-          sonstigeKosten = null;
-        }
-        kaution = parseInt(kaution);
-        if(Number.isNaN(kaution)){
-          kaution = null;
-        }
-
-        // Adresse:
-        var adresse = $('.headline-detailed-view-panel-title:contains("Adresse")+p');
-        adresse.find("span").html("");
-        adresse = adresse.text().trim();
-
-        result.data = {
-          miete: miete,
-          nebenkosten: nebenkosten,
-          sonstigeKosten: sonstigeKosten,
-          kaution: kaution,
-          adresse: adresse
-        }
-
-        if(Number.isNaN(result.latitude) || Number.isNaN(result.longitude)) {
-          this.getLocationOfAddress(result.data.adresse).then(res => {
-            result.latitude = res.latitude;
-            result.longitude = res.longitude;
-            defer.resolve(result);
-          }).catch(error => {
-            defer.resolve(result);
-          });
-        }else{
+        if(result.gone) {
           defer.resolve(result);
+        }else{
+          if(Number.isNaN(result.latitude) || Number.isNaN(result.longitude)) {
+            this.getLocationOfAddress(result.data.adresse).then(res => {
+              result.latitude = res.latitude;
+              result.longitude = res.longitude;
+              defer.resolve(result);
+            }).catch(error => {
+              defer.resolve(result);
+            });
+          }else{
+            defer.resolve(result);
+          }
         }
       }
     });
@@ -204,5 +216,5 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
       defer.resolve();
     });
     return defer.promise;
-  };
+  }
 }

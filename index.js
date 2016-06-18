@@ -12,14 +12,19 @@ const scraper = [
   return new s(db);
 });
 
-var job = new CronJob({
-  cronTime: config.cronTime,
-  onTick: function() {
-    scraper.forEach(s => s.scrape());
-  },
-  start: true,
-  timeZone: 'Europe/Berlin'
-});
-job.start();
+const startScraperCronjob = function(cronTime, scraperFuncName) {
+  const job = new CronJob({
+    cronTime: cronTime,
+    onTick: function() {
+      scraper.forEach(s => s[scraperFuncName]());
+    },
+    start: true,
+    timeZone: 'Europe/Berlin'
+  });
+  job.start();
+}
 
-var appInstance = new app(db, scraper);
+startScraperCronjob(config.cronTimes.scrape, "scrape");
+startScraperCronjob(config.cronTimes.update, "updateItems");
+
+new app(db, scraper);

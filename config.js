@@ -6,7 +6,11 @@ module.exports = {
       zoom: 12,
     },
   },
-  cronTime: '0,30 * * * *',
+  cronTimes: {
+    scrape: '0,30 * * * *',
+    update: '15,45 * * * *',
+  },
+  city: "Berlin",
   database: "wohnungen.db",
   geocoder: {
     apiKey: "AIzaSyD5FHeDK6vsPXFmP9kTszJ-crNVHBcRRWY", //see https://developers.google.com/maps/documentation/geocoding/get-api-key
