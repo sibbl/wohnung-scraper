@@ -17,7 +17,15 @@ const startScraperCronjob = function(cronTime, scraperFuncName) {
   const job = new CronJob({
     cronTime: cronTime,
     onTick: function() {
-      scraper.forEach(s => s[scraperFuncName]());
+      let promise = null;
+      scraper.forEach(s => {
+        if(promise == null) {
+          promise = s[scraperFuncName]();
+        }else{
+          promise.then(s[scraperFuncName]);
+        }
+      })
+      // scraper.forEach(s => s[scraperFuncName]());
     },
     start: true,
     timeZone: 'Europe/Berlin'
