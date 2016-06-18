@@ -8,8 +8,8 @@ module.exports = class AbstractScraper {
     if (typeof(scraperId) === "undefined") {
       throw new TypeError("Constructor of scraper needs a ID.");
     }
-    if (typeof(this.scrape) !== "function") {
-      throw new TypeError("Scraper must override method scrape.");
+    if (typeof(this.scrapeSite) !== "function") {
+      throw new TypeError("Scraper must override method scrapeSite.");
     }
     if (typeof(this.scrapeItemDetails) !== "function") {
       throw new TypeError("Scraper must override method scrapeItemDetails.");
@@ -189,6 +189,17 @@ module.exports = class AbstractScraper {
     const defer = q.defer();
     this.getActiveItems().then(rows => {
       this._updateItemsAsync(rows).then(() => defer.resolve(true));
+    });
+    return defer.promise;
+  }
+  
+  scrape() {
+    const defer = q.defer();
+    console.log("Start scraping " + this.id);
+    this.scrapeSiteCounter = 1;
+    this.scrapeSite(this.config.url).then(() => {
+      console.log("Finish scraping " + this.id);
+      defer.resolve();
     });
     return defer.promise;
   }

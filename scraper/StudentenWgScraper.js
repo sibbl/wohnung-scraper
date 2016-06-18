@@ -174,7 +174,7 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     });
     return defer.promise;
   }
-  _scrapeSite(url) {
+  scrapeSite(url) {
     const defer = q.defer();
     request.get(url, this._getRequestOptions(), (error, response, body) => {
       if(error) {
@@ -188,21 +188,11 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
         const nextPageUrl = this._getNextPage(url, $);
         if(nextPageUrl !== false && this.scrapeSiteCounter < this.config.maxPages) {
           this.scrapeSiteCounter++;
-          defers.push(this._scrapeSite(nextPageUrl));
+          defers.push(this.scrapeSite(nextPageUrl));
         }
         q.all(defers).then(() => defer.resolve());
       }
     });
     return defer.promise;
   }
-  scrape() {
-    const defer = q.defer();
-    console.log("Start scraping " + this.id);
-    this.scrapeSiteCounter = 1;
-    this._scrapeSite(this.config.url).then(() => {
-      console.log("Finish scraping " + this.id);
-      defer.resolve();
-    });
-    return defer.promise;
-  };
 }
