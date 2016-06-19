@@ -11,13 +11,46 @@ angular.module('dataVis')
   $scope.center = config.map.initialView;
   $scope.layers = {
     baselayers: {
-      mapbox_dark: {
-        name: 'Dark',
+      mapbox_streets: {
+        name: 'Mapbox Streets',
         url: 'http://api.tiles.mapbox.com/v4/{mapid}/{z}/{x}/{y}.png?access_token={apikey}',
         type: 'xyz',
         layerOptions: {
           apikey: 'pk.eyJ1Ijoic2liYmwiLCJhIjoiQlFVb2YzYyJ9.tUs45Lp6oAz8ZUmwWVTaZg',
           mapid: 'mapbox.streets',
+          detectRetina: true,
+          attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+        },
+      },
+      mapbox_light: {
+        name: 'Mapbox Light',
+        url: 'http://api.tiles.mapbox.com/v4/{mapid}/{z}/{x}/{y}.png?access_token={apikey}',
+        type: 'xyz',
+        layerOptions: {
+          apikey: 'pk.eyJ1Ijoic2liYmwiLCJhIjoiQlFVb2YzYyJ9.tUs45Lp6oAz8ZUmwWVTaZg',
+          mapid: 'mapbox.light',
+          detectRetina: true,
+          attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+        },
+      },
+      mapbox_dark: {
+        name: 'Mapbox Dark',
+        url: 'http://api.tiles.mapbox.com/v4/{mapid}/{z}/{x}/{y}.png?access_token={apikey}',
+        type: 'xyz',
+        layerOptions: {
+          apikey: 'pk.eyJ1Ijoic2liYmwiLCJhIjoiQlFVb2YzYyJ9.tUs45Lp6oAz8ZUmwWVTaZg',
+          mapid: 'mapbox.dark',
+          detectRetina: true,
+          attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+        },
+      },
+      mapbox_emerald: {
+        name: 'Mapbox Emerald',
+        url: 'http://api.tiles.mapbox.com/v4/{mapid}/{z}/{x}/{y}.png?access_token={apikey}',
+        type: 'xyz',
+        layerOptions: {
+          apikey: 'pk.eyJ1Ijoic2liYmwiLCJhIjoiQlFVb2YzYyJ9.tUs45Lp6oAz8ZUmwWVTaZg',
+          mapid: 'mapbox.emerald',
           detectRetina: true,
           attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
         },
@@ -50,8 +83,6 @@ angular.module('dataVis')
         url: 'http://tileserver.memomaps.de/tilegen/{z}/{x}/{y}.png',
         type: 'xyz',
       }
-
-      
     },
     overlays: {}
   };
