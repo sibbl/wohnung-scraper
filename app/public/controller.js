@@ -1,11 +1,22 @@
 'use strict';
 angular.module('dataVis')
-.controller('MainController', ['$scope', '$rootScope', '$window', '$http', '$q', 'Config', 'leafletData', function($scope, $rootScope, $window, $http, $q, config, leafletData) {
+.controller('MainController', ['$scope', '$rootScope', '$window', '$http', '$q', '$filter', 'Config', 'leafletData', function($scope, $rootScope, $window, $http, $q, $filter, config, leafletData) {
   var map;
   var markers = {};
+
   $scope.data = [];
+
+  var VISIBILITY_ALL = 1,
+      VISIBILITY_ACTIVE = 2,
+      VISIBILITY_FAVORITE = 3;
+
+  $scope.visibilityEnum = {};
+  $scope.visibilityEnum[VISIBILITY_ALL] = "Alle";
+  $scope.visibilityEnum[VISIBILITY_ACTIVE] = "Aktive";
+  $scope.visibilityEnum[VISIBILITY_FAVORITE] = "Favoriten";
+
   $scope.filter = {
-    showAll: false
+    visibility: VISIBILITY_ACTIVE
   }
 
   $scope.center = config.map.initialView;
@@ -100,7 +111,7 @@ angular.module('dataVis')
   }
 
   $scope.$watch('data', function(newValue, oldValue) {
-    angular.forEach($scope.data, function(wohnung) {
+    angular.forEach($scope.data, function(wohnung, index) {
       //[input, output]
       var sizeFunc = new L.LinearFunction([0, 0], [80, 30], {
         constrainX:true,
@@ -153,50 +164,80 @@ angular.module('dataVis')
       marker.on('click', function() {
         $scope.selectedFlat = wohnung;
       })
-      if(wohnung.active == true || $scope.filter.showAll) {
-        marker.addTo(map);
+
+      $scope.$watch("data[" + index + "].active", function(newActive, oldActive) {
+        if(angular.isDefined(oldActive) && oldActive != newActive) {
+          updateActive(newActive, wohnung.id);
+        }
+      })
+      $scope.$watch("data[" + index + "].favorite", function(newFav, oldFav) {
+        if(angular.isDefined(oldFav) && oldFav != newFav) {
+          updateFavorite(newFav, wohnung.id);
+        }
+      })
+      if(isMarkerVisible(wohnung.id)) {
+        map.addLayer(marker);
       }
       markers[wohnung.id] = marker;
     });
   });
 
-  $scope.$watch('filter.showAll', function(showAll) {
-    angular.forEach(markers, function(marker, markerId) {
-      if(showAll) {
-        if(!map.hasLayer(marker)) {
-          map.addLayer(marker);
-        }
-      }else{
-        if($scope.data[markerId].active == true) {
-          if(!map.hasLayer(marker)) {
-            map.addLayer(marker);
-          }
-        }else if($scope.data[markerId].active != true) {
-          if(map.hasLayer(marker)) {
-            map.removeLayer(marker);
-          }
-        }
-      }
-    })
-  })
+  var isMarkerVisible = function(markerId) {
+    var markerData = $scope.data[markerId];
+    if($scope.filter.visibility == VISIBILITY_ACTIVE && !markerData.active) {
+      return false;
+    }else if($scope.filter.visibility == VISIBILITY_FAVORITE && (!markerData.active || !markerData.favorite)) {
+      return false;
+    }
+    return true;
+  }
 
-  $scope.toggleActive = function(flat) {
-    flat.active = !(flat.active == true);
-    if(flat.active == true || $scope.filter.showAll) {
-      if(!map.hasLayer(markers[flat.id])) {
-        map.addLayer(markers[flat.id]);
+  var updateMarkerVisibility = function(marker, markerId) {
+    if(isMarkerVisible(markerId)) {
+      if(!map.hasLayer(marker)) {
+        map.addLayer(marker);
       }
-    }else if(flat.active != true) {
-      if(!$scope.filter.showAll && map.hasLayer(markers[flat.id])) {
-        map.removeLayer(markers[flat.id]);
+    }else{
+      if(map.hasLayer(marker)) {
+        map.removeLayer(marker);
       }
     }
-    $http.post("/" + flat.id + "/active", {
-      active: flat.active
-    }).then(response => {
+  };
+
+  $scope.$watchCollection('filter', function(filter) {
+    angular.forEach(markers, updateMarkerVisibility)
+  });
+
+  var updateActive = function(value, id) {
+    var data = {
+      active: value
+    }
+    updateMarkerVisibility(markers[id], id);
+    $http.post("/" + flat.id + "/active", data).then(response => {
       if(!response.data.success) {
         alert("Failed to change active, please reload the page.");
       }
     })
+  }
+
+  var updateFavorite = function(value, id) {
+    var data = {
+      favorite: value
+    }
+    updateMarkerVisibility(markers[id], id);
+    $http.post("/" + flat.id + "/favorite", data).then(response => {
+      if(!response.data.success) {
+        alert("Failed to change favorite, please reload the page.");
+      }
+    })
+  }
+
+  $scope.getFreeFromStr = function(flat) {
+    var now = new Date();
+    if(flat.free_from == "Invalid date" || flat.free_from < now) {
+      return "sofort";
+    }else{
+      return $filter('date')(flat.free_from, 'dd.MM.yyyy');
+    }
   }
 }]);
