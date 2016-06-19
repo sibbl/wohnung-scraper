@@ -6,6 +6,7 @@ module.exports = {
       zoom: 12,
     },
   },
+  defaultTransportTime: 20, //20 min
   filters: {
     // usually, the upper bound is set automatically. But we crop them at these values
     upperLimits: {

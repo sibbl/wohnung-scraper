@@ -5,9 +5,25 @@ angular.module('dataVis')
   var markers = {};
 
   $scope.status = { // ui status, e.g. filter accordion
-    showFilters: true //show filters by default
+    showFilters: true, //show filters by default
+    showTransport: false, //hide transport by default
   };
   $scope.data = [];
+
+  // transport layer
+  var currentTransportPos;
+  $scope.transport = {
+    minutes: config.defaultTransportTime,
+    sliderOptions: {
+      ceil: 60,
+      floor: 5,
+      showTicks: 15,
+      translate: function(value) {
+        return value + " Min";
+      }
+    },
+    automatically: true
+  }
 
   $scope.availableWebsites = config.scraper;
 
@@ -135,6 +151,7 @@ angular.module('dataVis')
   }).then(function(results) {
     map = results.map;
     $scope.data = results.data.data;
+    initMapnificent(map);
   });
 
   $scope.getWebsiteName = function(website) {
@@ -166,6 +183,11 @@ angular.module('dataVis')
 
   $scope.$watch('data', function(newValue, oldValue) {
     angular.forEach($scope.data, function(wohnung, index) {
+      if(wohnung.latitude == null || wohnung.longitude == null) {
+        console.warn("missing latitude or longitude", wohnung);
+        return;
+      }
+
       //[input, output]
       var sizeFunc = new L.LinearFunction([0, 0], [80, 30], {
         constrainX:true,
@@ -214,7 +236,8 @@ angular.module('dataVis')
           }
         }
       };
-      var marker = new L.StackedRegularPolygonMarker(new L.LatLng(wohnung.latitude, wohnung.longitude), {
+      var coords = new L.LatLng(wohnung.latitude, wohnung.longitude);
+      var marker = new L.StackedRegularPolygonMarker(coords, {
           radius: sizeFunc.evaluate(wohnung.size),
           numberOfSides: (wohnung.rooms + 1),
           rotation: -90,
@@ -224,8 +247,17 @@ angular.module('dataVis')
       marker.on('click', function() {
         $timeout(function() {
           $scope.selectedFlat = wohnung;
+          if($scope.transport.automatically) {
+            $scope.showTransportOverlay(wohnung);
+          }
         });
       })
+
+      $scope.$watch('transport.minutes', function(newMinutes) {
+        if(angular.isDefined(currentTransportPos)) {
+          currentTransportPos.setTime(newMinutes * 60);
+        }
+      });
 
       $scope.$watch("data[" + index + "].active", function(newActive, oldActive) {
         if(angular.isDefined(oldActive) && oldActive != newActive) {
@@ -415,5 +447,44 @@ angular.module('dataVis')
       }
     }
     return options;
+  }
+
+  var mapnificent;
+  var initMapnificent = function() {
+    var city = {
+      cityid: "berlin",
+      cityname: "Berlin",
+      lat: 52.525592,
+      lng: 13.369545,
+      northwest: {"lat":52.755362,"lng":12.901471},
+      southeast: {"lat":52.295934,"lng":13.909891},
+      options: {"estimatedMaxCalculateCalls":2100000} || {},
+      zoom: 11,
+      dataPath: "http://www.mapnificent.net/data/berlin/"
+    };
+    mapnificent = new Mapnificent(map, city, {
+      baseurl: '/lib/mapnificent/'
+    });
+    mapnificent.init();
+  }
+
+  $scope.showTransportOverlay = function(flat) {
+    var marker = markers[flat.id];
+    $scope.transport.visible = flat.id;
+    currentTransportPos = mapnificent.addPosition(marker, $scope.transport.minutes * 60);
+    currentTransportPos.setProgressCallback(function(percent) {
+      $timeout(function() {
+        $scope.transportLoadingPercentage = percent;
+      });
+    });
+  }
+
+  $scope.resetTransportOverlay = function() {
+    $scope.transport.visible = undefined;
+    if(angular.isDefined(currentTransportPos)) {
+      // currentTransportPos.destroy();
+      currentTransportPos = undefined;
+      mapnificent.reset();
+    }
   }
 }]);

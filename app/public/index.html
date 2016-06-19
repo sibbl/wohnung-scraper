@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <title>Wohnungen</title>
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
   <script src="bower_components/leaflet/dist/leaflet.js"></script>
   <script src="bower_components/leaflet-dvf/dist/leaflet-dvf.js"></script>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/1.3.2/ui-bootstrap.min.js"></script>
   <link rel="stylesheet" href="bower_components/leaflet-dvf/dist/css/dvf.css" type="text/css" media="screen" />
   <link rel="stylesheet" href="bower_components/leaflet/dist/leaflet.css" type="text/css" media="screen" />
   <link rel="stylesheet" href="style.css">
@@ -16,10 +16,11 @@
   <script src="bower_components/ui-leaflet/dist/ui-leaflet.js"></script>
   <script src="bower_components/checklist-model/checklist-model.js"></script>
   <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
-  <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
   <script src="bower_components/angularjs-slider/dist/rzslider.min.js"></script>
   <link rel="stylesheet" href="bower_components/angularjs-slider/dist/rzslider.min.css" type="text/css" media="screen" />
   <script src="bower_components/moment/min/moment.min.js"></script>
+  <script src="lib/mapnificent/quadtree.js"></script>
+  <script src="lib/mapnificent/mapnificent.js"></script>
 
   <script src="/config"></script>
   <script src="app.js"></script>
@@ -36,6 +37,30 @@
         <div class="col-right-content">
 
           <uib-accordion class="filter">
+            <uib-accordion-group is-open="status.showTransport">
+              <uib-accordion-heading>
+                <div>
+                  Transport layer <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-up': status.showTransport, 'glyphicon-chevron-down': !status.showTransport}"></i>
+                </div>
+                <div class="progress" style="margin-bottom: 0" ng-show="transportLoadingPercentage > 0 && transportLoadingPercentage < 100">
+                  <div class="progress-bar" role="progressbar" ng-style="{width: transportLoadingPercentage + '%'}"></div>
+                </div>
+              </uib-accordion-heading>
+
+              <label><strong>Minutes:</strong></label>
+              <rzslider
+                 rz-slider-model="transport.minutes"
+                 rz-slider-options="transport.sliderOptions"></rzslider>
+              
+              <label>
+                <input type="checkbox" ng-model="transport.automatically"> Autom. berechnen
+              </label>
+              <br/>
+
+              <a class="btn btn-default" ng-click="resetTransportOverlay()" ng-show="transport.visible">Overlay zurücksetzen</a><br/>
+
+            </uib-accordion-group>
+
             <uib-accordion-group is-open="status.showFilters">
               <uib-accordion-heading>
                 <div>
@@ -110,8 +135,11 @@
             </dl>
             <a class="btn btn-primary" href="{{selectedFlat.url}}" target="_blank">Auf {{getWebsiteName(selectedFlat.website)}} öffnen</a>
 
-            <a class="btn btn-default" ng-click="selectedFlat.active = !selectedFlat.active">{{ selectedFlat.active ? "deaktivieren" : "aktivieren" }}</a>
-            <a class="btn btn-default" ng-click="selectedFlat.favorite = !selectedFlat.favorite" ng-class="{disabled: !selectedFlat.active}">{{ selectedFlat.favorite ? "aus Favoriten entfernen" : "zu Favoriten hinzufügen" }}</a>
+            <br/><br/>
+
+            <a class="btn btn-default" ng-click="selectedFlat.active = !selectedFlat.active">{{ selectedFlat.active ? "deaktivieren" : "aktivieren" }}</a><br/>
+            <a class="btn btn-default" ng-click="selectedFlat.favorite = !selectedFlat.favorite" ng-class="{disabled: !selectedFlat.active}">{{ selectedFlat.favorite ? "aus Favoriten entfernen" : "zu Favoriten hinzufügen" }}</a><br/>
+            <a class="btn btn-default" ng-click="showTransportOverlay(selectedFlat)" ng-hide="transport.visible == selectedFlat.id">ÖPNV-Overlay zeichnen</a><br/>
           </div>
         </div>
       </aside>
