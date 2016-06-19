@@ -6,6 +6,39 @@ module.exports = {
       zoom: 12,
     },
   },
+  filters: {
+    // usually, the upper bound is set automatically. But we crop them at these values
+    upperLimits: {
+      price: 1500,
+      rooms: 5,
+      size: 200,
+      age: 100
+    },
+    default: {
+      hideInactive: true,
+      showOnlyFavs: false,
+      price: {
+        min: 0,
+        max: 1200
+      },
+      rooms: {
+        min: 0,
+        max: 2
+      },
+      size: {
+        min: 30,
+        max: 120
+      },
+      age: {
+        min: 0,
+        max: 14
+      },
+      free_from: {
+        min: 0,
+        max: 8
+      }
+    }
+  },
   cronTimes: {
     scrape: '0 * * * *',
     update: '30 * * * *',

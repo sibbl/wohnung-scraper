@@ -1,6 +1,7 @@
 var express = require('express'),
     bodyParser = require('body-parser'),
     q = require('q'),
+    moment = require('moment'),
     config = require('../config.js');
 
 module.exports = class App {
@@ -35,11 +36,14 @@ module.exports = class App {
         if(error) {
           res.send(JSON.stringify(error));
         }else{
+          var now = moment();
           var resultArr = result.map(item => {
             //convert to boolena
             ["favorite", "gone", "active"].map(name => item[name] = item[name] == 1);
             //parse JSON string
             item.data = JSON.parse(item.data);
+            //set age
+            item.age = now.diff(moment(item.added), 'days')
             return item;
           });
           var resultObj = {};

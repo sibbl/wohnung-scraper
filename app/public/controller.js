@@ -11,10 +11,43 @@ angular.module('dataVis')
 
   $scope.availableWebsites = config.scraper;
 
-  $scope.filter = {
-    hideInactive: true,
-    showOnlyFavs: false,
-    websites: Object.keys($scope.availableWebsites)
+  $scope.filter = Object.assign(config.filters.default, {
+    websites: Object.keys($scope.availableWebsites),
+  });
+
+  //generate next 10 free_from values
+  var free_from = [null];
+  var start = moment().startOf("month").startOf("day").subtract(1,'day'); //use last day of last month 
+  var startIsMonthBegin = true;
+  var now = moment().startOf("day");
+  if(start.isBefore(now)) { //if start is before now (e.g. 30th of last month is before 5th)
+    start = start.add(14, 'days'); //then try 14th of current month
+    startIsMonthBegin = false;
+    if(start.isBefore(now)) { //if it's still before now (e.g. 14th is before 20th)
+      //add one month to last date
+      start = moment().startOf("month").startOf("day").add(1, "month").subtract(1,'day');
+      startIsMonthBegin = true;
+    }
+  }
+  //generate 8 values (next 4 months)
+  for(var i = startIsMonthBegin ? 0 : 1; i < 8; i++) {
+    if(i % 2 == 1) {
+      //middle of month
+      free_from.push(start.clone());
+      start = start.add(1, "month").startOf("month").startOf("day").subtract(1,'day'); //last day of month
+    }else{
+      //start of month
+      free_from.push(start.clone());
+      start = start.add(14, "days"); //14th of current month
+    }
+  }
+
+  $scope.filterBounds = {
+    price: { min: 0 },
+    rooms: { min: 0 },
+    size: { min: 0 },
+    age: { min: 0 },
+    free_from: { min: 0, max: 8 }
   }
 
   $scope.center = config.map.initialView;
@@ -108,6 +141,29 @@ angular.module('dataVis')
     return config.scraper[website].name;
   }
 
+  var setBounds = function(name, wohnung) {
+    // set min if smaller or no value set yet
+    if(angular.isDefined($scope.filterBounds[name].min)) {
+      if(wohnung[name] < $scope.filterBounds[name].min) {
+        $scope.filterBounds[name].min = wohnung[name];
+      }
+    }else{
+      $scope.filterBounds[name].min = wohnung[name];
+    }
+    // set max if bigger or no value set yet
+    if(angular.isDefined($scope.filterBounds[name].max)) {
+      if(wohnung[name] > $scope.filterBounds[name].max) {
+        $scope.filterBounds[name].max = wohnung[name];
+      }
+    }else{
+      $scope.filterBounds[name].max = wohnung[name];
+    }
+    // if too high, crop it
+    if($scope.filterBounds[name].max > config.filters.upperLimits[name]) {
+      $scope.filterBounds[name].max = config.filters.upperLimits[name];
+    }
+  }
+
   $scope.$watch('data', function(newValue, oldValue) {
     angular.forEach($scope.data, function(wohnung, index) {
       //[input, output]
@@ -134,6 +190,11 @@ angular.module('dataVis')
         pricePerSqM.toFixed(2) + "€/m²",
         ''
       ];
+
+      ["price", "rooms", "size", "age"].map(function(name) {
+        setBounds(name, wohnung);
+      }) 
+
       for (var key in wohnung.data) {
         if(wohnung.data[key] != null && wohnung.data.hasOwnProperty(key)) {
           text.push(key + ": " + wohnung.data[key]);
@@ -193,6 +254,24 @@ angular.module('dataVis')
     if($scope.filter.websites.indexOf(markerData.website) < 0) {
       return false;
     }
+    if(markerData.price < $scope.filter.price.min || markerData.price > $scope.filter.price.max) {
+      return false;
+    }
+    if(markerData.rooms < $scope.filter.rooms.min || markerData.rooms > $scope.filter.rooms.max) {
+      return false;
+    }
+    if(markerData.size < $scope.filter.size.min || markerData.size > $scope.filter.size.max) {
+      return false;
+    }
+    if(markerData.age < $scope.filter.age.min || markerData.age > $scope.filter.age.max) {
+      return false;
+    }
+    var freeFromDate = moment(markerData.free_from);
+    var minFreeFrom = free_from[$scope.filter.free_from.min];
+    var maxFreeFrom = free_from[$scope.filter.free_from.max];
+    if(freeFromDate.isBefore(minFreeFrom) || freeFromDate.isAfter(maxFreeFrom)) {
+      return false;
+    }
     return true;
   }
 
@@ -250,4 +329,77 @@ angular.module('dataVis')
       $scope.status.showFilters = false;
     }
   })
+
+  var sliderOptions = {
+    price: {
+      showTicks: 250,
+      step: 50,
+      translate: function(value) {
+        return value + " €";
+      }
+    },
+    rooms: {
+      showTicks: true,
+    },
+    size: {
+      showTicks: 25,
+      translate: function(value) {
+        return value + " m²";
+      }
+    },
+    age: {
+      showTicks: 7,
+      rightToLeft: true,
+      translate: function(value) {
+        if(value > Math.max(6, $scope.filterBounds.age.max)) {
+          return "egal";
+        }else if(value == 0) {
+          return "heute";
+        }else if(value == 1) {
+          return "gestern";
+        }else{
+          return value + " Tage";
+        }
+      }
+    },
+    free_from: {
+      showTicks: true,
+      stepsArray: Array.apply(null, {length: free_from.length}).map(Function.call, Number), //creates an array from 0 to N
+      translate: function(value) {
+        if(Number.isNaN(value) || free_from.length <= value) {
+          return value;
+        }else{
+          var date = free_from[value];
+          if(date == null) {
+            return "sofort";
+          }else{
+            return date.format("DD.MM.");
+          }
+        }
+      }
+    }
+  };
+  $scope.getSliderOptions = function(name) {
+    var options = {};
+    if(angular.isUndefined(sliderOptions[name].stepsArray)) {
+      var min = $scope.filterBounds[name].min;
+      if(angular.isUndefined(min)) min = $scope.filter[name].min;
+      var max = $scope.filterBounds[name].max;
+      if(angular.isUndefined(max)) max = $scope.filter[name].max;
+
+      options = {
+        floor: min,
+        ceil: max,
+      };
+    }
+    options = Object.assign(options, sliderOptions[name]);
+    if(name == "age") {
+      if (options.ceil < 7) {
+        options.ceil = 7;
+      }else{
+        options.ceil += 1;
+      }
+    }
+    return options;
+  }
 }]);

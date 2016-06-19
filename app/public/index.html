@@ -16,7 +16,10 @@
   <script src="bower_components/ui-leaflet/dist/ui-leaflet.js"></script>
   <script src="bower_components/checklist-model/checklist-model.js"></script>
   <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
-          
+  <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+  <script src="bower_components/angularjs-slider/dist/rzslider.min.js"></script>
+  <link rel="stylesheet" href="bower_components/angularjs-slider/dist/rzslider.min.css" type="text/css" media="screen" />
+  <script src="bower_components/moment/min/moment.min.js"></script>
 
   <script src="/config"></script>
   <script src="app.js"></script>
@@ -39,7 +42,37 @@
               </div>
             </uib-accordion-heading>
 
+            <label><strong>Preis:</strong></label>
+            <rzslider
+               rz-slider-model="filter.price.min"
+               rz-slider-high="filter.price.max"
+               rz-slider-options="getSliderOptions('price')"></rzslider>
 
+            <label><strong>Größe:</strong></label>
+            <rzslider
+               rz-slider-model="filter.size.min"
+               rz-slider-high="filter.size.max"
+               rz-slider-options="getSliderOptions('size')"></rzslider>
+
+            <label><strong>Zimmer:</strong></label>
+            <rzslider
+               rz-slider-model="filter.rooms.min"
+               rz-slider-high="filter.rooms.max"
+               rz-slider-options="getSliderOptions('rooms')"></rzslider>
+
+            <label><strong>Frei ab:</strong></label>
+            <rzslider
+               rz-slider-model="filter.free_from.min"
+               rz-slider-high="filter.free_from.max"
+               rz-slider-options="getSliderOptions('free_from')"></rzslider>
+
+            <label><strong>Alter:</strong></label>
+            <rzslider
+               rz-slider-model="filter.age.min"
+               rz-slider-high="filter.age.max"
+               rz-slider-options="getSliderOptions('age')"></rzslider>
+            
+            <hr/>
 
             <label>
               <input type="checkbox" ng-model="filter.hideInactive"> Inaktive ausblenden
@@ -47,7 +80,9 @@
             <label>
               <input type="checkbox" ng-model="filter.showOnlyFavs"> Nur Favoriten anzeigen
             </label>
+
             <hr/>
+
             <label><strong>Seiten:</strong></label>
               <br/>
               <label ng-repeat="(websiteId, website) in availableWebsites">
@@ -57,7 +92,6 @@
         </uib-accordion>
         
         <div class="currentObjectContainer" ng-if="selectedFlat">
-          <hr/>
           <h4>Ausgewählte Wohnung</h4>
           <dl>
             <dt>Frei ab</dt>
