@@ -31,10 +31,11 @@
 
         <div class="filter">
             <h4>Filter</h4>
-            <button class="btn btn-default" ng-class="{active: filter.showAll}" ng-click="filter.showAll = !filter.showAll">
-              <span class="glyphicon glyphicon glyphicon-asterisk" title="" aria-hidden="true"></span>
-              auch inaktive anzeigen
-            </button>
+            <div class="btn-group" role="group" aria-label="Sichtbarkeit">
+              <button class="btn btn-default" ng-class="{active: filter.visibility == visibilityValue}" ng-click="filter.visibility = visibilityValue" ng-repeat="(visibilityValue, visibilityName) in visibilityEnum">
+                {{visibilityName}}
+              </button>
+            </div>
         </div>
         
         <div class="currentObjectContainer" ng-if="selectedFlat">
@@ -42,7 +43,7 @@
           <h4>Ausgewählte Wohnung</h4>
           <dl>
             <dt>Frei ab</dt>
-            <dd>{{selectedFlat.free_from | date:'dd.MM.yyyy'}}</dd>
+            <dd>{{ getFreeFromStr(selectedFlat) }}</dd>
 
             <dt>Miete</dt>
             <dd>{{selectedFlat.price}} €</dd>
@@ -55,7 +56,8 @@
           </dl>
           <a class="btn btn-primary" href="{{selectedFlat.url}}" target="_blank">Auf {{getWebsiteName(selectedFlat.website)}} öffnen</a>
 
-          <a class="btn btn-default" ng-click="toggleActive(selectedFlat)">{{ selectedFlat.active ? "deaktivieren" : "aktivieren" }}</a>
+          <a class="btn btn-default" ng-click="selectedFlat.active = !selectedFlat.active">{{ selectedFlat.active ? "deaktivieren" : "aktivieren" }}</a>
+          <a class="btn btn-default" ng-click="selectedFlat.favorite = !selectedFlat.favorite" ng-class="{disabled: !selectedFlat.active}">{{ selectedFlat.favorite ? "aus Favoriten entfernen" : "zu Favoriten hinzufügen" }}</a>
         </div>
       </aside>
     </div>

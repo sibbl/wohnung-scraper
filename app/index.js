@@ -36,6 +36,9 @@ module.exports = class App {
           res.send(JSON.stringify(error));
         }else{
           var resultArr = result.map(item => {
+            //convert to boolena
+            ["favorite", "gone", "active"].map(name => item[name] = item[name] == 1);
+            //parse JSON string
             item.data = JSON.parse(item.data);
             return item;
           });
@@ -65,6 +68,30 @@ module.exports = class App {
           .prepare('UPDATE "wohnungen" SET active = $active WHERE id = $id')
           .run({
             $active: active,
+            $id: req.params.id
+          }, error => {
+            if(error) {
+              res.send(JSON.stringify({
+                success: false,
+                message: 'database error',
+                details: error
+              }));
+            }else{
+              res.send(JSON.stringify({success:true}));
+            }
+          });
+      }
+    })
+
+    this.app.post('/:id/favorite', (req, res) => {
+      var favorite = req.body.favorite;
+      if(typeof(favorite) !== "boolean") {
+        res.send(JSON.stringify({success: false, message: "missing body"}));
+      }else{
+        db
+          .prepare('UPDATE "wohnungen" SET favorite = $favorite WHERE id = $id')
+          .run({
+            $favorite: favorite,
             $id: req.params.id
           }, error => {
             if(error) {
