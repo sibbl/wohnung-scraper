@@ -6,17 +6,12 @@ angular.module('dataVis')
 
   $scope.data = [];
 
-  var VISIBILITY_ALL = 1,
-      VISIBILITY_ACTIVE = 2,
-      VISIBILITY_FAVORITE = 3;
-
-  $scope.visibilityEnum = {};
-  $scope.visibilityEnum[VISIBILITY_ALL] = "Alle";
-  $scope.visibilityEnum[VISIBILITY_ACTIVE] = "Aktive";
-  $scope.visibilityEnum[VISIBILITY_FAVORITE] = "Favoriten";
+  $scope.availableWebsites = config.scraper;
 
   $scope.filter = {
-    visibility: VISIBILITY_ACTIVE
+    hideInactive: true,
+    hideNonFavs: false,
+    websites: Object.keys($scope.availableWebsites)
   }
 
   $scope.center = config.map.initialView;
@@ -184,9 +179,13 @@ angular.module('dataVis')
 
   var isMarkerVisible = function(markerId) {
     var markerData = $scope.data[markerId];
-    if($scope.filter.visibility == VISIBILITY_ACTIVE && !markerData.active) {
+    if($scope.filter.hideInactive && !markerData.active) {
       return false;
-    }else if($scope.filter.visibility == VISIBILITY_FAVORITE && (!markerData.active || !markerData.favorite)) {
+    }
+    if($scope.filter.hideNonFavs && !markerData.favorite) {
+      return false;
+    }
+    if($scope.filter.websites.indexOf(markerData.website) < 0) {
       return false;
     }
     return true;
@@ -204,9 +203,9 @@ angular.module('dataVis')
     }
   };
 
-  $scope.$watchCollection('filter', function(filter) {
+  $scope.$watch('filter', function(filter) {
     angular.forEach(markers, updateMarkerVisibility)
-  });
+  }, true);
 
   var updateActive = function(value, id) {
     var data = {

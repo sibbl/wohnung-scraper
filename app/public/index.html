@@ -14,6 +14,8 @@
   <script src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
   <script src="bower_components/angular-simple-logger/dist/angular-simple-logger.js"></script>
   <script src="bower_components/ui-leaflet/dist/ui-leaflet.js"></script>
+  <script src="bower_components/checklist-model/checklist-model.js"></script>
+  <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
           
 
   <script src="/config"></script>
@@ -29,14 +31,28 @@
       </div>
       <aside class="col-xs-2 full-height" id="sidebar" style="padding-right: 30px">
 
-        <div class="filter">
-            <h4>Filter</h4>
-            <div class="btn-group" role="group" aria-label="Sichtbarkeit">
-              <button class="btn btn-default" ng-class="{active: filter.visibility == visibilityValue}" ng-click="filter.visibility = visibilityValue" ng-repeat="(visibilityValue, visibilityName) in visibilityEnum">
-                {{visibilityName}}
-              </button>
-            </div>
-        </div>
+        <uib-accordion class="filter" ng-init="showFilters = false">
+          <uib-accordion-group is-open="showFilters">
+            <uib-accordion-heading>
+              Filter <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-up': showFilters, 'glyphicon-chevron-down': !showFilters}"></i>
+            </uib-accordion-heading>
+
+
+
+            <label>
+              <input type="checkbox" ng-model="filter.hideInactive"> Inaktive ausblenden
+            </label>
+            <label>
+              <input type="checkbox" ng-model="filter.hideNonFavs"> Nicht-Favoriten ausblenden
+            </label>
+            <hr/>
+            <label><strong>Seiten:</strong></label>
+              <br/>
+              <label ng-repeat="(websiteId, website) in availableWebsites">
+                <input type="checkbox" checklist-model="filter.websites" checklist-value="websiteId"> {{website.name}}
+              </label>
+          </uib-accordion-group>
+        </uib-accordion>
         
         <div class="currentObjectContainer" ng-if="selectedFlat">
           <hr/>
