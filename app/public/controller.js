@@ -1,16 +1,19 @@
 'use strict';
 angular.module('dataVis')
-.controller('MainController', ['$scope', '$rootScope', '$window', '$http', '$q', '$filter', 'Config', 'leafletData', function($scope, $rootScope, $window, $http, $q, $filter, config, leafletData) {
+.controller('MainController', ['$scope', '$rootScope', '$window', '$http', '$q', '$filter', '$timeout', 'Config', 'leafletData', function($scope, $rootScope, $window, $http, $q, $filter, $timeout, config, leafletData) {
   var map;
   var markers = {};
 
+  $scope.status = { // ui status, e.g. filter accordion
+    showFilters: true //show filters by default
+  };
   $scope.data = [];
 
   $scope.availableWebsites = config.scraper;
 
   $scope.filter = {
     hideInactive: true,
-    hideNonFavs: false,
+    showOnlyFavs: false,
     websites: Object.keys($scope.availableWebsites)
   }
 
@@ -157,7 +160,9 @@ angular.module('dataVis')
           chartOptions: chartOptions
       });
       marker.on('click', function() {
-        $scope.selectedFlat = wohnung;
+        $timeout(function() {
+          $scope.selectedFlat = wohnung;
+        });
       })
 
       $scope.$watch("data[" + index + "].active", function(newActive, oldActive) {
@@ -182,7 +187,7 @@ angular.module('dataVis')
     if($scope.filter.hideInactive && !markerData.active) {
       return false;
     }
-    if($scope.filter.hideNonFavs && !markerData.favorite) {
+    if($scope.filter.showOnlyFavs && !markerData.favorite) {
       return false;
     }
     if($scope.filter.websites.indexOf(markerData.website) < 0) {
@@ -239,4 +244,10 @@ angular.module('dataVis')
       return $filter('date')(flat.free_from, 'dd.MM.yyyy');
     }
   }
+
+  $scope.$watch('selectedFlat', function(newFlat, oldFlat) {
+    if(angular.isDefined(newFlat)) {
+      $scope.status.showFilters = false;
+    }
+  })
 }]);
