@@ -188,6 +188,7 @@ angular.module('dataVis')
         wohnung.price + " €",
         wohnung.rooms + " Zimmer</strong>",
         pricePerSqM.toFixed(2) + "€/m²",
+        'frei ab: ' + $scope.getFreeFromStr(wohnung),
         ''
       ];
 
@@ -266,11 +267,24 @@ angular.module('dataVis')
     if(markerData.age < $scope.filter.age.min || markerData.age > $scope.filter.age.max) {
       return false;
     }
-    var freeFromDate = moment(markerData.free_from);
     var minFreeFrom = free_from[$scope.filter.free_from.min];
     var maxFreeFrom = free_from[$scope.filter.free_from.max];
-    if(freeFromDate.isBefore(minFreeFrom) || freeFromDate.isAfter(maxFreeFrom)) {
-      return false;
+    var freeFromDate = moment(markerData.free_from).startOf("day");
+    var now = moment().startOf("day");
+    if(minFreeFrom == null) {
+      // if "sofort <-> sofort", then return false if from_date is in future 
+      if(maxFreeFrom == null) {
+        if(freeFromDate.isAfter(now)) {
+          return false;
+        }
+      // if "sofort -> date", then return false if from_date is after given date
+      }else if(freeFromDate.isAfter(maxFreeFrom)) {
+        return false;
+      }
+    }else{
+      if(freeFromDate.isBefore(minFreeFrom) || freeFromDate.isAfter(maxFreeFrom)) {
+        return false;
+      }
     }
     return true;
   }
@@ -373,7 +387,7 @@ angular.module('dataVis')
           if(date == null) {
             return "sofort";
           }else{
-            return date.format("DD.MM.");
+            return date.clone().add(1, "day").format("DD.MM.");
           }
         }
       }
