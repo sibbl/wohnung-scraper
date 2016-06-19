@@ -212,7 +212,7 @@ angular.module('dataVis')
       active: value
     }
     updateMarkerVisibility(markers[id], id);
-    $http.post("/" + flat.id + "/active", data).then(response => {
+    $http.post("/" + id + "/active", data).then(response => {
       if(!response.data.success) {
         alert("Failed to change active, please reload the page.");
       }
@@ -224,7 +224,7 @@ angular.module('dataVis')
       favorite: value
     }
     updateMarkerVisibility(markers[id], id);
-    $http.post("/" + flat.id + "/favorite", data).then(response => {
+    $http.post("/" + id+ "/favorite", data).then(response => {
       if(!response.data.success) {
         alert("Failed to change favorite, please reload the page.");
       }
