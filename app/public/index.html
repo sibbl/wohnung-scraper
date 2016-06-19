@@ -68,6 +68,15 @@
                 </div>
               </uib-accordion-heading>
 
+              <label>
+                <input type="checkbox" ng-model="filter.hideInactive"> Inaktive ausblenden
+              </label>
+              <label>
+                <input type="checkbox" ng-model="filter.showOnlyFavs"> Nur Favoriten anzeigen
+              </label>
+
+              <hr/>
+
               <label><strong>Preis:</strong></label>
               <rzslider
                  rz-slider-model="filter.price.min"
@@ -98,15 +107,6 @@
                  rz-slider-high="filter.age.max"
                  rz-slider-options="getSliderOptions('age')"></rzslider>
               
-              <hr/>
-
-              <label>
-                <input type="checkbox" ng-model="filter.hideInactive"> Inaktive ausblenden
-              </label>
-              <label>
-                <input type="checkbox" ng-model="filter.showOnlyFavs"> Nur Favoriten anzeigen
-              </label>
-
               <hr/>
 
               <label><strong>Seiten:</strong></label>
