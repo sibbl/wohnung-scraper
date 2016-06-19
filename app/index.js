@@ -2,7 +2,8 @@ var express = require('express'),
     bodyParser = require('body-parser'),
     q = require('q'),
     moment = require('moment'),
-    config = require('../config.js');
+    config = require('../config.js'),
+    basicAuth = require('basic-auth-connect');
 
 module.exports = class App {
   constructor(db, scraper) {
@@ -10,6 +11,7 @@ module.exports = class App {
     this.app = express();
     this.port = process.env.PORT || 3000;
     
+    this.app.use(basicAuth(config.auth.username, config.auth.password));
     this.app.use(express.static('./app/public'));
     this.app.use(bodyParser.json());
 

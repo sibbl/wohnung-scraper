@@ -6,6 +6,10 @@ module.exports = {
       zoom: 12,
     },
   },
+  auth: {
+    username: "berlin",
+    password: "291010"
+  },
   defaultTransportTime: 20, //20 min
   filters: {
     // usually, the upper bound is set automatically. But we crop them at these values
