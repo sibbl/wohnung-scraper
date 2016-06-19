@@ -33,3 +33,6 @@ body,
   margin-top: 20px !important;
   text-align: left !important;
 }
+.filter label {
+  font-weight: normal;
+}
