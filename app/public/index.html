@@ -31,11 +31,11 @@
       </div>
       <aside class="col-xs-2 full-height" id="sidebar" style="padding-right: 30px">
 
-        <uib-accordion class="filter" ng-init="showFilters = false">
-          <uib-accordion-group is-open="showFilters">
+        <uib-accordion class="filter">
+          <uib-accordion-group is-open="status.showFilters">
             <uib-accordion-heading>
               <div>
-                Filter <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-up': showFilters, 'glyphicon-chevron-down': !showFilters}"></i>
+                Filter <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-up': status.showFilters, 'glyphicon-chevron-down': !status.showFilters}"></i>
               </div>
             </uib-accordion-heading>
 
@@ -45,7 +45,7 @@
               <input type="checkbox" ng-model="filter.hideInactive"> Inaktive ausblenden
             </label>
             <label>
-              <input type="checkbox" ng-model="filter.hideNonFavs"> Nicht-Favoriten ausblenden
+              <input type="checkbox" ng-model="filter.showOnlyFavs"> Nur Favoriten anzeigen
             </label>
             <hr/>
             <label><strong>Seiten:</strong></label>
