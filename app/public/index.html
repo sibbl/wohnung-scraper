@@ -26,90 +26,93 @@
   <script src="controller.js"></script>
 </head>
 <body ng-app="dataVis">
-    <div class="row full-height" ng-controller="MainController">
-      <div class="col-xs-10 full-height" style="padding-right: 0">
+    <div class="full-height col-wrapper" ng-controller="MainController">
+      <div class="full-height col-left">
         <leaflet lf-center="center"
                  layers="layers"
                  class="map"></leaflet>
       </div>
-      <aside class="col-xs-2 full-height" id="sidebar" style="padding-right: 30px">
+      <aside class="full-height col-right" id="sidebar">
+        <div class="col-right-content">
 
-        <uib-accordion class="filter">
-          <uib-accordion-group is-open="status.showFilters">
-            <uib-accordion-heading>
-              <div>
-                Filter <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-up': status.showFilters, 'glyphicon-chevron-down': !status.showFilters}"></i>
-              </div>
-            </uib-accordion-heading>
+          <uib-accordion class="filter">
+            <uib-accordion-group is-open="status.showFilters">
+              <uib-accordion-heading>
+                <div>
+                  Filter <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-up': status.showFilters, 'glyphicon-chevron-down': !status.showFilters}"></i>
+                </div>
+              </uib-accordion-heading>
 
-            <label><strong>Preis:</strong></label>
-            <rzslider
-               rz-slider-model="filter.price.min"
-               rz-slider-high="filter.price.max"
-               rz-slider-options="getSliderOptions('price')"></rzslider>
+              <label><strong>Preis:</strong></label>
+              <rzslider
+                 rz-slider-model="filter.price.min"
+                 rz-slider-high="filter.price.max"
+                 rz-slider-options="getSliderOptions('price')"></rzslider>
 
-            <label><strong>Größe:</strong></label>
-            <rzslider
-               rz-slider-model="filter.size.min"
-               rz-slider-high="filter.size.max"
-               rz-slider-options="getSliderOptions('size')"></rzslider>
+              <label><strong>Größe:</strong></label>
+              <rzslider
+                 rz-slider-model="filter.size.min"
+                 rz-slider-high="filter.size.max"
+                 rz-slider-options="getSliderOptions('size')"></rzslider>
 
-            <label><strong>Zimmer:</strong></label>
-            <rzslider
-               rz-slider-model="filter.rooms.min"
-               rz-slider-high="filter.rooms.max"
-               rz-slider-options="getSliderOptions('rooms')"></rzslider>
+              <label><strong>Zimmer:</strong></label>
+              <rzslider
+                 rz-slider-model="filter.rooms.min"
+                 rz-slider-high="filter.rooms.max"
+                 rz-slider-options="getSliderOptions('rooms')"></rzslider>
 
-            <label><strong>Frei ab:</strong></label>
-            <rzslider
-               rz-slider-model="filter.free_from.min"
-               rz-slider-high="filter.free_from.max"
-               rz-slider-options="getSliderOptions('free_from')"></rzslider>
+              <label><strong>Frei ab:</strong></label>
+              <rzslider
+                 rz-slider-model="filter.free_from.min"
+                 rz-slider-high="filter.free_from.max"
+                 rz-slider-options="getSliderOptions('free_from')"></rzslider>
 
-            <label><strong>Alter:</strong></label>
-            <rzslider
-               rz-slider-model="filter.age.min"
-               rz-slider-high="filter.age.max"
-               rz-slider-options="getSliderOptions('age')"></rzslider>
-            
-            <hr/>
+              <label><strong>Alter:</strong></label>
+              <rzslider
+                 rz-slider-model="filter.age.min"
+                 rz-slider-high="filter.age.max"
+                 rz-slider-options="getSliderOptions('age')"></rzslider>
+              
+              <hr/>
 
-            <label>
-              <input type="checkbox" ng-model="filter.hideInactive"> Inaktive ausblenden
-            </label>
-            <label>
-              <input type="checkbox" ng-model="filter.showOnlyFavs"> Nur Favoriten anzeigen
-            </label>
-
-            <hr/>
-
-            <label><strong>Seiten:</strong></label>
-              <br/>
-              <label ng-repeat="(websiteId, website) in availableWebsites">
-                <input type="checkbox" checklist-model="filter.websites" checklist-value="websiteId"> {{website.name}}
+              <label>
+                <input type="checkbox" ng-model="filter.hideInactive"> Inaktive ausblenden
               </label>
-          </uib-accordion-group>
-        </uib-accordion>
-        
-        <div class="currentObjectContainer" ng-if="selectedFlat">
-          <h4>Ausgewählte Wohnung</h4>
-          <dl>
-            <dt>Frei ab</dt>
-            <dd>{{ getFreeFromStr(selectedFlat) }}</dd>
+              <label>
+                <input type="checkbox" ng-model="filter.showOnlyFavs"> Nur Favoriten anzeigen
+              </label>
 
-            <dt>Miete</dt>
-            <dd>{{selectedFlat.price}} €</dd>
+              <hr/>
 
-            <dt>Größe</dt>
-            <dd>{{selectedFlat.size}} m²</dd>
+              <label><strong>Seiten:</strong></label>
+              <div ng-repeat="(websiteId, website) in availableWebsites">
+                <label>
+                  <input type="checkbox" checklist-model="filter.websites" checklist-value="websiteId"> {{website.name}}
+                </label>
+              </div>
+            </uib-accordion-group>
+          </uib-accordion>
+          
+          <div class="currentObjectContainer" ng-if="selectedFlat">
+            <h4>Ausgewählte Wohnung</h4>
+            <dl>
+              <dt>Frei ab</dt>
+              <dd>{{ getFreeFromStr(selectedFlat) }}</dd>
 
-            <dt>Zimmer</dt>
-            <dd>{{selectedFlat.rooms}}</dd>
-          </dl>
-          <a class="btn btn-primary" href="{{selectedFlat.url}}" target="_blank">Auf {{getWebsiteName(selectedFlat.website)}} öffnen</a>
+              <dt>Miete</dt>
+              <dd>{{selectedFlat.price}} €</dd>
 
-          <a class="btn btn-default" ng-click="selectedFlat.active = !selectedFlat.active">{{ selectedFlat.active ? "deaktivieren" : "aktivieren" }}</a>
-          <a class="btn btn-default" ng-click="selectedFlat.favorite = !selectedFlat.favorite" ng-class="{disabled: !selectedFlat.active}">{{ selectedFlat.favorite ? "aus Favoriten entfernen" : "zu Favoriten hinzufügen" }}</a>
+              <dt>Größe</dt>
+              <dd>{{selectedFlat.size}} m²</dd>
+
+              <dt>Zimmer</dt>
+              <dd>{{selectedFlat.rooms}}</dd>
+            </dl>
+            <a class="btn btn-primary" href="{{selectedFlat.url}}" target="_blank">Auf {{getWebsiteName(selectedFlat.website)}} öffnen</a>
+
+            <a class="btn btn-default" ng-click="selectedFlat.active = !selectedFlat.active">{{ selectedFlat.active ? "deaktivieren" : "aktivieren" }}</a>
+            <a class="btn btn-default" ng-click="selectedFlat.favorite = !selectedFlat.favorite" ng-class="{disabled: !selectedFlat.active}">{{ selectedFlat.favorite ? "aus Favoriten entfernen" : "zu Favoriten hinzufügen" }}</a>
+          </div>
         </div>
       </aside>
     </div>
