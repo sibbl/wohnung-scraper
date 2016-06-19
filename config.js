@@ -7,8 +7,8 @@ module.exports = {
     },
   },
   cronTimes: {
-    scrape: '0,30 * * * *',
-    update: '15,45 * * * *',
+    scrape: '0 * * * *',
+    update: '30 * * * *',
   },
   city: "Berlin",
   database: "wohnungen.db",
