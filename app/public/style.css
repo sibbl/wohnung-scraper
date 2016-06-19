@@ -6,6 +6,19 @@ body,
 .full-height {
   height: 100%;
 }
+.col-left {
+  width: 80%;
+  float: left;
+}
+.col-right {
+  width: 20%;
+  float: left;
+}
+.col-right-content {
+  overflow-y: auto;
+  max-height: 100%;
+  padding: 15px;
+}
 .map {
   height: 100%;
   width: 100%;
