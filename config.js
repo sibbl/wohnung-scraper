@@ -10,7 +10,7 @@ module.exports = {
     username: "berlin",
     password: "291010"
   },
-  defaultTransportTime: 20, //20 min
+  defaultTransportTime: 30, // minutes
   filters: {
     // usually, the upper bound is set automatically. But we crop them at these values
     upperLimits: {
@@ -27,8 +27,8 @@ module.exports = {
         max: 1200
       },
       rooms: {
-        min: 0,
-        max: 2
+        min: 2,
+        max: 3
       },
       size: {
         min: 30,
