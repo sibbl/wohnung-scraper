@@ -88,7 +88,7 @@ angular.module('dataVis')
       mapbox_light: mapboxLayer("Mapbox Light", 'mapbox.light'),
       mapbox_dark: mapboxLayer("Mapbox Dark", 'mapbox.dark'),
       mapbox_emerald: mapboxLayer("Mapbox Emerald", 'mapbox.emerald'),
-      mapbox_noise: mapboxLayer("Noise", "berlinermorgenpost.n7c2hal9"),
+      mapbox_noise: mapboxLayer("Lärmkarte", "berlinermorgenpost.n7c2hal9"),
       osm: {
         name: 'OpenStreetMap',
         url: 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
