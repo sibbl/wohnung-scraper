@@ -68,12 +68,13 @@ angular.module('dataVis')
 
   $scope.center = config.map.initialView;
 
-  var mapboxLayer = function(name, mapId) {
+  var mapboxLayer = function(name, mapId, mode) {
     return {
         name: name,
         url: 'http://api.tiles.mapbox.com/v4/{mapid}/{z}/{x}/{y}.png?access_token={apikey}',
         type: 'xyz',
         layerOptions: {
+          mode: mode,
           apikey: 'pk.eyJ1Ijoic2liYmwiLCJhIjoiQlFVb2YzYyJ9.tUs45Lp6oAz8ZUmwWVTaZg',
           mapid: mapId,
           detectRetina: true,
@@ -86,9 +87,9 @@ angular.module('dataVis')
     baselayers: {
       mapbox_streets: mapboxLayer("Mapbox Streets", "mapbox.streets"),
       mapbox_light: mapboxLayer("Mapbox Light", 'mapbox.light'),
-      mapbox_dark: mapboxLayer("Mapbox Dark", 'mapbox.dark'),
+      mapbox_dark: mapboxLayer("Mapbox Dark", 'mapbox.dark', "dark"),
       mapbox_emerald: mapboxLayer("Mapbox Emerald", 'mapbox.emerald'),
-      mapbox_noise: mapboxLayer("Lärmkarte", "berlinermorgenpost.n7c2hal9"),
+      mapbox_noise: mapboxLayer("Lärmkarte", "berlinermorgenpost.n7c2hal9", "dark"),
       osm: {
         name: 'OpenStreetMap',
         url: 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',

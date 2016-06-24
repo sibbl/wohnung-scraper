@@ -273,6 +273,11 @@ Mapnificent.prototype.init = function(){
   return this.loadData().done(function(data){
     self.prepareData(data);
     self.canvasTileLayer = L.tileLayer.canvas();
+    self.map.on('baselayerchange', function(baseLayer){ 
+      self.mode = baseLayer.layer.options.mode;
+      self.canvasTileLayer.bringToFront(); 
+      self.canvasTileLayer.redraw();
+    });
     self.canvasTileLayer.on('loading', function(){
     //   console.log('loading');
       self.tilesLoading = true;
@@ -441,7 +446,13 @@ Mapnificent.prototype.drawTile = function() {
     var stationsAround = self.quadtree.searchInRadius(latlng.lat, latlng.lng, searchRadius);
 
     ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = 'rgba(50,50,50,0.4)';
+    var color;
+    if(self.mode == "dark") {
+      color = [255,255,255,0.4];
+    }else{
+      color = [50,50,50,0.4];
+    }
+    ctx.fillStyle = 'rgba(' + color.join(',') + ')';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.globalCompositeOperation = 'destination-out';
