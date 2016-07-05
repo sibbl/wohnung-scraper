@@ -15,16 +15,28 @@ module.exports = class App {
     this.app.use(express.static('./app/public'));
     this.app.use(bodyParser.json());
 
+    var scrapeOrUpdate = function(scraperFuncName) {
+      let promise = null;
+      scraper.forEach(s => {
+        if(promise == null) {
+          promise = s[scraperFuncName]();
+        }else{
+          promise = promise.then(function() {
+            return q.when(s[scraperFuncName]());
+          });
+        }
+      });
+      return q.when(promise);
+    }
+
     this.app.get('/scrape', (req, res) => {
-      const promises = scraper.map(s => s.scrape());
-      q.all(promises).then(() => {
+      scrapeOrUpdate('scrape').then(() => {
         res.send(JSON.stringify({status: "ok"}));
       });
     });
 
     this.app.get('/update', (req, res) => {
-      const promises = scraper.map(s => s.updateItems());
-      q.all(promises).then(() => {
+      scrapeOrUpdate('update').then(() => {
         res.send(JSON.stringify({status: "ok"}));
       });
     });
