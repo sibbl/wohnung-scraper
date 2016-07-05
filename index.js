@@ -2,7 +2,8 @@ var config = require('./config'),
     app = require('./app'),
     sqlite = require('sqlite3').verbose(),
     db = new sqlite.Database(config.database),
-    CronJob = require('cron').CronJob;
+    CronJob = require('cron').CronJob,
+    q = require('q');
 
 const scraper = [
   'WgGesuchtScraper',
@@ -22,9 +23,11 @@ const startScraperCronjob = function(cronTime, scraperFuncName) {
         if(promise == null) {
           promise = s[scraperFuncName]();
         }else{
-          promise.then(s[scraperFuncName]);
+          promise = promise.then(function() {
+            return q.when(s[scraperFuncName]());
+          });
         }
-      })
+      });
       // scraper.forEach(s => s[scraperFuncName]());
     },
     start: true,
