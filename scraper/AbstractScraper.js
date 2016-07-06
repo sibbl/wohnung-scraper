@@ -163,14 +163,10 @@ module.exports = class AbstractScraper {
     return defer.promise;
   }
   _updateItemsSync(rows) {
-    const defer = q.defer();
-
-    const promises = [];
     let promise = null;
     rows.forEach(row => {
       var step = () => {
         var def = q.defer();
-        promises.push(def.promise);
         this.scrapeItemDetails(row.url).then(data => {
           row = Object.assign(row, data);
           this.updateInDb(row).then(() => def.resolve(true));
@@ -179,16 +175,17 @@ module.exports = class AbstractScraper {
       if(promise == null) {
         promise = step();
       }else{
-        promise.then(step);
+        promise = promise.then(function() {
+          return q.when(step());
+        });
       }
     });
-    promise.then(defer.resolve);
-    return defer.promise;
+    return q.when(promise);
   }
   updateItems() {
     const defer = q.defer();
     this.getActiveItems().then(rows => {
-      this._updateItemsAsync(rows).then(() => defer.resolve(true));
+      this._updateItemsSync(rows).then(() => defer.resolve(true));
     });
     return defer.promise;
   }
