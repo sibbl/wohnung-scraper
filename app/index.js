@@ -36,7 +36,7 @@ module.exports = class App {
     });
 
     this.app.get('/update', (req, res) => {
-      scrapeOrUpdate('update').then(() => {
+      scrapeOrUpdate('updateItems').then(() => {
         res.send(JSON.stringify({status: "ok"}));
       });
     });
