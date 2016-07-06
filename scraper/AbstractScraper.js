@@ -155,7 +155,6 @@ module.exports = class AbstractScraper {
       promises.push(innerPromise.promise);
       this.scrapeItemDetails(row.url).then(data => {
         row = Object.assign(row, data);
-        console.log("update?", row.id, row.gone);
         this.updateInDb(row).then(() => innerPromise.resolve(true));
       });
     });
@@ -171,6 +170,7 @@ module.exports = class AbstractScraper {
           row = Object.assign(row, data);
           this.updateInDb(row).then(() => def.resolve(true));
         });
+        return def.promise;
       }
       if(promise == null) {
         promise = step();
