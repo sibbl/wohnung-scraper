@@ -11,6 +11,7 @@ module.exports = {
     password: "291010"
   },
   defaultTransportTime: 30, // minutes
+  defaultShowTransportRangeAutomatically: false,
   filters: {
     // usually, the upper bound is set automatically. But we crop them at these values
     upperLimits: {

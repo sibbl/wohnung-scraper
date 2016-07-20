@@ -22,7 +22,7 @@ angular.module('dataVis')
         return value + " Min";
       }
     },
-    automatically: true
+    automatically: config.defaultShowTransportRangeAutomatically
   }
 
   $scope.availableWebsites = config.scraper;
@@ -68,19 +68,30 @@ angular.module('dataVis')
 
   $scope.center = config.map.initialView;
 
-  var mapboxLayer = function(name, mapId, mode) {
+  var genericMapboxLayer = function(name, url, mapId, mode, version) {
     return {
         name: name,
-        url: 'http://api.tiles.mapbox.com/v4/{mapid}/{z}/{x}/{y}.png?access_token={apikey}',
+        url: url,
         type: 'xyz',
         layerOptions: {
           mode: mode,
+          version: version,
           apikey: 'pk.eyJ1Ijoic2liYmwiLCJhIjoiQlFVb2YzYyJ9.tUs45Lp6oAz8ZUmwWVTaZg',
           mapid: mapId,
           detectRetina: true,
           attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
         },
       };
+  }
+
+  var mapboxLayer = function(name, mapId, mode, version) {
+    var url = 'https://api.mapbox.com/{version}/{mapid}/{z}/{x}/{y}.png?access_token={apikey}';
+    return genericMapboxLayer(name, url, mapId, mode, version || "v4");
+  }
+
+  var mapboxStyleLayer = function(name, username, styleId, mode) {
+    var url = 'https://api.mapbox.com/styles/{version}/{mapid}/tiles/{z}/{x}/{y}?access_token={apikey}';
+    return genericMapboxLayer(name, url, username + "/" + styleId, mode, "v1");
   }
 
   $scope.layers = {
@@ -90,6 +101,7 @@ angular.module('dataVis')
       mapbox_dark: mapboxLayer("Mapbox Dark", 'mapbox.dark', "dark"),
       mapbox_emerald: mapboxLayer("Mapbox Emerald", 'mapbox.emerald'),
       mapbox_noise: mapboxLayer("Lärmkarte", "berlinermorgenpost.n7c2hal9", "dark"),
+      mapbox_churches: mapboxStyleLayer("Kirchen", "sibbl", "ciqamzoia000mdxkvqbm8jud5"),
       osm: {
         name: 'OpenStreetMap',
         url: 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
