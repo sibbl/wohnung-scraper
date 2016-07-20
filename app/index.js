@@ -59,6 +59,8 @@ module.exports = class App {
             //set age
             item.age = now.diff(moment(item.added), 'days')
             return item;
+          }).filter(item => {
+            return item.latitude != null && item.longitude != null;
           });
           var resultObj = {};
           resultArr.forEach(item => {
