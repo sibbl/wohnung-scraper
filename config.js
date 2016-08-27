@@ -6,6 +6,16 @@ module.exports = {
       zoom: 12,
     },
   },
+  dataFilter: {
+    lat: 52.474600,
+    lng: 13.301398,
+    radius: 5000
+  },
+  dataFilterRange: {
+    min: 500,
+    max: 10000,
+    step: 500
+  },
   auth: {
     username: "berlin",
     password: "291010"
