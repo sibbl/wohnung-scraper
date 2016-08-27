@@ -3,7 +3,8 @@ var express = require('express'),
     q = require('q'),
     moment = require('moment'),
     config = require('../config.js'),
-    basicAuth = require('basic-auth-connect');
+    basicAuth = require('basic-auth-connect'),
+    geolib = require('geolib');
 
 module.exports = class App {
   constructor(db, scraper) {
@@ -46,11 +47,18 @@ module.exports = class App {
     })
 
     this.app.get('/data', (req, res) => {
-      db.all('SELECT * FROM "wohnungen" ORDER BY added DESC', (error, result) => {
+      var query;
+      if(req.query.all == undefined) {
+        query = 'SELECT * FROM "wohnungen" WHERE gone = 0 AND latitude IS NOT NULL AND longitude IS NOT NULL ORDER BY added DESC';
+      }else{
+        query = 'SELECT * FROM "wohnungen" ORDER BY added DESC';
+      }
+      db.all(query, (error, result) => {
         if(error) {
           res.send(JSON.stringify(error));
         }else{
           var now = moment();
+
           var resultArr = result.map(item => {
             //convert to boolena
             ["favorite", "gone", "active"].map(name => item[name] = item[name] == 1);
@@ -59,9 +67,17 @@ module.exports = class App {
             //set age
             item.age = now.diff(moment(item.added), 'days')
             return item;
-          }).filter(item => {
-            return item.latitude != null && item.longitude != null;
           });
+          // filter by center coordinate & radius
+          if(req.query.lat != undefined && req.query.lng != undefined && req.query.radius != undefined) {
+            var filterCenter = {
+              latitude: req.query.lat,
+              longitude: req.query.lng
+            }
+            resultArr = resultArr.filter(item => {
+              return geolib.getDistance(item, filterCenter) <= req.query.radius;
+            });
+          }
           var resultObj = {};
           resultArr.forEach(item => {
             resultObj[item.id] = item;
