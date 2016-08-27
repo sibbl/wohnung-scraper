@@ -2,12 +2,19 @@
 angular.module('dataVis')
 .controller('MainController', ['$scope', '$rootScope', '$window', '$http', '$q', '$filter', '$timeout', 'Config', 'leafletData', function($scope, $rootScope, $window, $http, $q, $filter, $timeout, config, leafletData) {
   var map;
+  var filterCircle;
   var markers = {};
 
   $scope.status = { // ui status, e.g. filter accordion
     showFilters: true, //show filters by default
     showTransport: false, //hide transport by default
+    showDataFilter: true, //show data filter by default
   };
+  $scope.$watchGroup(Object.keys($scope.status).map(function(key) {
+    return "status." + key;
+  }), function() {
+    $scope.$broadcast('rzSliderForceRender');
+  });
   $scope.data = [];
 
   // transport layer
@@ -67,6 +74,30 @@ angular.module('dataVis')
   }
 
   $scope.center = config.map.initialView;
+
+  $scope.dataFilter = config.dataFilter || false;
+  $scope.dataFilterModel = {
+    setPosition: false,
+    enabled: $scope.dataFilter !== false,
+  }
+  $scope.dataFilterSliderOptions = {
+    floor: config.dataFilterRange.min,
+    ceil: config.dataFilterRange.max,
+    step: config.dataFilterRange.step,
+    onEnd: function() {
+      updateData();
+    }
+  };
+
+  $scope.$on('leafletDirectiveMap.click', function(event, args) {
+    if($scope.dataFilterModel.setPosition) {
+      var coord = args.leafletEvent.latlng;
+      $scope.dataFilter.lat = coord.lat;
+      $scope.dataFilter.lng = coord.lng;
+      $scope.dataFilterModel.setPosition = false;
+      updateData();
+    }
+  })
 
   var genericMapboxLayer = function(name, url, mapId, mode, version) {
     return {
@@ -134,13 +165,42 @@ angular.module('dataVis')
     overlays: {}
   };
 
-  $q.all({
-    data:  $http.get('/data'),
-    map: leafletData.getMap()
-  }).then(function(results) {
-    map = results.map;
-    $scope.data = results.data.data;
+  var updateCircle = function() {
+    if(map == undefined) {
+      return;
+    }
+    if(filterCircle) {
+      map.removeLayer(filterCircle);
+      filterCircle = undefined;
+    }
+    if($scope.dataFilterModel.enabled === true) {
+      filterCircle = L.circle($scope.dataFilter, $scope.dataFilter.radius, {
+        color: '#f00',
+        weight: 1.5,
+        opacity: .2,
+        fill: false
+      });
+      map.addLayer(filterCircle);
+    }
+  }
+
+  var updateData = function() {
+    updateCircle();
+    var options = {};
+    if($scope.dataFilterModel.enabled) {
+      options.params = $scope.dataFilter;
+    }
+    $http.get('/data', options).then(function(data) {
+      $scope.data = data.data;
+    });
+  }
+
+  $scope.$watchGroup(['dataFilter.lat', 'dataFilter.lng', 'dataFilter.radius', 'dataFilterModel.enabled'], updateData);
+
+  leafletData.getMap().then(function(mapResult) {
+    map = mapResult;
     initMapnificent(map);
+    updateData();
   });
 
   $scope.getWebsiteName = function(website) {
@@ -249,24 +309,43 @@ angular.module('dataVis')
       });
 
       $scope.$watch("data[" + index + "].active", function(newActive, oldActive) {
+        if(angular.isUndefined(newActive)) {
+          return;
+        }
         if(angular.isDefined(oldActive) && oldActive != newActive) {
           updateActive(newActive, wohnung.id);
         }
       })
       $scope.$watch("data[" + index + "].favorite", function(newFav, oldFav) {
+        if(angular.isUndefined(newFav)) {
+          return;
+        }
         if(angular.isDefined(oldFav) && oldFav != newFav) {
           updateFavorite(newFav, wohnung.id);
         }
       })
+      if(markers[wohnung.id]) {
+        map.removeLayer(markers[wohnung.id]);
+      }
       if(isMarkerVisible(wohnung.id)) {
         map.addLayer(marker);
       }
       markers[wohnung.id] = marker;
     });
+    for(var id in markers) {
+      if(!(id in $scope.data)) {
+        var marker = markers[id];
+        map.removeLayer(marker);
+        delete markers[id];
+      }
+    }
   });
 
   var isMarkerVisible = function(markerId) {
     var markerData = $scope.data[markerId];
+    if(angular.isUndefined(markerData)) {
+      return false;
+    }
     if($scope.filter.hideInactive && !markerData.active) {
       return false;
     }

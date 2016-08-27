@@ -116,6 +116,32 @@
                 </label>
               </div>
             </uib-accordion-group>
+
+            <uib-accordion-group is-open="status.showDataFilter">
+              <uib-accordion-heading>
+                <div>
+                  Datenfilter <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-up': status.showDataFilter, 'glyphicon-chevron-down': !status.showDataFilter}"></i>
+                </div>
+              </uib-accordion-heading>
+
+              <label>
+                <input type="checkbox" ng-model="dataFilterModel.enabled" /> Daten filtern
+              </label>
+
+              <div ng-show="dataFilterModel.enabled">
+                <button class="btn btn-default" ng-click="dataFilterModel.setPosition = true" ng-disabled="dataFilterModel.setPosition">Position neu setzen</button><br/>
+                <div ng-show="dataFilterModel.setPosition">In die Karte klicken, um die Position zu setzen</div><br/>
+
+                <label><strong>Radius:</strong></label>
+                <rzslider
+                   rz-slider-model="dataFilter.radius"
+                   rz-slider-options="dataFilterSliderOptions"></rzslider>
+              </div>
+              <br/>
+
+              <a class="btn btn-default" ng-click="resetTransportOverlay()" ng-show="transport.visible">Overlay zurücksetzen</a><br/>
+
+            </uib-accordion-group>
           </uib-accordion>
           
           <div class="currentObjectContainer" ng-if="selectedFlat">
