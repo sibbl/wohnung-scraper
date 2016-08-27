@@ -117,7 +117,7 @@ module.exports = class AbstractScraper {
   }
   getLocationOfAddress(address) {
     const defer = q.defer();
-    geocoder.geocode(address, function ( err, data ) {
+    geocoder.geocode(address.split("()").join(""), function ( err, data ) {
       if(err || !Array.isArray(data.results) || data.results.length == 0) {
         console.error("Failed to geocode address: " + address);
         defer.reject();
