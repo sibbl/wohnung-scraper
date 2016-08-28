@@ -1,7 +1,12 @@
 'use strict';
 angular.module('dataVis')
-.controller('MainController', ['$scope', '$rootScope', '$window', '$http', '$q', '$filter', '$timeout', 'Config', 'leafletData', function($scope, $rootScope, $window, $http, $q, $filter, $timeout, config, leafletData) {
-  var map, filterCircle, filterCircleCenter, markers = {};
+.controller('MainController', ['$scope', '$rootScope', '$window', '$http', '$q', '$filter', '$timeout', '$location', 'Config', 'leafletData', function($scope, $rootScope, $window, $http, $q, $filter, $timeout, $location, config, leafletData) {
+  var map, filterCircle, filterCircleCenter, markers = {}, initialLoad = true;
+
+  var styles = {
+    favoriteStyle: {color:"#f00"},
+    unfavoriteStyle: {color:"transparent"},
+  }
 
   $scope.status = { // ui status, e.g. filter accordion
     showFilters: true, //show filters by default
@@ -218,6 +223,10 @@ angular.module('dataVis')
       $scope.dataLoading--;
       if(index == updateIndex) {
         $scope.data = data.data;
+        if(initialLoad) {
+          initialLoad = false;
+          updateSelectedFlatById();
+        }
       }
     });
   }
@@ -321,7 +330,7 @@ angular.module('dataVis')
           numberOfSides: (wohnung.rooms + 1),
           rotation: -90,
           data: data,
-          chartOptions: chartOptions
+          chartOptions: chartOptions,
       });
       marker.on('click', function() {
         $timeout(function() {
@@ -357,10 +366,11 @@ angular.module('dataVis')
       if(markers[wohnung.id] && map.hasLayer(markers[wohnung.id])) {
         map.removeLayer(markers[wohnung.id]);
       }
+      markers[wohnung.id] = marker;
       if(isMarkerVisible(wohnung.id)) {
         map.addLayer(marker);
+        checkMarkerSelection(wohnung.id);
       }
-      markers[wohnung.id] = marker;
     });
     for(var id in markers) {
       if(!(id in $scope.data)) {
@@ -428,6 +438,7 @@ angular.module('dataVis')
     if(isMarkerVisible(markerId)) {
       if(!map.hasLayer(marker)) {
         map.addLayer(marker);
+        checkMarkerSelection(wohnung.id);
       }
     }else{
       if(map.hasLayer(marker)) {
@@ -477,9 +488,21 @@ angular.module('dataVis')
 
   $scope.$watch('selectedFlat', function(newFlat, oldFlat) {
     if(angular.isDefined(newFlat)) {
+      markers[newFlat.id].setStyle({color:"red"});
       $scope.status.showFilters = false;
+      $location.path(newFlat.id);
+    }
+    if(angular.isDefined(oldFlat)) {
+      markers[oldFlat.id].setStyle({color:"transparent"});
     }
   })
+
+
+  var checkMarkerSelection = function(id) {
+    if(angular.isDefined($scope.selectedFlat) && id == $scope.selectedFlat.id) {
+      markers[id].setStyle({color:"red"});
+    }
+  }
 
   var sliderOptions = {
     price: {
@@ -592,4 +615,27 @@ angular.module('dataVis')
       mapnificent.reset();
     }
   }
+
+  var updateSelectedFlatById = function() {
+    if(initialLoad) {
+      return;
+    }
+    var selectedFlatId = $location.path();
+    if(selectedFlatId[0] == '/') {
+      selectedFlatId = selectedFlatId.substr(1);
+    }
+    if(selectedFlatId.length > 0) {
+      if(selectedFlatId in $scope.data) {
+        if(angular.isUndefined($scope.selectedFlat) || $scope.selectedFlat.id != selectedFlatId) {
+          $scope.selectedFlat = $scope.data[selectedFlatId];
+        }
+      }else{
+        if(confirm("Die Wohnung liegt nicht im aktuellen Filter oder ist bereits deaktiviert.\n\nSoll die Anbieter-Webseite geöffnet werden?") === true) {
+          $window.open("/forward/" + selectedFlatId);
+        }
+      }
+    }
+  }
+  
+  $scope.$on('$locationChangeSuccess', updateSelectedFlatById); // set active layers on URL change
 }]);

@@ -44,6 +44,29 @@ module.exports = class App {
 
     this.app.get('/config', (req, res) => {
       res.send('window.appConfig = ' + JSON.stringify(config) + ";");
+    });
+
+    this.app.get('/forward/:id', (req, res) => {
+      db
+        .prepare('SELECT url FROM "wohnungen" WHERE id = $id')
+        .get({
+          $id: req.params.id
+        }, (error, row) => {
+          if(error) {
+            res.send(JSON.stringify({
+              success: false,
+              message: 'database error',
+              details: error
+            }), 500);
+          }else{
+            if(row == undefined) {
+              res.send("invalid ID", 404);
+            }else{
+              res.writeHead(301, { "Location": row.url });
+              res.end();
+            }
+          }
+        });
     })
 
     this.app.get('/data', (req, res) => {
