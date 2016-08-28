@@ -71,8 +71,8 @@ module.exports = {
   city: "Berlin",
   database: "wohnungen.db",
   geocoder: {
-    // provider: "mapquest",
-    provider: "google",
+    provider: "mapquest",
+    // provider: "google",
     options: {
       google: {
         apiKey: "AIzaSyAmc3ExA9-AzPK9tvh9R8MeiGyVgosEqLU"
