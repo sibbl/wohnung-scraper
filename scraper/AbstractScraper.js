@@ -1,7 +1,8 @@
 var config = require('../config'),
     q = require('q'),
-    geocoder = require('geocoder'),
-    moment = require('moment');
+    NodeGeocoder = require('node-geocoder'),
+    moment = require('moment'),
+    TelegramBot = require('node-telegram-bot-api');
 
 module.exports = class AbstractScraper {
   constructor(db, scraperId) {
@@ -121,18 +122,18 @@ module.exports = class AbstractScraper {
     if(strippedAddress.length == 0) {
       defer.reject();
     }else{
-      geocoder.geocode(strippedAddress, function ( err, data ) {
-        if(err || !Array.isArray(data.results) || data.results.length == 0) {
+      var geocoder = NodeGeocoder(config.geocoder);
+      geocoder.geocode(strippedAddress, function ( err, res ) {
+        if(err || !Array.isArray(res) || res.length < 1) {
           console.error("Failed to geocode address: '" + strippedAddress + "' (original: '" + address + "')");
           defer.reject();
         }else{
-          const location = data.results[0].geometry.location;
           defer.resolve({
-            latitude: location.lat,
-            longitude: location.lng
+            latitude: res[0].latitude,
+            longitude: res[0].longitude
           });
         }      
-      }, {key: config.geocoder.apiKey});
+      });
     }
     return defer.promise;
   }
@@ -194,14 +195,44 @@ module.exports = class AbstractScraper {
     });
     return defer.promise;
   }
+
+  sendBotNotifications(bots, result) {
+    // use only added flats
+    var flatsOfInterest = result.filter(res => res.type == "added");
+    // if(flatsOfInterest)
+    console.log("Sending " + flatsOfInterest.length + " message(s) from " + this.id);
+    flatsOfInterest.forEach(flat => {
+      // console.log(flat);
+      bots.forEach(bot => {
+        switch(bot.id) {
+          case "telegram": 
+            var telegramBot = new TelegramBot(bot.key);
+            bot.chats.forEach(chatId => {
+              telegramBot.sendMessage(chatId, flat.data.url);
+            });
+            break;
+        }
+      })
+    });
+    return q.when(true);
+  }
   
   scrape() {
     const defer = q.defer();
     console.log("Start scraping " + this.id);
     this.scrapeSiteCounter = 1;
-    this.scrapeSite(this.config.url).then(() => {
+    this.scrapeSite(this.config.url).then(result => {
       console.log("Finish scraping " + this.id);
-      defer.resolve();
+      var enabledBots = config.bots.filter(bot => bot.enabled === true);
+      if(enabledBots.length > 0) {
+        console.log("Start sending to bots " + enabledBots.map(config => config.id).join(", ") + " (" + this.id + ")");
+        this.sendBotNotifications(enabledBots, result).then(() => {
+          console.log("Finish sending to bots " + this.id);
+          defer.resolve();
+        })
+      }else{
+        defer.resolve();
+      }
     });
     return defer.promise;
   }
