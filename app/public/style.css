@@ -6,13 +6,27 @@ body,
 .full-height {
   height: 100%;
 }
+.col-wrapper {
+  display: flex;
+}
+@media(max-width: 600px) {
+  .col-left, .col-right {
+    height: auto;
+  }
+  .col-wrapper {
+    flex-direction: column;
+  }
+  .col-right {
+    width: 100% !important;
+    height: 42vh;
+    overflow-y: auto;
+  }
+}
 .col-left {
-  width: 80%;
-  float: left;
+  flex: 1;
 }
 .col-right {
-  width: 20%;
-  float: left;
+  width: 320px;
 }
 .col-right-content {
   overflow-y: auto;
@@ -29,14 +43,8 @@ body,
 .legend-box {
   display: none !important;  
 }
-.legend-values {
-
-}
 .legend-values .key {
   display: none !important;
-}
-.legend-values .value {
-
 }
 .leaflet-marker-icon {
   width: 100px !important;
