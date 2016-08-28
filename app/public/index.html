@@ -179,6 +179,8 @@
             <a class="btn btn-default" ng-click="selectedFlat.active = !selectedFlat.active">{{ selectedFlat.active ? "deaktivieren" : "aktivieren" }}</a><br/>
             <a class="btn btn-default" ng-click="selectedFlat.favorite = !selectedFlat.favorite" ng-class="{disabled: !selectedFlat.active}">{{ selectedFlat.favorite ? "aus Favoriten entfernen" : "zu Favoriten hinzufügen" }}</a><br/>
             <a class="btn btn-default" ng-click="showTransportOverlay(selectedFlat)" ng-hide="transport.visible == selectedFlat.id">ÖPNV-Overlay zeichnen</a><br/>
+            <br/>
+            <small>Hinzugefügt: {{toDate(selectedFlat.added) | date:"dd.MM.yyyy HH:mm" }}</small>
           </div>
         </div>
       </aside>
