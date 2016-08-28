@@ -14,7 +14,8 @@ module.exports = {
   dataFilterRange: {
     min: 500,
     max: 10000,
-    step: 100
+    step: 100,
+    ticks: 1000,
   },
   auth: {
     username: "berlin",

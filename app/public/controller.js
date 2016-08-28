@@ -82,6 +82,10 @@ angular.module('dataVis')
     floor: config.dataFilterRange.min,
     ceil: config.dataFilterRange.max,
     step: config.dataFilterRange.step,
+    showTicks: config.dataFilterRange.ticks,
+    translate: function(value) {
+      return (value / 1000).toLocaleString() + " km";
+    },
     onEnd: function() {
       updateData();
     }
