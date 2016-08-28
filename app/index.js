@@ -176,10 +176,12 @@ module.exports = class App {
           var nonEmptyResults = [];
           for(var i = 0; i < result.length; i++) {
             var data = JSON.parse(result[i].data);
-            var adr = data.adresse.replace(/ *\([^)]*\) */g, "");
-            if(adr.length > 0) {
-              nonEmptyResults.push(result[i]);
-              addresses.push(adr);
+            if(data != null && data.adresse != null) {
+              var adr = data.adresse.replace(/ *\([^)]*\) */g, "");
+              if(adr.length > 0) {
+                nonEmptyResults.push(result[i]);
+                addresses.push(adr);
+              }
             }
           }
           if(nonEmptyResults.length == 0) {
