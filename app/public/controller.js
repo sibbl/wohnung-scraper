@@ -1,9 +1,7 @@
 'use strict';
 angular.module('dataVis')
 .controller('MainController', ['$scope', '$rootScope', '$window', '$http', '$q', '$filter', '$timeout', 'Config', 'leafletData', function($scope, $rootScope, $window, $http, $q, $filter, $timeout, config, leafletData) {
-  var map;
-  var filterCircle;
-  var markers = {};
+  var map, filterCircle, filterCircleCenter, markers = {};
 
   $scope.status = { // ui status, e.g. filter accordion
     showFilters: true, //show filters by default
@@ -97,6 +95,11 @@ angular.module('dataVis')
       $scope.dataFilterModel.setPosition = false;
       updateData();
     }
+  });
+
+  $scope.$watch('dataFilterModel.setPosition', () => {
+    updateCircle();
+    updateMarkersVisibility();
   })
 
   var genericMapboxLayer = function(name, url, mapId, mode, version) {
@@ -169,7 +172,7 @@ angular.module('dataVis')
     if(map == undefined) {
       return;
     }
-    if(filterCircle) {
+    if(filterCircle && map.hasLayer(filterCircle)) {
       map.removeLayer(filterCircle);
       filterCircle = undefined;
     }
@@ -182,20 +185,43 @@ angular.module('dataVis')
       });
       map.addLayer(filterCircle);
     }
+    if(filterCircleCenter && map.hasLayer(filterCircleCenter)) {
+      map.removeLayer(filterCircleCenter);
+      filterCircleCenter = undefined;
+    }
+    if($scope.dataFilterModel.setPosition) {
+      filterCircleCenter = L.circleMarker($scope.dataFilter, {
+        stroke: false,
+        fillColor: '#f00',
+        fillOpacity: 0.9,
+      });
+      filterCircleCenter.setRadius(5);
+      map.addLayer(filterCircleCenter);
+    }
   }
 
+  var updateIndex = 0;
+  $scope.dataLoading = 0;
   var updateData = function() {
     updateCircle();
     var options = {};
     if($scope.dataFilterModel.enabled) {
       options.params = $scope.dataFilter;
     }
+    var index = ++updateIndex;
+    $scope.dataLoading++;
     $http.get('/data', options).then(function(data) {
-      $scope.data = data.data;
+      $scope.dataLoading--;
+      if(index == updateIndex) {
+        $scope.data = data.data;
+      }
     });
   }
 
-  $scope.$watchGroup(['dataFilter.lat', 'dataFilter.lng', 'dataFilter.radius', 'dataFilterModel.enabled'], updateData);
+  $scope.refresh = updateData;
+
+  $scope.$watchGroup(['dataFilter.lat', 'dataFilter.lng', 'dataFilterModel.enabled'], updateData);
+  $scope.$watch('dataFilter.radius', updateCircle);
 
   leafletData.getMap().then(function(mapResult) {
     map = mapResult;
@@ -324,7 +350,7 @@ angular.module('dataVis')
           updateFavorite(newFav, wohnung.id);
         }
       })
-      if(markers[wohnung.id]) {
+      if(markers[wohnung.id] && map.hasLayer(markers[wohnung.id])) {
         map.removeLayer(markers[wohnung.id]);
       }
       if(isMarkerVisible(wohnung.id)) {
@@ -335,13 +361,18 @@ angular.module('dataVis')
     for(var id in markers) {
       if(!(id in $scope.data)) {
         var marker = markers[id];
-        map.removeLayer(marker);
+        if(map.hasLayer(marker)) {
+          map.removeLayer(marker);
+        }
         delete markers[id];
       }
     }
   });
 
   var isMarkerVisible = function(markerId) {
+    if($scope.dataFilterModel.setPosition === true) {
+      return false;
+    }
     var markerData = $scope.data[markerId];
     if(angular.isUndefined(markerData)) {
       return false;
@@ -401,9 +432,11 @@ angular.module('dataVis')
     }
   };
 
-  $scope.$watch('filter', function(filter) {
-    angular.forEach(markers, updateMarkerVisibility)
-  }, true);
+  var updateMarkersVisibility = function() {
+    angular.forEach(markers, updateMarkerVisibility);
+  }
+
+  $scope.$watch('filter', updateMarkersVisibility, true);
 
   var updateActive = function(value, id) {
     var data = {

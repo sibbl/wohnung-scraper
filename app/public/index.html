@@ -124,18 +124,30 @@
                 </div>
               </uib-accordion-heading>
 
-              <label>
+              <div class="progress progress-striped active" ng-show="dataLoading">
+                <div class="progress-bar"  role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+                </div>
+              </div>
+
+              <button class="btn btn-default" ng-click="refresh()" ng-disabled="dataLoading">Daten neu vom Server laden</button>
+
+              <hr/>
+
+              <div><label>
                 <input type="checkbox" ng-model="dataFilterModel.enabled" /> Daten filtern
-              </label>
+              </label></div>
 
               <div ng-show="dataFilterModel.enabled">
-                <button class="btn btn-default" ng-click="dataFilterModel.setPosition = true" ng-disabled="dataFilterModel.setPosition">Position neu setzen</button><br/>
-                <div ng-show="dataFilterModel.setPosition">In die Karte klicken, um die Position zu setzen</div><br/>
-
-                <label><strong>Radius:</strong></label>
-                <rzslider
-                   rz-slider-model="dataFilter.radius"
-                   rz-slider-options="dataFilterSliderOptions"></rzslider>
+                <div><button class="btn btn-default" ng-click="dataFilterModel.setPosition = true" ng-disabled="dataFilterModel.setPosition">Mittelpunkt neu setzen</button></div>
+                <div ng-show="dataFilterModel.setPosition">In die Karte klicken, um den Mittelpunkt zu setzen</div>
+                <div><small>Aktueller Mittelpunkt: <br/>{{dataFilter.lat}},<br/>{{dataFilter.lng}}</small></div>
+                <br/>
+                <div>
+                  <label><strong>Radius:</strong></label>
+                  <rzslider
+                     rz-slider-model="dataFilter.radius"
+                     rz-slider-options="dataFilterSliderOptions"></rzslider>
+                 </div>
               </div>
               <br/>
 

@@ -118,18 +118,22 @@ module.exports = class AbstractScraper {
   getLocationOfAddress(address) {
     const defer = q.defer();
     const strippedAddress = address.replace(/ *\([^)]*\) */g, "");
-    geocoder.geocode(strippedAddress, function ( err, data ) {
-      if(err || !Array.isArray(data.results) || data.results.length == 0) {
-        console.error("Failed to geocode address: '" + strippedAddress + "' (original: '" + address + "')");
-        defer.reject();
-      }else{
-        const location = data.results[0].geometry.location;
-        defer.resolve({
-          latitude: location.lat,
-          longitude: location.lng
-        });
-      }      
-    }, {key: config.geocoder.apiKey});
+    if(strippedAddress.length == 0) {
+      defer.reject();
+    }else{
+      geocoder.geocode(strippedAddress, function ( err, data ) {
+        if(err || !Array.isArray(data.results) || data.results.length == 0) {
+          console.error("Failed to geocode address: '" + strippedAddress + "' (original: '" + address + "')");
+          defer.reject();
+        }else{
+          const location = data.results[0].geometry.location;
+          defer.resolve({
+            latitude: location.lat,
+            longitude: location.lng
+          });
+        }      
+      }, {key: config.geocoder.apiKey});
+    }
     return defer.promise;
   }
   getActiveItems(id) {

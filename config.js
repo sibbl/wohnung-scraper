@@ -7,14 +7,14 @@ module.exports = {
     },
   },
   dataFilter: {
-    lat: 52.474600,
-    lng: 13.301398,
+    lat: 52.49281508540494,
+    lng: 13.302726745605469,
     radius: 5000
   },
   dataFilterRange: {
     min: 500,
     max: 10000,
-    step: 500
+    step: 100
   },
   auth: {
     username: "berlin",
@@ -73,17 +73,17 @@ module.exports = {
     wgGesucht: {
       name: "wg-gesucht.de",
       url: "http://www.wg-gesucht.de/wohnungen-in-Berlin.8.2.0.0.html",
-      maxPages: 5
+      maxPages: 10
     },
     studentenWg: {
       name: "studenten-wg.de",
       url: "https://www.studenten-wg.de/angebote_lesen.html?preismode=2&newsort=&stadt=Berlin&fuer=Wohnungen&mietart=1&zimin=2&zimax=4&lmode=2&proseite=50",
-      maxPages: 5
+      maxPages: 10
     },
     immoscout24: {
       name: "immobilienscout24.de",
       url: "https://www.immobilienscout24.de/Suche/S-2/Wohnung-Miete/Berlin/Berlin/-/-/-/-/-/-/false",
-      maxPages: 5
+      maxPages: 10
     }
   }
 }
