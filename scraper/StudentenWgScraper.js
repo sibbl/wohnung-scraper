@@ -34,7 +34,6 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     }
   }
   _getDbObject(url, tableRow, itemId, exists) {
-    exists = false;
     var defer = q.defer();
     const miete = tableRow.find("td:nth-child(3)").text().replace("€","").trim();
     const groesse = tableRow.find("td:nth-child(4)").text().replace("m²","").trim();

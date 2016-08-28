@@ -20,7 +20,6 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     }
   }
   _getDbObject(url, tableRow, itemId, relativeItemUrl, exists) {
-    exists = false;
     var defer = q.defer();
     const itemUrl = urlLib.resolve(url, relativeItemUrl);
 

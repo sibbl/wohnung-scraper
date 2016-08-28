@@ -34,7 +34,6 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     }
   }
   _getDbObject(url, tableRow, itemId, exists) {
-    exists = false;
     var defer = q.defer();
     // const stadtteil = tableRow.find(".ang_spalte_stadt").text().trim();
     const miete = tableRow.find(".ang_spalte_miete").text().trim().replace("€","");
