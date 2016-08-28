@@ -389,6 +389,9 @@ angular.module('dataVis')
     if($scope.dataFilterModel.setPosition === true) {
       return false;
     }
+    if(angular.isDefined($scope.selectedFlat) && $scope.selectedFlat.id == markerId) {
+      return true;
+    }
     var markerData = $scope.data[markerId];
     if(angular.isUndefined(markerData)) {
       return false;
