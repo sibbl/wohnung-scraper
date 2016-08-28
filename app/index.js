@@ -225,11 +225,9 @@ module.exports = class App {
                   }
                 }
               }
-              console.log("start");
               var stmt = db.prepare('UPDATE "wohnungen" SET latitude = $latitude, longitude = $longitude WHERE id = $id');
               var defers = [];
               toUpdate.forEach(obj => {
-                console.log("...", obj);
                 var defer = q.defer();
                 defers.push(q.promise);
                 stmt.run(obj, dbErr => {
