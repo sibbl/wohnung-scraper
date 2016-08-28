@@ -4,7 +4,8 @@ var express = require('express'),
     moment = require('moment'),
     config = require('../config.js'),
     basicAuth = require('basic-auth-connect'),
-    geolib = require('geolib');
+    geolib = require('geolib'),
+    NodeGeocoder = require('node-geocoder');
 
 module.exports = class App {
   constructor(db, scraper) {
@@ -164,7 +165,86 @@ module.exports = class App {
             }
           });
       }
-    })
+    });
+
+    this.app.get("/geocode/:provider", (req, res) => {
+      db.all('SELECT * from "wohnungen" WHERE latitude IS NULL OR longitude IS NULL', (error, result) => {
+        if(error) {
+          res.send(JSON.stringify(error), 500);
+        }else{
+          var addresses = [];
+          var nonEmptyResults = [];
+          for(var i = 0; i < result.length; i++) {
+            var data = JSON.parse(result[i].data);
+            var adr = data.adresse.replace(/ *\([^)]*\) */g, "");
+            if(adr.length > 0) {
+              nonEmptyResults.push(result[i]);
+              addresses.push(adr);
+            }
+          }
+          if(nonEmptyResults.length == 0) {
+            res.send("No missing latlng found.");
+            return;
+          }
+          var provider = req.params.provider || config.geocoder.provider;
+          var params = {};
+          if(provider in config.geocoder.options) {
+            params = config.geocoder.options[provider];
+          }
+          params.provider = provider;
+          var geocoder = NodeGeocoder(params);
+          geocoder.batchGeocode(addresses, (geoError, geoResults) => {
+            if(geoError) {
+              res.send(JSON.stringify(geoError), 500);
+            }else{
+              var log = [], toUpdate = [];
+              for(var i = 0; i < geoResults.length; i++) {
+                var geoRes = geoResults[i];
+                var isError = geoRes.error != null || geoRes.value.length < 1;
+                if(isError) {
+                  log.push("ERROR: " + addresses[i] + " -- " + geoRes.error + " <a href='" + nonEmptyResults[i].url + "'>Link</a>");
+                }else{
+                  var val = geoRes.value[0];
+                  var str = Object.keys(val).filter(key => {
+                    if(["latitude", "longitude", "provider"].indexOf(key) >= 0) {
+                      return false;
+                    }
+                    return val[key] != null && val[key] != undefined;
+                  }).map(key => val[key]).join(" ");
+                  if(str.indexOf("Berlin") < 0) {
+                    log.push("WHAT?! " + addresses[i] + " -- " + str);
+                  }else{
+                    log.push("<strong>FOUND:</strong> " + addresses[i] + " -- " + str);
+                    toUpdate.push({
+                      $id: nonEmptyResults[i].id,
+                      $latitude: val.latitude,
+                      $longitude: val.longitude
+                    });
+                  }
+                }
+              }
+              console.log("start");
+              var stmt = db.prepare('UPDATE "wohnungen" SET latitude = $latitude, longitude = $longitude WHERE id = $id');
+              var defers = [];
+              toUpdate.forEach(obj => {
+                console.log("...", obj);
+                var defer = q.defer();
+                defers.push(q.promise);
+                stmt.run(obj, dbErr => {
+                  if(dbErr) {
+                    console.log(dbErr);
+                  }
+                  defer.resolve();
+                });
+              });
+              q.all(defers).then(() => {
+                res.send(log.join("<br/>"));
+              });
+            }
+          });
+        }
+      });
+    });
 
     this.app.listen(this.port, () => {
       console.log('App listening on port ' + this.port);
