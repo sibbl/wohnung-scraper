@@ -51,7 +51,7 @@ module.exports = {
       },
       free_from: {
         min: 0,
-        max: 7
+        max: 4
       }
     }
   },
