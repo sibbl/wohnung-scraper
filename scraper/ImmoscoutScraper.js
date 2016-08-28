@@ -4,8 +4,7 @@ var AbstractScraper = require('./AbstractScraper'),
     cheerio = require('cheerio'),
     urlLib = require('url'),
     moment = require('moment'),
-    q = require('q'),
-    geocoder = require('geocoder');
+    q = require('q');
 
 module.exports = class WgGesuchtScraper extends AbstractScraper {
   constructor(db) {
@@ -20,11 +19,12 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
       return false;
     }
   }
-  _getDbObject(url, tableRow, itemId, relativeItemUrl) {
+  _getDbObject(url, tableRow, itemId, relativeItemUrl, exists) {
+    exists = false;
     var defer = q.defer();
     const itemUrl = urlLib.resolve(url, relativeItemUrl);
 
-    this.scrapeItemDetails(itemUrl).then(data => {
+    this.scrapeItemDetails(itemUrl, exists).then(data => {
       data.url = itemUrl;
       data.websiteId = itemId;
       data.active = true;
@@ -49,12 +49,18 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     }
     this.hasItemInDb(itemId).then(isInDb => {
       if(isInDb) {
-        this._getDbObject(url, tableRow, itemId, relativeItemUrl).then(data => {
-          this.updateInDb(data).then(() => defer.resolve(true));
+        this._getDbObject(url, tableRow, itemId, relativeItemUrl, true).then(data => {
+          this.updateInDb(data).then(() => defer.resolve({
+            type: "updated",
+            data: data
+          }));
         });
       }else{
         this._getDbObject(url, tableRow, itemId, relativeItemUrl).then(data => {
-          this.insertIntoDb(data).then(() => defer.resolve(true));
+          this.insertIntoDb(data).then(() => defer.resolve({
+            type: "added",
+            data: data
+          }));
         });
       };
     });
@@ -65,7 +71,7 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
       jar: this.cookieJar
     }, config.httpOptions);
   }
-  scrapeItemDetails(url) {
+  scrapeItemDetails(url, exists) {
     var defer = q.defer();
     request.get(url, this._getRequestOptions(), (error, response, body) => {
       if(error) {
@@ -136,13 +142,17 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
         if(result.gone) {
           defer.resolve(result);
         }else{
-          this.getLocationOfAddress(result.data.adresse).then(res => {
-            result.latitude = res.latitude;
-            result.longitude = res.longitude;
+          if(exists) {
             defer.resolve(result);
-          }).catch(error => {
-            defer.resolve(result);
-          });
+          }else{
+            this.getLocationOfAddress(result.data.adresse).then(res => {
+              result.latitude = res.latitude;
+              result.longitude = res.longitude;
+              defer.resolve(result);
+            }).catch(error => {
+              defer.resolve(result);
+            });
+          }
         }
       }
     });
@@ -164,7 +174,7 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
           this.scrapeSiteCounter++;
           defers.push(this.scrapeSite(nextPageUrl));
         }
-        q.all(defers).then(() => defer.resolve());
+        q.all(defers).then(result => defer.resolve(result));
       }
     });
     return defer.promise;

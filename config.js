@@ -6,6 +6,14 @@ module.exports = {
       zoom: 12,
     },
   },
+  bots: [
+    {
+      id: "telegram",
+      enabled: false,
+      key: "249641867:AAEHJa0zlkeX1vUsY922SZKJ9J4lZUlT5Qg",
+      chats: ["-165642407"],
+    }
+  ],
   dataFilter: {
     lat: 52.49281508540494,
     lng: 13.302726745605469,
@@ -63,7 +71,11 @@ module.exports = {
   city: "Berlin",
   database: "wohnungen.db",
   geocoder: {
-    apiKey: "AIzaSyD5FHeDK6vsPXFmP9kTszJ-crNVHBcRRWY", //see https://developers.google.com/maps/documentation/geocoding/get-api-key
+    // "provider": "openstreetmap",
+    provider: "google",
+    apiKey: "AIzaSyAmc3ExA9-AzPK9tvh9R8MeiGyVgosEqLU",
+    // apiKey: "AIzaSyCDmH4kcyO-CymV2CJz-vQjGPoAOiC6phk",
+    // apiKey: "AIzaSyD5FHeDK6vsPXFmP9kTszJ-crNVHBcRRWY", //see https://developers.google.com/maps/documentation/geocoding/get-api-key
   },
   httpOptions: {
     headers: {
