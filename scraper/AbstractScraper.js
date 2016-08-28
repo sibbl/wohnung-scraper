@@ -123,7 +123,13 @@ module.exports = class AbstractScraper {
     if(strippedAddress.length == 0) {
       defer.reject();
     }else{
-      var geocoder = NodeGeocoder(config.geocoder);
+      var provider = config.geocoder.provider;
+      var params = {};
+      if(provider in config.geocoder.options) {
+        params = config.geocoder.options[provider];
+      }
+      params.provider = provider;
+      var geocoder = NodeGeocoder(params);
       geocoder.geocode(strippedAddress, function ( err, res ) {
         if(err || !Array.isArray(res) || res.length < 1) {
           console.error("Failed to geocode address: '" + strippedAddress + "' (original: '" + address + "')", err, res);
