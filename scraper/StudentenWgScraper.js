@@ -99,8 +99,9 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
       }else{
         if(!isInDb) {
           this._getDbObject(url, tableRow, itemId).then(data => {
-            this.insertIntoDb(data).then(() => defer.resolve({
+            this.insertIntoDb(data).then(id => defer.resolve({
               type: "added",
+              id: id,
               data: data
             }));
           });

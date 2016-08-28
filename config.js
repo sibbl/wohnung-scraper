@@ -9,7 +9,7 @@ module.exports = {
   bots: [
     {
       id: "telegram",
-      enabled: false,
+      enabled: true,
       key: "249641867:AAEHJa0zlkeX1vUsY922SZKJ9J4lZUlT5Qg",
       chats: ["-165642407"],
     }
@@ -71,11 +71,10 @@ module.exports = {
   city: "Berlin",
   database: "wohnungen.db",
   geocoder: {
-    // "provider": "openstreetmap",
+    // provider: "openstreetmap",
     provider: "google",
-    apiKey: "AIzaSyAmc3ExA9-AzPK9tvh9R8MeiGyVgosEqLU",
-    // apiKey: "AIzaSyCDmH4kcyO-CymV2CJz-vQjGPoAOiC6phk",
-    // apiKey: "AIzaSyD5FHeDK6vsPXFmP9kTszJ-crNVHBcRRWY", //see https://developers.google.com/maps/documentation/geocoding/get-api-key
+    apiKey: "AIzaSyAmc3ExA9-AzPK9tvh9R8MeiGyVgosEqLU", //see https://developers.google.com/maps/documentation/geocoding/get-api-key
+    // apiKey: "AIzaSyD5FHeDK6vsPXFmP9kTszJ-crNVHBcRRWY", 
   },
   httpOptions: {
     headers: {

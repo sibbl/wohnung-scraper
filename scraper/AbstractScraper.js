@@ -2,7 +2,8 @@ var config = require('../config'),
     q = require('q'),
     NodeGeocoder = require('node-geocoder'),
     moment = require('moment'),
-    TelegramBot = require('node-telegram-bot-api');
+    TelegramBot = require('node-telegram-bot-api'),
+    geolib = require('geolib');
 
 module.exports = class AbstractScraper {
   constructor(db, scraperId) {
@@ -47,12 +48,12 @@ module.exports = class AbstractScraper {
         $active: row.active,
         $gone: row.gone,
         $data: typeof(row.data) === 'string' ? row.data : JSON.stringify(row.data)
-      }, error => {
+      }, function(error) {
         if(error) {
           console.error("Error while inserting into database", this.id, error);
           defer.reject();
         }else{
-          defer.resolve();
+          defer.resolve(this.lastID);
         }
     });
     return defer.promise;
@@ -125,7 +126,7 @@ module.exports = class AbstractScraper {
       var geocoder = NodeGeocoder(config.geocoder);
       geocoder.geocode(strippedAddress, function ( err, res ) {
         if(err || !Array.isArray(res) || res.length < 1) {
-          console.error("Failed to geocode address: '" + strippedAddress + "' (original: '" + address + "')");
+          console.error("Failed to geocode address: '" + strippedAddress + "' (original: '" + address + "')", err, res);
           defer.reject();
         }else{
           defer.resolve({
@@ -198,17 +199,90 @@ module.exports = class AbstractScraper {
 
   sendBotNotifications(bots, result) {
     // use only added flats
-    var flatsOfInterest = result.filter(res => res.type == "added");
-    // if(flatsOfInterest)
+    var flatsOfInterest = result.filter(flat => {
+      if(flat.type != "added") {
+        return false;
+      }
+      var filters = config.filters.default;
+      if(flat.price < filters.price.min || flat.price > filters.price.max) {
+        return false;
+      }
+      if(flat.rooms < filters.rooms.min || flat.rooms > filters.rooms.max) {
+        return false;
+      }
+      if(flat.size < filters.size.min || flat.size > filters.size.max) {
+        return false;
+      }
+      var free_from = [null];
+      var start = moment().startOf("month").startOf("day").subtract(1,'day'); //use last day of last month 
+      var startIsMonthBegin = true;
+      var now = moment().startOf("day");
+      if(start.isBefore(now)) { //if start is before now (e.g. 30th of last month is before 5th)
+        start = start.add(14, 'days'); //then try 14th of current month
+        startIsMonthBegin = false;
+        if(start.isBefore(now)) { //if it's still before now (e.g. 14th is before 20th)
+          //add one month to last date
+          start = moment().startOf("month").startOf("day").add(1, "month").subtract(1,'day');
+          startIsMonthBegin = true;
+        }
+      }
+      //generate 8 values (next 4 months)
+      for(var i = startIsMonthBegin ? 0 : 1; i < 8; i++) {
+        if(i % 2 == 1) {
+          //middle of month
+          free_from.push(start.clone());
+          start = start.add(1, "month").startOf("month").startOf("day").subtract(1,'day'); //last day of month
+        }else{
+          //start of month
+          free_from.push(start.clone());
+          start = start.add(14, "days"); //14th of current month
+        }
+      }
+
+      var minFreeFrom = free_from[filters.free_from.min];
+      var maxFreeFrom = free_from[filters.free_from.max];
+      var freeFromDate = moment(flat.free_from).startOf("day");
+
+      if(minFreeFrom == null) {
+        // if "sofort <-> sofort", then return false if from_date is in future 
+        if(maxFreeFrom == null) {
+          if(freeFromDate.isAfter(now)) {
+            return false;
+          }
+        // if "sofort -> date", then return false if from_date is after given date
+        }else if(freeFromDate.isAfter(maxFreeFrom)) {
+          return false;
+        }
+      }else{
+        if(freeFromDate.isBefore(minFreeFrom) || freeFromDate.isAfter(maxFreeFrom)) {
+          return false;
+        }
+      }
+      if(flat.latitude == undefined || flat.longitude == undefined || flat.latitude == null || flat.longitude == null){
+        return false;
+      }
+      var filterCenter = {
+        latitude: config.dataFilter.lat,
+        longitude: config.dataFilter.lng
+      }
+      return geolib.getDistance(flat, config.dataFilter) <= config.dataFilter.radius;
+    });
     console.log("Sending " + flatsOfInterest.length + " message(s) from " + this.id);
     flatsOfInterest.forEach(flat => {
-      // console.log(flat);
+      var data = flat.data;
       bots.forEach(bot => {
         switch(bot.id) {
           case "telegram": 
             var telegramBot = new TelegramBot(bot.key);
             bot.chats.forEach(chatId => {
-              telegramBot.sendMessage(chatId, flat.data.url);
+              telegramBot.sendMessage(chatId, 
+                [ 
+                  data.url,
+                  data.rooms + " Zi. | " + data.size + " m² | " + data.price + " € | frei ab: " + moment(data.free_from).format("DD.MM.YYYY"),
+                  "",
+                  "https://wohnung.sibbl.net/#/" + flat.id,
+                ].join("\n")
+              );
             });
             break;
         }
