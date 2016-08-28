@@ -355,6 +355,9 @@ angular.module('dataVis')
         }
         if(angular.isDefined(oldActive) && oldActive != newActive) {
           updateActive(newActive, wohnung.id);
+          if($scope.filter.hideInactive && newActive == false && angular.isDefined($scope.selectedFlat) && $scope.selectedFlat.id == wohnung.id) {
+            $scope.selectedFlat = undefined;
+          }
         }
       })
       $scope.$watch("data[" + index + "].favorite", function(newFav, oldFav) {
@@ -363,6 +366,9 @@ angular.module('dataVis')
         }
         if(angular.isDefined(oldFav) && oldFav != newFav) {
           updateFavorite(newFav, wohnung.id);
+          if($scope.filter.showOnlyFavs === true && newFav === false && angular.isDefined($scope.selectedFlat) && $scope.selectedFlat.id == wohnung.id) {
+            $scope.selectedFlat = undefined;
+          }
         }
       })
       if(markers[wohnung.id] && map.hasLayer(markers[wohnung.id])) {
@@ -504,6 +510,9 @@ angular.module('dataVis')
     }
     if(angular.isDefined(oldFlat)) {
       updateMarkerVisibility(oldFlat.id, markers[oldFlat.id]);
+      if(map.hasLayer(markers[oldFlat.id]) && !isMarkerVisible(oldFlat.id)) {
+        map.removeLayer(markers[oldFlat.id]);
+      }
       markers[oldFlat.id].setStyle({color:"transparent"});
     }
   })
