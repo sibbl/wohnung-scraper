@@ -71,10 +71,21 @@ module.exports = {
   city: "Berlin",
   database: "wohnungen.db",
   geocoder: {
-    // provider: "openstreetmap",
+    // provider: "mapquest",
     provider: "google",
-    apiKey: "AIzaSyAmc3ExA9-AzPK9tvh9R8MeiGyVgosEqLU", //see https://developers.google.com/maps/documentation/geocoding/get-api-key
-    // apiKey: "AIzaSyD5FHeDK6vsPXFmP9kTszJ-crNVHBcRRWY", 
+    options: {
+      google: {
+        apiKey: "AIzaSyAmc3ExA9-AzPK9tvh9R8MeiGyVgosEqLU"
+      // apiKey: "AIzaSyD5FHeDK6vsPXFmP9kTszJ-crNVHBcRRWY"
+      },
+      here: {
+        appId: "BT0jwU7AVBMfVUSYqWtH",
+        appCode: "DrfYGlwmrHeQMEq04E-1DA"
+      },
+      mapquest: {
+        apiKey: "a1rKn8hjtNNVtVLBu2b9jEMQGjjUGIbJ"
+      }
+    }
   },
   httpOptions: {
     headers: {
