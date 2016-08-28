@@ -103,6 +103,8 @@ angular.module('dataVis')
       $scope.dataFilter.lng = coord.lng;
       $scope.dataFilterModel.setPosition = false;
       updateData();
+    }else{
+      $scope.selectedFlat = undefined;
     }
   });
 
