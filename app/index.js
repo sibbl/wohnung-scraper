@@ -167,6 +167,29 @@ module.exports = class App {
       }
     });
 
+    this.app.post("/update/location", (req, res) => {
+      var id = req.body.id;
+      var lat = req.body.latitude;
+      var lng = req.body.longitude;
+      if(id && lat && lng) {
+        var stmt = db.prepare('UPDATE "wohnungen" SET latitude = $latitude, longitude = $longitude WHERE id = $id');
+        stmt.run({
+          $id: id,
+          $latitude: lat,
+          $longitude: lng
+        }, dbErr => {
+          if(dbErr) {
+            console.log(dbErr);
+            res.send(JSON.stringify({success:false, error: dbErr}), 500);
+          }else{
+            res.send(JSON.stringify({success:true}), 200);
+          }
+        });
+      }else{
+        res.send(JSON.stringify({success:false, error: "missing params"}), 400);
+      }
+    })
+
     this.app.get("/geocode/:provider", (req, res) => {
       db.all('SELECT * from "wohnungen" WHERE latitude IS NULL OR longitude IS NULL', (error, result) => {
         if(error) {
