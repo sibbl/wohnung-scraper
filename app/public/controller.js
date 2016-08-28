@@ -498,10 +498,12 @@ angular.module('dataVis')
   $scope.$watch('selectedFlat', function(newFlat, oldFlat) {
     if(angular.isDefined(newFlat)) {
       markers[newFlat.id].setStyle({color:"red"});
+      updateMarkerVisibility(newFlat.id, markers[newFlat.id]);
       $scope.status.showFilters = false;
       $location.path(newFlat.id);
     }
     if(angular.isDefined(oldFlat)) {
+      updateMarkerVisibility(oldFlat.id, markers[oldFlat.id]);
       markers[oldFlat.id].setStyle({color:"transparent"});
     }
   })
