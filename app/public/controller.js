@@ -438,7 +438,7 @@ angular.module('dataVis')
     if(isMarkerVisible(markerId)) {
       if(!map.hasLayer(marker)) {
         map.addLayer(marker);
-        checkMarkerSelection(wohnung.id);
+        checkMarkerSelection(markerId);
       }
     }else{
       if(map.hasLayer(marker)) {
