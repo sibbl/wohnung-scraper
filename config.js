@@ -75,8 +75,10 @@ module.exports = {
     // provider: "google",
     options: {
       google: {
-        apiKey: "AIzaSyAmc3ExA9-AzPK9tvh9R8MeiGyVgosEqLU"
-      // apiKey: "AIzaSyD5FHeDK6vsPXFmP9kTszJ-crNVHBcRRWY"
+        apiKey: "AIzaSyAmc3ExA9-AzPK9tvh9R8MeiGyVgosEqLU",
+        // apiKey: "AIzaSyD5FHeDK6vsPXFmP9kTszJ-crNVHBcRRWY"
+        language: "de-DE",
+        region: ".de",
       },
       here: {
         appId: "BT0jwU7AVBMfVUSYqWtH",
