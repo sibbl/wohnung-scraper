@@ -488,6 +488,10 @@ angular.module('dataVis')
     }
   }
 
+  $scope.toDate = function(t) {
+    return new Date(t);
+  }
+
   $scope.$watch('selectedFlat', function(newFlat, oldFlat) {
     if(angular.isDefined(newFlat)) {
       markers[newFlat.id].setStyle({color:"red"});
