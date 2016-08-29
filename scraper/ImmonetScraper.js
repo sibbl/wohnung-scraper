@@ -71,7 +71,6 @@ module.exports = class ImmonetScraper extends AbstractScraper {
       }else if(this._isVermietetByTableRow(tableRow)) {
         if(isInDb) {
           this._getDbObject(url, tableRow, itemId, true).then(data => {
-            defer.resolve(false);
             this.updateInDb(data).then(() => defer.resolve({
               type: "updated",
               data: data
@@ -83,7 +82,6 @@ module.exports = class ImmonetScraper extends AbstractScraper {
       }else{
         if(!isInDb) {
           this._getDbObject(url, tableRow, itemId).then(data => {
-            defer.resolve(false);
             this.insertIntoDb(data).then(id => defer.resolve({
               type: "added",
               id: id,
