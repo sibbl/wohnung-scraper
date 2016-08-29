@@ -205,8 +205,9 @@ module.exports = class AbstractScraper {
 
   sendBotNotifications(bots, result) {
     // use only added flats
-    var flatsOfInterest = result.filter(flat => {
-      if(flat.type != "added") {
+    var flatsOfInterest = result.filter(result => {
+      var flat = result.data;
+      if(result.type != "added") {
         return false;
       }
       var filters = config.filters.default;
@@ -271,7 +272,8 @@ module.exports = class AbstractScraper {
         latitude: config.dataFilter.lat,
         longitude: config.dataFilter.lng
       }
-      return geolib.getDistance(flat, config.dataFilter) <= config.dataFilter.radius;
+      var distance = geolib.getDistance(flat, config.dataFilter);
+      return distance <= config.dataFilter.radius;
     });
     console.log("Sending " + flatsOfInterest.length + " message(s) from " + this.id);
     flatsOfInterest.forEach(flat => {
@@ -299,14 +301,27 @@ module.exports = class AbstractScraper {
   
   scrape() {
     const defer = q.defer();
+    console.log(new Date().toISOString());
     console.log("Start scraping " + this.id);
     this.scrapeSiteCounter = 1;
     this.scrapeSite(this.config.url).then(result => {
+      var flatResult = [];
+      var fillResult = function(result) {
+        for(var i = 0; i < result.length; i++) {
+          if(Array.isArray(result[i])) {
+            fillResult(result[i]);
+          } else if(typeof(result[i]) === "object") {
+            flatResult.push(result[i]);
+          }
+        }
+      }
+      fillResult(result);
+
       console.log("Finish scraping " + this.id);
       var enabledBots = config.bots.filter(bot => bot.enabled === true);
       if(enabledBots.length > 0) {
         console.log("Start sending to bots " + enabledBots.map(config => config.id).join(", ") + " (" + this.id + ")");
-        this.sendBotNotifications(enabledBots, result).then(() => {
+        this.sendBotNotifications(enabledBots, flatResult).then(() => {
           console.log("Finish sending to bots " + this.id);
           defer.resolve();
         })
