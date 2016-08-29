@@ -168,113 +168,111 @@ module.exports = class App {
       }
     });
 
-    this.app.get("/:id/route/:direction?", (req, res) => {
-        db
-          .prepare('SELECT data, latitude, longitude FROM "wohnungen" WHERE id = $id')
-          .get({
-            $id: req.params.id
-          }, (error, row) => {
-            if(error) {
-              res.send(JSON.stringify({
-                success: false,
-                message: 'database error',
-                details: error
-              }), 500);
+    this.app.get("/:id/route/:direction", (req, res) => {
+      if(Object.keys(config.transportRoutes).indexOf(req.params.direction) < 0) {
+        res.send("invalid param", 400);
+        return;
+      }
+      var transportData = config.transportRoutes[req.params.direction];
+      db
+        .prepare('SELECT data, latitude, longitude FROM "wohnungen" WHERE id = $id')
+        .get({
+          $id: req.params.id
+        }, (error, row) => {
+          if(error) {
+            res.send(JSON.stringify({
+              success: false,
+              message: 'database error',
+              details: error
+            }), 500);
+          }else{
+            if(row == undefined) {
+              res.send("invalid ID", 400);
             }else{
-              if(row == undefined) {
-                res.send("invalid ID", 404);
-              }else{
-                var data = JSON.parse(row.data);
+              var data = JSON.parse(row.data);
 
-                var forward = function(adr) {
-                  var name = encodeURIComponent(adr);
+              var forward = function(adr) {
+                var name = encodeURIComponent(adr);
 
-                  var url = `http://fahrinfo.vbb.de/bin/ajax-getstop.exe/dny?start=1&tpl=suggest2json&REQ0JourneyStopsS0A=7&getstop=1&noSession=yes&REQ0JourneyStopsS0F=excludeStationAttribute;FO&REQ0JourneyStopsB=12&REQ0JourneyStopsS0G=${name}&js=true&`;
-                  request.get(url, (error, response, body) => {
-                    var firstEqualSign = body.indexOf("=");
-                    var firstSemicolon = body.indexOf(";");
-                    var json = JSON.parse(body.substr(firstEqualSign+1, firstSemicolon-firstEqualSign-1));
-                    // json.substr(0, json.length-1);
-                    var startName = json.suggestions[0].value;
-                    var startId = json.suggestions[0].id;
-                  
-                    // var startName = "10829 Berlin-Schöneberg, Gesslerstr. 15";
-                    // var startId = "A=2@O=10829 Berlin-Schöneberg, Gesslerstr. 15@X=13366636@Y=52486099@U=103@L=007707855@B=1@V=3.9,@p=1464105852@";
-                    var endName = "S Griebnitzsee Bhf";
-                    var endId = "A=1@O=S Griebnitzsee Bhf@X=13128916@Y=52393987@U=86@L=009230003@B=1@V=3.9,@p=1472124910@";
-                    if(req.params.direction == "zoo") {
-                      endName = "S+U Zoologischer Garten Bhf (Berlin)";
-                      endId = "A=1@O=S+U Zoologischer Garten Bhf (Berlin)@X=13332710@Y=52506918@U=86@L=009023201@B=1@V=3.9,@p=1472124910@";
-                    }
-                    var str = `<!DOCTYPE html>
-              <html>
-              <body></body>
-              <script>
-              var form = document.createElement("form");
-              form.setAttribute("method", "post");
-              form.setAttribute("action", "http://fahrinfo.vbb.de/bin/query.exe/dn");
-              var createInputField = function(name, input) {
-                var hiddenField = document.createElement("input");              
-                hiddenField.setAttribute("name", name);
-                hiddenField.setAttribute("type", "hidden");
-                hiddenField.setAttribute("value", input);
-                form.appendChild(hiddenField);
+                var url = `http://fahrinfo.vbb.de/bin/ajax-getstop.exe/dny?start=1&tpl=suggest2json&REQ0JourneyStopsS0A=7&getstop=1&noSession=yes&REQ0JourneyStopsS0F=excludeStationAttribute;FO&REQ0JourneyStopsB=12&REQ0JourneyStopsS0G=${name}&js=true&`;
+                request.get(url, (error, response, body) => {
+                  var firstEqualSign = body.indexOf("=");
+                  var firstSemicolon = body.indexOf(";");
+                  var json = JSON.parse(body.substr(firstEqualSign+1, firstSemicolon-firstEqualSign-1));
+                  var startName = json.suggestions[0].value;
+                  var startId = json.suggestions[0].id;
+                
+                  var endName = transportData.name;
+                  var endId = transportData.id;
+                  var str = `<!DOCTYPE html>
+            <html>
+            <body></body>
+            <script>
+            var form = document.createElement("form");
+            form.setAttribute("method", "post");
+            form.setAttribute("action", "http://fahrinfo.vbb.de/bin/query.exe/dn");
+            var createInputField = function(name, input) {
+              var hiddenField = document.createElement("input");              
+              hiddenField.setAttribute("name", name);
+              hiddenField.setAttribute("type", "hidden");
+              hiddenField.setAttribute("value", input);
+              form.appendChild(hiddenField);
+            }
+            createInputField("start","yes");
+            createInputField("REQ0JourneyStopsS0A",2);
+            createInputField("ignoreTypeCheck", "yes");
+            createInputField("S", "${startName}");
+            createInputField("REQ0JourneyStopsSID","${startId}");
+            // createInputField("REQ0JourneyStopsZ0A", "1");
+            createInputField("Z", "${endName}");
+            createInputField("REQ0JourneyStopsZID", "${endId}");
+            createInputField("time", "10:00");
+            createInputField("date", "10.10.2016");
+            createInputField("timeSel", "depart");
+            // createInputField("route_search_now_submit", "");
+            document.body.appendChild(form);
+            form.submit();
+            </script>
+            </html>`;
+                  res.set('Content-Type', 'text/html');
+                  res.send(str);
+                });
               }
-              createInputField("start","yes");
-              createInputField("REQ0JourneyStopsS0A",2);
-              createInputField("ignoreTypeCheck", "yes");
-              createInputField("S", "${startName}");
-              createInputField("REQ0JourneyStopsSID","${startId}");
-              // createInputField("REQ0JourneyStopsZ0A", "1");
-              createInputField("Z", "${endName}");
-              createInputField("REQ0JourneyStopsZID", "${endId}");
-              createInputField("time", "10:00");
-              createInputField("date", "10.10.2016");
-              createInputField("timeSel", "depart");
-              // createInputField("route_search_now_submit", "");
-              document.body.appendChild(form);
-              form.submit();
-              </script>
-              </html>`;
-                    res.set('Content-Type', 'text/html');
-                    res.send(str);
-                  });
-                }
 
-                var adr = data.adresse;
-                if(adr.length == 0) {
-                  if(row.longitude && row.latitude) {
-                    //reverse geoencode
-                    var provider = req.params.provider || config.geocoder.provider;
-                    var params = {};
-                    if(provider in config.geocoder.options) {
-                      params = config.geocoder.options[provider];
-                    }
-                    params.provider = provider;
-                    var geocoder = NodeGeocoder(params);
-                    geocoder.reverse({
-                      lat: row.latitude,
-                      lon: row.longitude
-                    }).then(function(res) {
-                      var adrArr = res[0];
-                      var adrParts = [];
-                      for(var i in adrArr) {
-                        adrParts.push(adrArr[i]);
-                      }
-                      forward(adrParts.join(" "));
-                    }).catch(function(err) {
-                      res.send("error: " + JSON.stringify(err), 500);
-                    })
-                  }else{
-                    res.send("no address found", 404);
+              var adr = data.adresse;
+              if(adr.length == 0) {
+                if(row.longitude && row.latitude) {
+                  //reverse geoencode
+                  var provider = req.params.provider || config.geocoder.provider;
+                  var params = {};
+                  if(provider in config.geocoder.options) {
+                    params = config.geocoder.options[provider];
                   }
+                  params.provider = provider;
+                  var geocoder = NodeGeocoder(params);
+                  geocoder.reverse({
+                    lat: row.latitude,
+                    lon: row.longitude
+                  }).then(function(res) {
+                    var adrArr = res[0];
+                    var adrParts = [];
+                    for(var i in adrArr) {
+                      adrParts.push(adrArr[i]);
+                    }
+                    forward(adrParts.join(" "));
+                  }).catch(function(err) {
+                    res.send("error: " + JSON.stringify(err), 500);
+                  })
                 }else{
-                  forward(adr);
+                  res.send("no address found", 404);
                 }
+              }else{
+                forward(adr);
               }
             }
-          });
+          }
         });
+      });
 
     this.app.post("/update/location", (req, res) => {
       var id = req.body.id;
