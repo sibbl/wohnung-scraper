@@ -166,7 +166,7 @@ module.exports = class AbstractScraper {
     rows.forEach(row => {
       const innerPromise = q.defer();
       promises.push(innerPromise.promise);
-      this.scrapeItemDetails(row.url).then(data => {
+      this.scrapeItemDetails(row.url, true).then(data => {
         row = Object.assign(row, data);
         this.updateInDb(row).then(() => innerPromise.resolve(true));
       });
@@ -179,7 +179,7 @@ module.exports = class AbstractScraper {
     rows.forEach(row => {
       var step = () => {
         var def = q.defer();
-        this.scrapeItemDetails(row.url).then(data => {
+        this.scrapeItemDetails(row.url, true).then(data => {
           row = Object.assign(row, data);
           this.updateInDb(row).then(() => def.resolve(true));
         });
