@@ -109,6 +109,11 @@ module.exports = {
       name: "immobilienscout24.de",
       url: "https://www.immobilienscout24.de/Suche/S-2/Wohnung-Miete/Berlin/Berlin/-/-/-/-/-/-/false",
       maxPages: 10
+    },
+    immonet: {
+      name: "immonet.de",
+      url: "http://www.immonet.de/immobiliensuche/sel.do?marketingtype=2&city=87372&parentcat=1&suchart=2&radius=0&listsize=25&objecttype=1&pageoffset=1&sortby=19",
+      maxPages: 5
     }
   }
 }
