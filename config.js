@@ -65,7 +65,7 @@ module.exports = {
     }
   },
   cronTimes: {
-    scrape: '0 * * * *',
+    scrape: '0,20,40 * * * *',
     update: '30 * * * *',
   },
   city: "Berlin",
@@ -98,12 +98,12 @@ module.exports = {
     wgGesucht: {
       name: "wg-gesucht.de",
       url: "http://www.wg-gesucht.de/wohnungen-in-Berlin.8.2.0.0.html",
-      maxPages: 10
+      maxPages: 5
     },
     studentenWg: {
       name: "studenten-wg.de",
       url: "https://www.studenten-wg.de/angebote_lesen.html?preismode=2&newsort=&stadt=Berlin&fuer=Wohnungen&mietart=1&zimin=2&zimax=4&lmode=2&proseite=50",
-      maxPages: 10
+      maxPages: 5
     },
     immoscout24: {
       name: "immobilienscout24.de",
