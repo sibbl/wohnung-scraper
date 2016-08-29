@@ -18,6 +18,7 @@ const startScraperCronjob = function(cronTime, scraperFuncName) {
   const job = new CronJob({
     cronTime: cronTime,
     onTick: function() {
+      console.log("Run cron: " + scraperFuncName + "(" + (new Date().toISOString()) + ")");
       let promise = null;
       scraper.forEach(s => {
         if(promise == null) {
