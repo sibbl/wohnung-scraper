@@ -30,7 +30,6 @@ module.exports = class ImmonetScraper extends AbstractScraper {
   }
   _getDbObject(url, tableRow, itemId, exists) {
     var defer = q.defer();
-    const miete = tableRow.find(".listObjPrice span:first-child").text().replace("€","").trim();
     const groesse = tableRow.find(".objDetails li:nth-child(3)").text().replace("Wohnfläche", "").replace("m²","").trim();
     const rooms = tableRow.find(".objDetails li:nth-child(2)").text().replace("Zimmer", "").trim();
 
@@ -40,7 +39,6 @@ module.exports = class ImmonetScraper extends AbstractScraper {
     this.scrapeItemDetails(itemUrl, exists).then(data => {
       data.websiteId = itemId;
       data.size = parseFloat(groesse.replace(".", "").replace(",", "."));
-      data.price = parseFloat(miete.replace(".", "").replace(",", "."));
       data.rooms = parseFloat(rooms.replace(".", "").replace(",", "."));
       data.url = itemUrl;
       data.active = true;
@@ -121,13 +119,26 @@ module.exports = class ImmonetScraper extends AbstractScraper {
         result.gone = false;
         try{
           var makePrice = function(str) {
-            return parseFloat(str.replace(".","").replace(",", ".").replace("€", "").trim());
+            return parseFloat(str.replace("€", "").trim());
           }
           result.data = {};
           result.data.kaltmiete = makePrice($("#priceid_2").text());
           result.data.warmmiete = makePrice($("#priceid_4").text());
           result.data.nebenkosten = makePrice($("#priceid_20").text());
           result.data.heizkosten = makePrice($("#priceid_5").text());
+
+          var warmmiete = result.data.warmmiete;
+          if(Number.isNaN(warmmiete)) {
+            warmmiete = result.data.kaltmiete;
+            if(!Number.isNaN(result.data.nebenkosten)) {
+              warmmiete += result.data.nebenkosten;
+            }
+            if(!Number.isNaN(result.data.heizkosten)) {
+              warmmiete += result.data.heizkosten;
+            }
+          }
+
+          result.price = warmmiete;
 
           var latLngParts = bodyStr.match(/"latitude":([0-9\.]+),\s*"longitude":([0-9\.]+)/);
           result.latitude = parseFloat(latLngParts[1]);
