@@ -32,7 +32,8 @@ angular.module('dataVis')
         return value + " Min";
       }
     },
-    automatically: config.defaultShowTransportRangeAutomatically
+    automatically: config.defaultShowTransportRangeAutomatically,
+    routeVisible: false
   }
 
   $scope.availableWebsites = config.scraper;
@@ -654,6 +655,22 @@ angular.module('dataVis')
           $window.open("/forward/" + selectedFlatId);
         }
       }
+    }
+  }
+
+  $scope.openRoute = function(id, direction) {
+    var url = "/" + id + "/route";
+    if(direction) {
+      url += "/" + direction;
+    }
+    window.open(url, "routing");
+  }
+
+  $scope.print = function(obj) {
+    if(angular.isArray(obj)) {
+      return obj.join();
+    }else{
+      return obj;
     }
   }
   
