@@ -45,8 +45,6 @@ module.exports = class ImmonetScraper extends AbstractScraper {
       data.url = itemUrl;
       data.active = true;
 
-      console.log(data);
-
       defer.resolve(data);
     });
     return defer.promise;
@@ -88,7 +86,6 @@ module.exports = class ImmonetScraper extends AbstractScraper {
         if(!isInDb) {
           this._getDbObject(url, tableRow, itemId).then(data => {
             defer.resolve(false);
-            console.log("insert", data);
             this.insertIntoDb(data).then(id => defer.resolve({
               type: "added",
               id: id,
@@ -165,7 +162,6 @@ module.exports = class ImmonetScraper extends AbstractScraper {
     return defer.promise;
   }
   scrapeSite(url) {
-    console.log("scrape " + url);
     const defer = q.defer();
     request.get(url, this._getRequestOptions(), (error, response, body) => {
       if(error) {
