@@ -42,6 +42,8 @@ angular.module('dataVis')
     websites: Object.keys($scope.availableWebsites),
   });
 
+  $scope.transportRoutes = config.transportRoutes;
+
   //generate next 10 free_from values
   var free_from = [null];
   var start = moment().startOf("month").startOf("day").subtract(1,'day'); //use last day of last month 
@@ -658,12 +660,11 @@ angular.module('dataVis')
     }
   }
 
-  $scope.openRoute = function(id, direction) {
-    var url = "/" + id + "/route";
-    if(direction) {
-      url += "/" + direction;
-    }
-    window.open(url, "routing");
+  $scope.openRoute = function(id, direction, $event) {
+    var url = "/" + id + "/route/" + direction;
+    window.open(url, "routing_" + direction);
+    $event.preventDefault();
+    return false;
   }
 
   $scope.print = function(obj) {

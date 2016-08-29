@@ -14,6 +14,18 @@ module.exports = {
       chats: ["-165642407"],
     }
   ],
+  transportRoutes: {
+    hpi: {
+      label: "HPI",
+      name: "S Griebnitzsee Bhf",
+      id: "A=1@O=S Griebnitzsee Bhf@X=13128916@Y=52393987@U=86@L=009230003@B=1@V=3.9,@p=1472124910@",
+    },
+    zoo: {
+      label: "Zoo",
+      name: "S+U Zoologischer Garten Bhf (Berlin)",
+      id: "A=1@O=S+U Zoologischer Garten Bhf (Berlin)@X=13332710@Y=52506918@U=86@L=009023201@B=1@V=3.9,@p=1472124910@",
+    },
+  },
   dataFilter: {
     lat: 52.49281508540494,
     lng: 13.302726745605469,

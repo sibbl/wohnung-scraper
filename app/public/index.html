@@ -175,7 +175,7 @@
             <a class="btn btn-primary" href="{{selectedFlat.url}}" target="_blank">Auf {{getWebsiteName(selectedFlat.website)}} öffnen</a>
             <br/>
             <br/>
-            <button class="btn btn-sm btn-default" ng-click="openRoute(selectedFlat.id)">Route HPI</button> <button class="btn btn-sm btn-default" ng-click="openRoute(selectedFlat.id, 'zoo')">Route Zoo</button>
+            <a ng-repeat="(id, info) in transportRoutes" class="btn btn-sm btn-default" ng-href="/{{selectedFlat.id}}/route/{{id}}" ng-click="openRoute(selectedFlat.id, id, $event)">{{info.label}}</a>
             <br/><br/>
             <small>
             <div ng-repeat="(key,val) in selectedFlat.data">{{key}}: {{print(val)}}</div>
