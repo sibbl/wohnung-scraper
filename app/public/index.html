@@ -164,16 +164,22 @@
               <dd>{{ getFreeFromStr(selectedFlat) }}</dd>
 
               <dt>Miete</dt>
-              <dd>{{selectedFlat.price}} €</dd>
+              <dd>{{selectedFlat.price | number}} €</dd>
 
               <dt>Größe</dt>
-              <dd>{{selectedFlat.size}} m²</dd>
+              <dd>{{selectedFlat.size | number}} m²</dd>
 
               <dt>Zimmer</dt>
-              <dd>{{selectedFlat.rooms}}</dd>
+              <dd>{{selectedFlat.rooms | number}}</dd>
             </dl>
             <a class="btn btn-primary" href="{{selectedFlat.url}}" target="_blank">Auf {{getWebsiteName(selectedFlat.website)}} öffnen</a>
-
+            <br/>
+            <br/>
+            <button class="btn btn-sm btn-default" ng-click="openRoute(selectedFlat.id)">Route HPI</button> <button class="btn btn-sm btn-default" ng-click="openRoute(selectedFlat.id, 'zoo')">Route Zoo</button>
+            <br/><br/>
+            <small>
+            <div ng-repeat="(key,val) in selectedFlat.data">{{key}}: {{print(val)}}</div>
+            </small>
             <br/><br/>
 
             <a class="btn btn-default" ng-click="selectedFlat.active = !selectedFlat.active">{{ selectedFlat.active ? "deaktivieren" : "aktivieren" }}</a><br/>
