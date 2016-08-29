@@ -172,7 +172,7 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
           defer.resolve(result);
         }else{
           if(exists) {
-            deer.resolve(result); 
+            defer.resolve(result); 
           }else{
             this.getLocationOfAddress(adresse).then(res => {
               result.latitude = res.latitude;
