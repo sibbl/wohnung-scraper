@@ -9,6 +9,7 @@ const scraper = [
   'WgGesuchtScraper',
   'StudentenWgScraper',
   'ImmoscoutScraper',
+  'ImmonetScraper'
 ].map(scraper => {
   const s = require('./scraper/' + scraper);
   return new s(db);
