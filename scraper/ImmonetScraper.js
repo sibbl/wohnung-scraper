@@ -124,6 +124,7 @@ module.exports = class ImmonetScraper extends AbstractScraper {
           result.data.warmmiete = makePrice($("#priceid_4").text());
           result.data.nebenkosten = makePrice($("#priceid_20").text());
           result.data.heizkosten = makePrice($("#priceid_5").text());
+          result.data.betriebskosten = makePrice($("#priceid_3").text());
 
           var warmmiete = result.data.warmmiete;
           if(Number.isNaN(warmmiete)) {
@@ -133,6 +134,9 @@ module.exports = class ImmonetScraper extends AbstractScraper {
             }
             if(!Number.isNaN(result.data.heizkosten)) {
               warmmiete += result.data.heizkosten;
+            }
+            if(!Number.isNaN(result.data.betriebskosten)) {
+              warmmiete += result.data.betriebskosten;
             }
           }
 
