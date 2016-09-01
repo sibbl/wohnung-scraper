@@ -72,12 +72,12 @@ module.exports = {
       },
       free_from: {
         min: 0,
-        max: 4
+        max: 3
       }
     }
   },
   cronTimes: {
-    scrape: '0,20,40 * * * *',
+    scrape: '0,20,45 * * * *',
     update: '30 * * * *',
   },
   city: "Berlin",
