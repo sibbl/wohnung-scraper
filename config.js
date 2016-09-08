@@ -9,7 +9,7 @@ module.exports = {
   bots: [
     {
       id: "telegram",
-      enabled: true,
+      enabled: false,
       key: "249641867:AAEHJa0zlkeX1vUsY922SZKJ9J4lZUlT5Qg",
       chats: ["-165642407"],
     }
