@@ -26,5 +26,8 @@
     "prestart": "npm install",
     "start": "npm run server",
     "server": "supervisor -w index.js,config.js,scraper,app/index.js,node_modules,bower_components index.js"
+  },
+  "dependencies": {
+    "geocoder": "^0.2.2"
   }
 }
