@@ -11,6 +11,7 @@
     "cheerio": "^0.20.0",
     "cron": "^1.1.0",
     "express": "^4.13.4",
+    "geocoder": "^0.2.2",
     "geolib": "^2.0.21",
     "iconv-lite": "^0.4.13",
     "moment": "^2.13.0",
@@ -26,8 +27,5 @@
     "prestart": "npm install",
     "start": "npm run server",
     "server": "supervisor -w index.js,config.js,scraper,app/index.js,node_modules,bower_components index.js"
-  },
-  "dependencies": {
-    "geocoder": "^0.2.2"
   }
 }
