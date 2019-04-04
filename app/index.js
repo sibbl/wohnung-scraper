@@ -1,30 +1,30 @@
 var express = require('express'),
-    bodyParser = require('body-parser'),
-    q = require('q'),
-    moment = require('moment'),
-    config = require('../config.js'),
-    basicAuth = require('basic-auth-connect'),
-    geolib = require('geolib'),
-    NodeGeocoder = require('node-geocoder'),
-    request = require('request');
+  bodyParser = require('body-parser'),
+  q = require('q'),
+  moment = require('moment'),
+  config = require('../config.js'),
+  basicAuth = require('basic-auth-connect'),
+  geolib = require('geolib'),
+  NodeGeocoder = require('node-geocoder'),
+  request = require('request');
 
 module.exports = class App {
   constructor(db, scraper) {
     this.db = db;
     this.app = express();
     this.port = process.env.PORT || 3000;
-    
+
     this.app.use(basicAuth(config.auth.username, config.auth.password));
     this.app.use(express.static('./app/public'));
     this.app.use(bodyParser.json());
 
-    var scrapeOrUpdate = function(scraperFuncName) {
+    var scrapeOrUpdate = function (scraperFuncName) {
       let promise = null;
       scraper.forEach(s => {
-        if(promise == null) {
+        if (promise == null) {
           promise = s[scraperFuncName]();
-        }else{
-          promise = promise.then(function() {
+        } else {
+          promise = promise.then(function () {
             return q.when(s[scraperFuncName]());
           });
         }
@@ -34,13 +34,13 @@ module.exports = class App {
 
     this.app.get('/scrape', (req, res) => {
       scrapeOrUpdate('scrape').then(() => {
-        res.send(JSON.stringify({status: "ok"}));
+        res.send(JSON.stringify({ status: "ok" }));
       });
     });
 
     this.app.get('/update', (req, res) => {
       scrapeOrUpdate('updateItems').then(() => {
-        res.send(JSON.stringify({status: "ok"}));
+        res.send(JSON.stringify({ status: "ok" }));
       });
     });
 
@@ -54,16 +54,16 @@ module.exports = class App {
         .get({
           $id: req.params.id
         }, (error, row) => {
-          if(error) {
+          if (error) {
             res.send(JSON.stringify({
               success: false,
               message: 'database error',
               details: error
             }), 500);
-          }else{
-            if(row == undefined) {
+          } else {
+            if (row == undefined) {
               res.send("invalid ID", 404);
-            }else{
+            } else {
               res.writeHead(301, { "Location": row.url });
               res.end();
             }
@@ -73,15 +73,15 @@ module.exports = class App {
 
     this.app.get('/data', (req, res) => {
       var query;
-      if(req.query.all == undefined) {
+      if (req.query.all == undefined) {
         query = 'SELECT * FROM "wohnungen" WHERE gone = 0 AND latitude IS NOT NULL AND longitude IS NOT NULL ORDER BY added DESC';
-      }else{
+      } else {
         query = 'SELECT * FROM "wohnungen" ORDER BY added DESC';
       }
       db.all(query, (error, result) => {
-        if(error) {
+        if (error) {
           res.send(JSON.stringify(error));
-        }else{
+        } else {
           var now = moment();
 
           var resultArr = result.map(item => {
@@ -94,7 +94,7 @@ module.exports = class App {
             return item;
           });
           // filter by center coordinate & radius
-          if(req.query.lat != undefined && req.query.lng != undefined && req.query.radius != undefined) {
+          if (req.query.lat != undefined && req.query.lng != undefined && req.query.radius != undefined) {
             var filterCenter = {
               latitude: req.query.lat,
               longitude: req.query.lng
@@ -122,23 +122,23 @@ module.exports = class App {
 
     this.app.post('/:id/active', (req, res) => {
       var active = req.body.active;
-      if(typeof(active) !== "boolean") {
-        res.send(JSON.stringify({success: false, message: "missing body"}));
-      }else{
+      if (typeof (active) !== "boolean") {
+        res.send(JSON.stringify({ success: false, message: "missing body" }));
+      } else {
         db
           .prepare('UPDATE "wohnungen" SET active = $active WHERE id = $id')
           .run({
             $active: active,
             $id: req.params.id
           }, error => {
-            if(error) {
+            if (error) {
               res.send(JSON.stringify({
                 success: false,
                 message: 'database error',
                 details: error
               }));
-            }else{
-              res.send(JSON.stringify({success:true}));
+            } else {
+              res.send(JSON.stringify({ success: true }));
             }
           });
       }
@@ -146,30 +146,30 @@ module.exports = class App {
 
     this.app.post('/:id/favorite', (req, res) => {
       var favorite = req.body.favorite;
-      if(typeof(favorite) !== "boolean") {
-        res.send(JSON.stringify({success: false, message: "missing body"}));
-      }else{
+      if (typeof (favorite) !== "boolean") {
+        res.send(JSON.stringify({ success: false, message: "missing body" }));
+      } else {
         db
           .prepare('UPDATE "wohnungen" SET favorite = $favorite WHERE id = $id')
           .run({
             $favorite: favorite,
             $id: req.params.id
           }, error => {
-            if(error) {
+            if (error) {
               res.send(JSON.stringify({
                 success: false,
                 message: 'database error',
                 details: error
               }));
-            }else{
-              res.send(JSON.stringify({success:true}));
+            } else {
+              res.send(JSON.stringify({ success: true }));
             }
           });
       }
     });
 
     this.app.get("/:id/route/:direction", (req, res) => {
-      if(Object.keys(config.transportRoutes).indexOf(req.params.direction) < 0) {
+      if (Object.keys(config.transportRoutes).indexOf(req.params.direction) < 0) {
         res.send("invalid param", 400);
         return;
       }
@@ -179,29 +179,29 @@ module.exports = class App {
         .get({
           $id: req.params.id
         }, (error, row) => {
-          if(error) {
+          if (error) {
             res.send(JSON.stringify({
               success: false,
               message: 'database error',
               details: error
             }), 500);
-          }else{
-            if(row == undefined) {
+          } else {
+            if (row == undefined) {
               res.send("invalid ID", 400);
-            }else{
+            } else {
               var data = JSON.parse(row.data);
 
-              var forward = function(adr) {
+              var forward = function (adr) {
                 var name = encodeURIComponent(adr);
 
                 var url = `http://fahrinfo.vbb.de/bin/ajax-getstop.exe/dny?start=1&tpl=suggest2json&REQ0JourneyStopsS0A=7&getstop=1&noSession=yes&REQ0JourneyStopsS0F=excludeStationAttribute;FO&REQ0JourneyStopsB=12&REQ0JourneyStopsS0G=${name}&js=true&`;
                 request.get(url, (error, response, body) => {
                   var firstEqualSign = body.indexOf("=");
                   var firstSemicolon = body.indexOf(";");
-                  var json = JSON.parse(body.substr(firstEqualSign+1, firstSemicolon-firstEqualSign-1));
+                  var json = JSON.parse(body.substr(firstEqualSign + 1, firstSemicolon - firstEqualSign - 1));
                   var startName = json.suggestions[0].value;
                   var startId = json.suggestions[0].id;
-                
+
                   var endName = transportData.name;
                   var endId = transportData.id;
                   var str = `<!DOCTYPE html>
@@ -240,12 +240,12 @@ module.exports = class App {
               }
 
               var adr = data.adresse;
-              if(adr.length == 0) {
-                if(row.longitude && row.latitude) {
+              if (adr.length == 0) {
+                if (row.longitude && row.latitude) {
                   //reverse geoencode
                   var provider = req.params.provider || config.geocoder.provider;
                   var params = {};
-                  if(provider in config.geocoder.options) {
+                  if (provider in config.geocoder.options) {
                     params = config.geocoder.options[provider];
                   }
                   params.provider = provider;
@@ -253,99 +253,99 @@ module.exports = class App {
                   geocoder.reverse({
                     lat: row.latitude,
                     lon: row.longitude
-                  }).then(function(res) {
+                  }).then(function (res) {
                     var adrArr = res[0];
                     var adrParts = [];
-                    for(var i in adrArr) {
+                    for (var i in adrArr) {
                       adrParts.push(adrArr[i]);
                     }
                     forward(adrParts.join(" "));
-                  }).catch(function(err) {
+                  }).catch(function (err) {
                     res.send("error: " + JSON.stringify(err), 500);
                   })
-                }else{
+                } else {
                   res.send("no address found", 404);
                 }
-              }else{
+              } else {
                 forward(adr);
               }
             }
           }
         });
-      });
+    });
 
     this.app.post("/update/location", (req, res) => {
       var id = req.body.id;
       var lat = req.body.latitude;
       var lng = req.body.longitude;
-      if(id && lat && lng) {
+      if (id && lat && lng) {
         var stmt = db.prepare('UPDATE "wohnungen" SET latitude = $latitude, longitude = $longitude WHERE id = $id');
         stmt.run({
           $id: id,
           $latitude: lat,
           $longitude: lng
         }, dbErr => {
-          if(dbErr) {
+          if (dbErr) {
             console.log(dbErr);
-            res.send(JSON.stringify({success:false, error: dbErr}), 500);
-          }else{
-            res.send(JSON.stringify({success:true}), 200);
+            res.send(JSON.stringify({ success: false, error: dbErr }), 500);
+          } else {
+            res.send(JSON.stringify({ success: true }), 200);
           }
         });
-      }else{
-        res.send(JSON.stringify({success:false, error: "missing params"}), 400);
+      } else {
+        res.send(JSON.stringify({ success: false, error: "missing params" }), 400);
       }
     })
 
     this.app.get("/geocode/:provider", (req, res) => {
       db.all('SELECT * from "wohnungen" WHERE latitude IS NULL OR longitude IS NULL', (error, result) => {
-        if(error) {
+        if (error) {
           res.send(JSON.stringify(error), 500);
-        }else{
+        } else {
           var addresses = [];
           var nonEmptyResults = [];
-          for(var i = 0; i < result.length; i++) {
+          for (var i = 0; i < result.length; i++) {
             var data = JSON.parse(result[i].data);
-            if(data != null && data.adresse != null) {
+            if (data != null && data.adresse != null) {
               var adr = data.adresse.replace(/ *\([^)]*\) */g, "");
-              if(adr.length > 0) {
+              if (adr.length > 0) {
                 nonEmptyResults.push(result[i]);
                 addresses.push(adr);
               }
             }
           }
-          if(nonEmptyResults.length == 0) {
+          if (nonEmptyResults.length == 0) {
             res.send("No missing latlng found.");
             return;
           }
           var provider = req.params.provider || config.geocoder.provider;
           var params = {};
-          if(provider in config.geocoder.options) {
+          if (provider in config.geocoder.options) {
             params = config.geocoder.options[provider];
           }
           params.provider = provider;
           var geocoder = NodeGeocoder(params);
           geocoder.batchGeocode(addresses, (geoError, geoResults) => {
-            if(geoError) {
+            if (geoError) {
               res.send(JSON.stringify(geoError), 500);
-            }else{
+            } else {
               var log = [], toUpdate = [];
-              for(var i = 0; i < geoResults.length; i++) {
+              for (var i = 0; i < geoResults.length; i++) {
                 var geoRes = geoResults[i];
                 var isError = geoRes.error != null || geoRes.value.length < 1;
-                if(isError) {
+                if (isError) {
                   log.push("ERROR: " + addresses[i] + " -- " + geoRes.error + " <a href='" + nonEmptyResults[i].url + "'>Link</a>");
-                }else{
+                } else {
                   var val = geoRes.value[0];
                   var str = Object.keys(val).filter(key => {
-                    if(["latitude", "longitude", "provider"].indexOf(key) >= 0) {
+                    if (["latitude", "longitude", "provider"].indexOf(key) >= 0) {
                       return false;
                     }
                     return val[key] != null && val[key] != undefined;
                   }).map(key => val[key]).join(" ");
-                  if(str.indexOf("Berlin") < 0) {
+                  if (str.indexOf("Berlin") < 0) {
                     log.push("WHAT?! " + addresses[i] + " -- " + str);
-                  }else{
+                  } else {
                     log.push("<strong>FOUND:</strong> " + addresses[i] + " -- " + str);
                     toUpdate.push({
                       $id: nonEmptyResults[i].id,
@@ -361,7 +361,7 @@ module.exports = class App {
                 var defer = q.defer();
                 defers.push(q.promise);
                 stmt.run(obj, dbErr => {
-                  if(dbErr) {
+                  if (dbErr) {
                     console.log(dbErr);
                   }
                   defer.resolve();

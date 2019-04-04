@@ -77,7 +77,7 @@ module.exports = {
     update: '30 * * * *',
   },
   city: "Berlin",
-  database: "wohnungen.db",
+  database: "data/wohnungen.db",
   geocoder: {
     provider: "here", //supported: here, google, mapquest
     options: {
