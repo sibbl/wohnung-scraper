@@ -1,4 +1,4 @@
-CREATE TABLE [wohnungen](
+CREATE TABLE IF NOT EXISTS [wohnungen](
     [id] INTEGER PRIMARY KEY AUTOINCREMENT, 
     [website] TEXT NOT NULL, 
     [websiteId] TEXT NOT NULL, 
