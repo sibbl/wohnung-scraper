@@ -16,7 +16,7 @@ if (!fs.existsSync(pathToDatabase)) {
     await db.run(SETUP_SQL);
     const scraper = [
         "WgGesuchtScraper",
-        // "StudentenWgScraper",
+        "StudentenWgScraper",
         "ImmoscoutScraper",
         "ImmonetScraper"
     ].map(scraperModuleName => {
@@ -50,7 +50,9 @@ if (!fs.existsSync(pathToDatabase)) {
     startScraperCronjob(config.cronTimes.scrape, "scrape");
     startScraperCronjob(config.cronTimes.update, "updateItems");
 
-    getRunFunction("scrape")();
+    // for debugging:
+    // getRunFunction("scrape")();
+    // getRunFunction("updateItems")();
 
     new app(db, scraper);
 })();
