@@ -1,6 +1,6 @@
 var AbstractScraper = require("./AbstractScraper"),
     config = require("../config"),
-    request = require("request"),
+    request = require("request-promise"),
     cheerio = require("cheerio"),
     urlLib = require("url"),
     moment = require("moment");
