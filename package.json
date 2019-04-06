@@ -19,7 +19,8 @@
     "node-telegram-bot-api": "^0.30.0",
     "q": "^1.5.1",
     "request": "^2.88.0",
-    "sqlite3": "^4.0.6",
+    "request-promise": "^4.2.4",
+    "sqlite": "^3.0.3",
     "supervisor": "^0.12.0"
   },
   "scripts": {
@@ -27,5 +28,6 @@
     "prestart": "npm install",
     "start": "npm run server",
     "server": "supervisor -w index.js,config.js,scraper,app/index.js,node_modules,bower_components index.js"
-  }
+  },
+  "dependencies": {}
 }

@@ -1,54 +1,56 @@
-const config = require('./config'),
-  app = require('./app'),
-  sqlite = require('sqlite3').verbose(),
-  CronJob = require('cron').CronJob,
-  q = require('q'),
-  { SETUP_SQL } = require('./app/database'),
-  fs = require('fs'),
-  path = require('path');
+const config = require("./config"),
+    app = require("./app"),
+    sqlite = require("sqlite"),
+    CronJob = require("cron").CronJob,
+    { SETUP_SQL } = require("./app/database"),
+    fs = require("fs"),
+    path = require("path");
 
 const pathToDatabase = path.dirname(config.database);
 if (!fs.existsSync(pathToDatabase)) {
-  fs.mkdirSync(pathToDatabase, { recursive: true });
+    fs.mkdirSync(pathToDatabase, { recursive: true });
 }
 
-const db = new sqlite.Database(config.database);
-db.run(SETUP_SQL, () => {
-  const scraper = [
-    'WgGesuchtScraper',
-    'StudentenWgScraper',
-    'ImmoscoutScraper',
-    'ImmonetScraper'
-  ].map(scraper => {
-    const s = require('./scraper/' + scraper);
-    return new s(db);
-  });
-
-  const startScraperCronjob = function (cronTime, scraperFuncName) {
-    const job = new CronJob({
-      cronTime: cronTime,
-      onTick: function () {
-        console.log("Run cron: " + scraperFuncName + "(" + (new Date().toISOString()) + ")");
-        let promise = null;
-        scraper.forEach(s => {
-          if (promise == null) {
-            promise = s[scraperFuncName]();
-          } else {
-            promise = promise.then(function () {
-              return q.when(s[scraperFuncName]());
-            });
-          }
-        });
-        // scraper.forEach(s => s[scraperFuncName]());
-      },
-      start: true,
-      timeZone: 'Europe/Berlin'
+(async () => {
+    const db = await sqlite.open(config.database);
+    await db.run(SETUP_SQL);
+    const scraper = [
+        // "WgGesuchtScraper",
+        // "StudentenWgScraper",
+        // "ImmoscoutScraper",
+        "ImmonetScraper"
+    ].map(scraperModuleName => {
+        const scraper = require("./scraper/" + scraperModuleName);
+        return new scraper(db);
     });
-    job.start();
-  }
 
-  startScraperCronjob(config.cronTimes.scrape, "scrape");
-  startScraperCronjob(config.cronTimes.update, "updateItems");
+    const getRunFunction = scraperFuncName => async () => {
+        console.log(
+            "Run cron: " +
+                scraperFuncName +
+                "(" +
+                new Date().toISOString() +
+                ")"
+        );
+        for(let s of scraper) {
+          await s[scraperFuncName]();
+        }
+    };
 
-  new app(db, scraper);
-});
+    const startScraperCronjob = (cronTime, scraperFuncName) => {
+        const job = new CronJob({
+            cronTime,
+            onTick: getRunFunction(scraperFuncName),
+            start: true,
+            timeZone: "Europe/Berlin"
+        });
+        job.start();
+    };
+
+    startScraperCronjob(config.cronTimes.scrape, "scrape");
+    startScraperCronjob(config.cronTimes.update, "updateItems");
+
+    getRunFunction("scrape")();
+
+    new app(db, scraper);
+})();

@@ -1,4 +1,5 @@
 module.exports = {
+  baseUrl: "http://localhost:3000/",
   map: {
     initialView: {
       lat: 52.504703,
