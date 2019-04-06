@@ -24,6 +24,8 @@ if (!fs.existsSync(pathToDatabase)) {
         return new scraper(db);
     });
 
+    await Promise.all(scraper.map(s => s.init()));
+
     const getRunFunction = scraperFuncName => async () => {
         console.log(
             "Run cron: " +
@@ -51,7 +53,7 @@ if (!fs.existsSync(pathToDatabase)) {
     startScraperCronjob(config.cronTimes.update, "updateItems");
 
     // for debugging:
-    // getRunFunction("scrape")();
+    getRunFunction("scrape")();
     // getRunFunction("updateItems")();
 
     new app(db, scraper);

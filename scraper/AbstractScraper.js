@@ -27,11 +27,11 @@ module.exports = class AbstractScraper {
                 "Scraper " + scraperId + " config could not be loaded."
             );
         }
-
-        this.prepareStatements();
+    }
+    async init() {
+        await this.prepareStatements();
     }
     async prepareStatements() {
-        
         this.statements = {
             insert: await this.db.prepare(
                 'INSERT INTO "wohnungen" (website, websiteId, url, latitude, longitude, rooms, size, price, free_from, active, gone, data) VALUES ($website, $websiteId, $url, $latitude, $longitude, $rooms, $size, $price, $free_from, $active, $gone, $data)'
@@ -366,6 +366,8 @@ module.exports = class AbstractScraper {
             this.sendBotNotifications(enabledBots, flatResult);
             console.log("Finish sending to bots " + this.id);
         }
-        console.log(`Finished scraping ${this.id} at ${new Date().toISOString()}`);
+        console.log(
+            `Finished scraping ${this.id} at ${new Date().toISOString()}`
+        );
     }
 };
