@@ -17,7 +17,7 @@ if (!fs.existsSync(pathToDatabase)) {
     const scraper = [
         // "WgGesuchtScraper",
         // "StudentenWgScraper",
-        // "ImmoscoutScraper",
+        "ImmoscoutScraper",
         "ImmonetScraper"
     ].map(scraperModuleName => {
         const scraper = require("./scraper/" + scraperModuleName);

@@ -198,7 +198,7 @@ module.exports = class ImmonetScraper extends AbstractScraper {
         try {
             body = await request.get(url, this._getRequestOptions());
         } catch (e) {
-            throw new Error(`Error while scraping URL "${url}"`);
+            throw new Error(`Error while scraping URL "${url}" with error ${e}`);
         }
 
         const $ = cheerio.load(body);

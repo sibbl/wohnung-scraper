@@ -366,5 +366,6 @@ module.exports = class AbstractScraper {
             this.sendBotNotifications(enabledBots, flatResult);
             console.log("Finish sending to bots " + this.id);
         }
+        console.log(`Finished scraping ${this.id} at ${new Date().toISOString()}`);
     }
 };
