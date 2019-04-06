@@ -53,7 +53,7 @@ if (!fs.existsSync(pathToDatabase)) {
     startScraperCronjob(config.cronTimes.update, "updateItems");
 
     // for debugging:
-    getRunFunction("scrape")();
+    // getRunFunction("scrape")();
     // getRunFunction("updateItems")();
 
     new app(db, scraper);
