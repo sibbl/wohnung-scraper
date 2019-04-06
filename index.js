@@ -15,7 +15,7 @@ if (!fs.existsSync(pathToDatabase)) {
     const db = await sqlite.open(config.database);
     await db.run(SETUP_SQL);
     const scraper = [
-        // "WgGesuchtScraper",
+        "WgGesuchtScraper",
         // "StudentenWgScraper",
         "ImmoscoutScraper",
         "ImmonetScraper"
