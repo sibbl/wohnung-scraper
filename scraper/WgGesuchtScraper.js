@@ -132,7 +132,7 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     async scrapeItemDetails(url, exists) {
         let body;
         try {
-            body = request.get(url, this._getRequestOptions());
+            body = await request.get(url, this._getRequestOptions());
         } catch (e) {
             throw new Error(
                 `Error while scraping item details for URL "${url}" with error ${e}`
@@ -248,7 +248,7 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     async scrapeSite(url) {
         let body;
         try {
-            body = request.get(url, this._getRequestOptions());
+            body = await request.get(url, this._getRequestOptions());
         } catch (e) {
             throw new Error(
                 `Error while scraping URL "${url}" with error ${e}`

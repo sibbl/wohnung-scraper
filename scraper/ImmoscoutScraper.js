@@ -3,10 +3,9 @@ var AbstractScraper = require("./AbstractScraper"),
     request = require("request-promise"),
     cheerio = require("cheerio"),
     urlLib = require("url"),
-    moment = require("moment"),
-    q = require("q");
+    moment = require("moment");
 
-module.exports = class WgGesuchtScraper extends AbstractScraper {
+module.exports = class ImmoscoutScraper extends AbstractScraper {
     constructor(db) {
         super(db, "immoscout24");
         this.cookieJar = request.jar();
@@ -82,7 +81,7 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     async scrapeItemDetails(url, exists) {
         let body;
         try {
-            body = request.get(url, this._getRequestOptions());
+            body = await request.get(url, this._getRequestOptions());
         } catch (e) {
             throw new Error(
                 `Error while scraping item details for URL "${url}" with error ${e}`
@@ -191,7 +190,7 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     async scrapeSite(url) {
         let body;
         try {
-            body = request.get(url, this._getRequestOptions());
+            body = await request.get(url, this._getRequestOptions());
         } catch (e) {
             throw new Error(
                 `Error while scraping URL "${url}" with error ${e}`

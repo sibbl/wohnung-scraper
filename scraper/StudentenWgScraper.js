@@ -4,7 +4,6 @@ var AbstractScraper = require("./AbstractScraper"),
   cheerio = require("cheerio"),
   urlLib = require("url"),
   moment = require("moment"),
-  q = require("q"),
   iconv = require("iconv-lite");
 
 iconv.skipDecodeWarning = true;
