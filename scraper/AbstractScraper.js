@@ -93,7 +93,7 @@ module.exports = class AbstractScraper {
       });
     } catch (e) {
       throw new Error(
-        `Error while updating in database (ID=${this.id}, error: ${e}`
+        `Error while updating in database (ID=${this.id}, error: ${e})`
       );
     }
   }
@@ -105,7 +105,7 @@ module.exports = class AbstractScraper {
       });
     } catch (e) {
       throw new Error(
-        `Error while deleting from database (ID=${this.id}, error: ${e}`
+        `Error while deleting from database (ID=${this.id}, error: ${e})`
       );
     }
   }
@@ -118,12 +118,15 @@ module.exports = class AbstractScraper {
       return count > 0;
     } catch (e) {
       throw new Error(
-        `Error while checking existing items (ID=${this.id}, error: ${e}`
+        `Error while checking existing items (ID=${this.id}, error: ${e})`
       );
     }
   }
   async getLocationOfAddress(address) {
-    const addressWithoutPhrasesInParentheses = address.replace(/ *\([^)]*\) */g, " ");
+    const addressWithoutPhrasesInParentheses = address.replace(
+      / *\([^)]*\) */g,
+      " "
+    );
     if (addressWithoutPhrasesInParentheses.length == 0) {
       throw new Error(`Trying to geocode invalid address: ${address}`);
     } else {
@@ -167,19 +170,6 @@ module.exports = class AbstractScraper {
     }
   }
 
-  async _updateItemsAsync(rows) {
-    const promises = rows.map(row => {
-      return new Promise((resolve, reject) => {
-        this.scrapeItemDetails(row.url, true).then(data => {
-          row = Object.assign(row, data);
-          this.updateInDb(row)
-            .then(() => resolve(true))
-            .catch(reject);
-        });
-      });
-    });
-    return Promise.all(promises);
-  }
   async _updateItemsSync(rows) {
     for (let row of rows) {
       const data = await this.scrapeItemDetails(row.url, true);
@@ -187,8 +177,10 @@ module.exports = class AbstractScraper {
     }
   }
   async updateItems() {
+    console.log(`Start updating ${this.id} at ${new Date().toISOString()}`);
     const rows = await this.getActiveItems();
     await this._updateItemsSync(rows);
+    console.log(`Finished updating ${this.id} at ${new Date().toISOString()}`);
   }
 
   sendBotNotifications(bots, result) {
@@ -345,5 +337,21 @@ module.exports = class AbstractScraper {
       console.log("Finish sending to bots " + this.id);
     }
     console.log(`Finished scraping ${this.id} at ${new Date().toISOString()}`);
+  }
+
+  async doRequest(url, req) {
+    let response;
+    try {
+      response = await req;
+    } catch (e) {
+      response = e.response;
+      console.warn(
+        `Received HTTP status code ${
+          response.statusCode
+        } at HTTP request for URL "${url}"`,
+        e
+      );
+    }
+    return response;
   }
 };

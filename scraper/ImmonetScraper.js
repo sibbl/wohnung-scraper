@@ -104,27 +104,24 @@ module.exports = class ImmonetScraper extends AbstractScraper {
     }
     _getRequestOptions() {
         return {
+            resolveWithFullResponse: true,
             jar: this.cookieJar,
             encoding: null,
             ...config.httpOptions
         };
     }
     async scrapeItemDetails(url, exists) {
-        let body;
-        try {
-            body = await request.get(url, this._getRequestOptions());
-        } catch (e) {
-            throw new Error(
-                `Error while scraping item details for URL "${url}" with error ${e}`
-            );
-        }
+        const { body, statusCode } = await this.doRequest(
+          url,
+          request.get(url, this._getRequestOptions())
+        );
 
         const result = {};
 
         const bodyStr = iconv.decode(body, "iso-8859-1");
         const $ = cheerio.load(body);
 
-        result.gone = false;
+        result.gone = statusCode !== 200;
         try {
             const makePrice = str => {
                 return parseFloat(str.replace("€", "").trim());
@@ -194,12 +191,10 @@ module.exports = class ImmonetScraper extends AbstractScraper {
         return result;
     }
     async scrapeSite(url) {
-        let body;
-        try {
-            body = await request.get(url, this._getRequestOptions());
-        } catch (e) {
-            throw new Error(`Error while scraping URL "${url}" with error ${e}`);
-        }
+        const { body } = await this.doRequest(
+          url,
+          request.get(url, this._getRequestOptions())
+        );
 
         const $ = cheerio.load(body);
         const promises = [];

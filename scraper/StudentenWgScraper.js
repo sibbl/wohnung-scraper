@@ -114,26 +114,23 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
   }
   _getRequestOptions() {
     return {
+      resolveWithFullResponse: true,
       jar: this.cookieJar,
       encoding: null,
       ...config.httpOptions
     };
   }
   async scrapeItemDetails(url, exists) {
-    let body;
-    try {
-      body = await request.get(url, this._getRequestOptions());
-    } catch (e) {
-      throw new Error(
-        `Error while scraping item details for URL "${url}" with error ${e}`
-      );
-    }
+    const { body, statusCode } = await this.doRequest(
+      url,
+      request.get(url, this._getRequestOptions())
+    );
 
     const result = {};
 
     const $ = cheerio.load(iconv.decode(body, "iso-8859-1"));
 
-    result.gone = false;
+    result.gone = statusCode !== 200;
     try {
       const adresse = $("#xlocation h4")
         .first()
@@ -195,7 +192,9 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
       } else {
         let resolvedAddress;
         try {
-          resolvedAddress = await this.getLocationOfAddress(result.data.adresse);
+          resolvedAddress = await this.getLocationOfAddress(
+            result.data.adresse
+          );
         } catch (_) {
           return result;
         }
@@ -206,12 +205,10 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     }
   }
   async scrapeSite(url) {
-    let body;
-    try {
-      body = await request.get(url, this._getRequestOptions());
-    } catch (e) {
-      throw new Error(`Error while scraping URL "${url}" with error ${e}`);
-    }
+    const { body } = await this.doRequest(
+      url,
+      request.get(url, this._getRequestOptions())
+    );
 
     const $ = cheerio.load(body);
     const promises = [];
