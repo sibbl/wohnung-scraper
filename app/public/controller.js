@@ -288,7 +288,7 @@ angular.module('dataVis')
           return this.constrainX(value);
         }
       });
-      var priceFunc = new L.HSLHueFunction(new L.Point(6, 120), new L.Point(20, 0), {
+      var priceFunc = new L.HSLHueFunction(new L.Point(6, 120), new L.Point(config.maxPricePerSqM, 0), {
         constrainX:true,
         preProcess: function(value) {
           return this.constrainX(value);

@@ -44,6 +44,7 @@ module.exports = {
   },
   defaultTransportTime: 30, // minutes
   defaultShowTransportRangeAutomatically: false,
+  maxPricePerSqM: 20,
   filters: {
     // usually, the upper bound is set automatically. But we crop them at these values
     upperLimits: {
