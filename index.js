@@ -27,10 +27,12 @@ if (!fs.existsSync(pathToDatabase)) {
 
   await Promise.all(scraperList.map(s => s.init()));
 
+  const scraperRunner = getScraperRunner(scraperList);
+
   const startScraperCronjob = (cronTime, scraperFuncName) => {
     const job = new CronJob({
       cronTime,
-      onTick: getScraperRunner(scraperList, scraperFuncName),
+      onTick: scraperRunner(scraperFuncName),
       start: true,
       timeZone: "Europe/Berlin"
     });
@@ -41,8 +43,8 @@ if (!fs.existsSync(pathToDatabase)) {
   startScraperCronjob(config.cronTimes.update, "updateItems");
 
   // for debugging:
-  // getScraperRunner(scraperList)("scrape");
-  // getScraperRunner(scraperList)("updateItems");
+  // scraperRunner("scrape");
+  // scraperRunner("updateItems");
 
   new app(db, scraperList);
 })();
