@@ -195,7 +195,7 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
       } else {
         let resolvedAddress;
         try {
-          resolvedAddress = this.getLocationOfAddress(result.data.adresse);
+          resolvedAddress = await this.getLocationOfAddress(result.data.adresse);
         } catch (_) {
           return result;
         }

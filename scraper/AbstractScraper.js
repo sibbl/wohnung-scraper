@@ -123,8 +123,8 @@ module.exports = class AbstractScraper {
     }
   }
   async getLocationOfAddress(address) {
-    const strippedAddress = address.replace(/ *\([^)]*\) */g, "");
-    if (strippedAddress.length == 0) {
+    const addressWithoutPhrasesInParentheses = address.replace(/ *\([^)]*\) */g, " ");
+    if (addressWithoutPhrasesInParentheses.length == 0) {
       throw new Error(`Trying to geocode invalid address: ${address}`);
     } else {
       const provider = config.geocoder.provider;
@@ -136,7 +136,7 @@ module.exports = class AbstractScraper {
       const geocoder = NodeGeocoder(params);
       let res;
       try {
-        res = await geocoder.geocode(strippedAddress);
+        res = await geocoder.geocode(addressWithoutPhrasesInParentheses);
       } catch (e) {
         throw new Error(
           `Failed to geocode address "${address}" with error: ${e}`
