@@ -23,7 +23,12 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
     async _getDbObject(url, tableRow, itemId, relativeItemUrl, exists) {
         const itemUrl = urlLib.resolve(url, relativeItemUrl);
 
-        const data = this.scrapeItemDetails(itemUrl, exists);
+        let data = {};
+        try {
+            data = await this.scrapeItemDetails(itemUrl, exists);
+        } catch(e) {
+            console.log("Error whilte scrapping immo", e);
+        }
         data.url = itemUrl;
         data.websiteId = itemId;
         data.active = true;
@@ -64,11 +69,11 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
                 itemId,
                 relativeItemUrl
             );
-            const id = this.insertIntoDb(data);
+            const {lastID} = await this.insertIntoDb(data);
             return {
                 type: "added",
-                id: id,
-                data: data
+                id: lastID,
+                data
             };
         }
     }

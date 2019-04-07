@@ -111,12 +111,12 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
             }
         } else {
             if (!isInDb) {
-                const data = this._getDbObject(url, tableRow, itemId);
-                const id = this.insertIntoDb(data);
+                const data = await this._getDbObject(url, tableRow, itemId);
+                const { lastID } = await this.insertIntoDb(data);
                 return {
                     type: "added",
-                    id: id,
-                    data: data
+                    id: lastID,
+                    data
                 };
             } else {
                 return false;
