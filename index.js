@@ -4,7 +4,8 @@ const config = require("./config"),
     CronJob = require("cron").CronJob,
     { SETUP_SQL } = require("./app/database"),
     fs = require("fs"),
-    path = require("path");
+    path = require("path"),
+    getScraperRunner = require("./utils/scraperRunner");
 
 const pathToDatabase = path.dirname(config.database);
 if (!fs.existsSync(pathToDatabase)) {
@@ -14,35 +15,21 @@ if (!fs.existsSync(pathToDatabase)) {
 (async () => {
     const db = await sqlite.open(config.database);
     await db.run(SETUP_SQL);
-    const scraper = [
+
+    const scraperList = [
         "WgGesuchtScraper",
         "StudentenWgScraper",
         "ImmoscoutScraper",
         "ImmonetScraper"
-    ].map(scraperModuleName => {
-        const scraper = require("./scraper/" + scraperModuleName);
-        return new scraper(db);
-    });
+    ].map(scraperModuleName => require("./scraper/" + scraperModuleName))
+    .map(scraper => new scraper(db));
 
-    await Promise.all(scraper.map(s => s.init()));
-
-    const getRunFunction = scraperFuncName => async () => {
-        console.log(
-            "Run cron: " +
-                scraperFuncName +
-                "(" +
-                new Date().toISOString() +
-                ")"
-        );
-        for(let s of scraper) {
-          await s[scraperFuncName]();
-        }
-    };
+    await Promise.all(scraperList.map(s => s.init()));
 
     const startScraperCronjob = (cronTime, scraperFuncName) => {
         const job = new CronJob({
             cronTime,
-            onTick: getRunFunction(scraperFuncName),
+            onTick: getScraperRunner(scraperList, scraperFuncName),
             start: true,
             timeZone: "Europe/Berlin"
         });
@@ -53,8 +40,8 @@ if (!fs.existsSync(pathToDatabase)) {
     startScraperCronjob(config.cronTimes.update, "updateItems");
 
     // for debugging:
-    // getRunFunction("scrape")();
-    // getRunFunction("updateItems")();
+    // getScraperRunner("scrape")();
+    // getScraperRunner("updateItems")();
 
-    new app(db, scraper);
+    new app(db, scraperList);
 })();

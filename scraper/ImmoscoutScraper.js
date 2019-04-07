@@ -3,10 +3,9 @@ var AbstractScraper = require("./AbstractScraper"),
     request = require("request-promise"),
     cheerio = require("cheerio"),
     urlLib = require("url"),
-    moment = require("moment"),
-    q = require("q");
+    moment = require("moment");
 
-module.exports = class WgGesuchtScraper extends AbstractScraper {
+module.exports = class ImmoscoutScraper extends AbstractScraper {
     constructor(db) {
         super(db, "immoscout24");
         this.cookieJar = request.jar();
