@@ -42,7 +42,7 @@ angular.module('dataVis')
     websites: Object.keys($scope.availableWebsites),
   });
 
-  $scope.transportRoutes = config.transportRoutes;
+  $scope.transportRoutes = config.transportRoutes.options[config.transportRoutes.provider];
 
   //generate next 10 free_from values
   var free_from = [null];

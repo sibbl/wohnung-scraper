@@ -33,18 +33,13 @@ if (!fs.existsSync(pathToDatabase)) {
     const job = new CronJob({
       cronTime,
       onTick: scraperRunner(scraperFuncName),
-      start: true,
-      timeZone: "Europe/Berlin"
+      start: true
     });
     job.start();
   };
 
   startScraperCronjob(config.cronTimes.scrape, "scrape");
   startScraperCronjob(config.cronTimes.update, "updateItems");
-
-  // for debugging:
-  // scraperRunner("scrape");
-  // scraperRunner("updateItems");
 
   new app(db, scraperList);
 })();

@@ -191,19 +191,18 @@ module.exports = class App {
 
     this.app.get("/:id/route/:direction", async (req, res) => {
       if (
-        Object.keys(config.transportRoutes).indexOf(req.params.direction) < 0
+        Object.keys(config.transportRoutes.options[config.transportRoutes.provider]).indexOf(req.params.direction) < 0
       ) {
         res.send("invalid param", 400);
         return;
       }
-      const transportData = config.transportRoutes[req.params.direction];
       let row;
       try {
-        row = await db
+        const statement = await db
           .prepare(
             'SELECT data, latitude, longitude FROM "wohnungen" WHERE id = $id'
-          )
-          .get({
+          );
+        row = await statement.get({
             $id: req.params.id
           });
       } catch (error) {
@@ -222,92 +221,10 @@ module.exports = class App {
         res.send("invalid ID", 400);
         return;
       }
-      const data = JSON.parse(row.data);
 
-      const forward = async adr => {
-        const name = encodeURIComponent(adr);
+      const transportModule = require(`../transport/${config.transportRoutes.provider}`);
 
-        const url = `http://fahrinfo.vbb.de/bin/ajax-getstop.exe/dny?start=1&tpl=suggest2json&REQ0JourneyStopsS0A=7&getstop=1&noSession=yes&REQ0JourneyStopsS0F=excludeStationAttribute;FO&REQ0JourneyStopsB=12&REQ0JourneyStopsS0G=${name}&js=true&`;
-        const body = await request.get(url);
-
-        const firstEqualSign = body.indexOf("=");
-        const firstSemicolon = body.indexOf(";");
-        const json = JSON.parse(
-          body.substr(firstEqualSign + 1, firstSemicolon - firstEqualSign - 1)
-        );
-        const startName = json.suggestions[0].value;
-        const startId = json.suggestions[0].id;
-
-        const endName = transportData.name;
-        const endId = transportData.id;
-        const str = `<!DOCTYPE html>
-            <html>
-            <body></body>
-            <script>
-            var form = document.createElement("form");
-            form.setAttribute("method", "post");
-            form.setAttribute("action", "http://fahrinfo.vbb.de/bin/query.exe/dn");
-            var createInputField = function(name, input) {
-              var hiddenField = document.createElement("input");              
-              hiddenField.setAttribute("name", name);
-              hiddenField.setAttribute("type", "hidden");
-              hiddenField.setAttribute("value", input);
-              form.appendChild(hiddenField);
-            }
-            createInputField("start","yes");
-            createInputField("REQ0JourneyStopsS0A",2);
-            createInputField("ignoreTypeCheck", "yes");
-            createInputField("S", "${startName}");
-            createInputField("REQ0JourneyStopsSID","${startId}");
-            // createInputField("REQ0JourneyStopsZ0A", "1");
-            createInputField("Z", "${endName}");
-            createInputField("REQ0JourneyStopsZID", "${endId}");
-            createInputField("time", "10:00");
-            createInputField("date", "10.10.2016");
-            createInputField("timeSel", "depart");
-            // createInputField("route_search_now_submit", "");
-            document.body.appendChild(form);
-            form.submit();
-            </script>
-            </html>`;
-        res.set("Content-Type", "text/html");
-        res.send(str);
-      };
-
-      const adr = data.adresse;
-      if (adr.length == 0) {
-        if (row.longitude && row.latitude) {
-          //reverse geoencode
-          const provider = req.params.provider || config.geocoder.provider;
-          const params = {};
-          if (provider in config.geocoder.options) {
-            params = config.geocoder.options[provider];
-          }
-          params.provider = provider;
-          const geocoder = NodeGeocoder(params);
-          let res;
-          try {
-            res = await geocoder.reverse({
-              lat: row.latitude,
-              lon: row.longitude
-            });
-          } catch (error) {
-            res.send("error: " + JSON.stringify(err), 500);
-            return;
-          }
-
-          const adrArr = res[0];
-          const adrParts = [];
-          for (let i in adrArr) {
-            adrParts.push(adrArr[i]);
-          }
-          await forward(adrParts.join(" "));
-        } else {
-          res.send("no address found", 404);
-        }
-      } else {
-        await forward(adr);
-      }
+      await transportModule.redirectToTransport(row, req.params.direction, config, res);
     });
 
     this.app.post("/update/location", async (req, res) => {
