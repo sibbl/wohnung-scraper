@@ -20,6 +20,15 @@ module.exports = class App {
 
     const scraperRunner = getScraperRunner(scaperList);
 
+    (async () => {
+      this.statements = {
+        updateActive: await db.prepare('UPDATE "wohnungen" SET active = $active WHERE id = $id'),
+        updateFavorite: await db.prepare('UPDATE "wohnungen" SET favorite = $favorite WHERE id = $id'),
+        updateLocation: await db.prepare('UPDATE "wohnungen" SET latitude = $latitude, longitude = $longitude WHERE id = $id'),
+        getById: await db.prepare('SELECT * FROM "wohnungen" WHERE id = $id')
+      }
+    })();
+
     this.app.get("/scrape", async (_, res) => {
       try {
         await scraperRunner("scrape");
@@ -47,9 +56,7 @@ module.exports = class App {
     this.app.get("/forward/:id", async (req, res) => {
       let row;
       try {
-        row = await db
-          .prepare('SELECT url FROM "wohnungen" WHERE id = $id')
-          .get({
+        row = await this.statements.getById.get({
             $id: req.params.id
           });
       } catch (error) {
@@ -141,9 +148,7 @@ module.exports = class App {
         res.send(JSON.stringify({ success: false, message: "missing body" }));
       } else {
         try {
-          await db
-            .prepare('UPDATE "wohnungen" SET active = $active WHERE id = $id')
-            .run({
+          await this.statements.updateActive.run({
               $active: active,
               $id: req.params.id
             });
@@ -166,12 +171,8 @@ module.exports = class App {
       if (typeof favorite !== "boolean") {
         res.send(JSON.stringify({ success: false, message: "missing body" }));
       } else {
-        try {
-          await db
-            .prepare(
-              'UPDATE "wohnungen" SET favorite = $favorite WHERE id = $id'
-            )
-            .run({
+        try {;
+          await this.statements.updateFavorite.run({
               $favorite: favorite,
               $id: req.params.id
             });
@@ -198,11 +199,7 @@ module.exports = class App {
       }
       let row;
       try {
-        const statement = await db
-          .prepare(
-            'SELECT data, latitude, longitude FROM "wohnungen" WHERE id = $id'
-          );
-        row = await statement.get({
+        row = await this.statements.getById.get({
             $id: req.params.id
           });
       } catch (error) {
@@ -231,11 +228,7 @@ module.exports = class App {
       const { id, latitude, longitude } = req.body;
       if (id && latitude && longitude) {
         try {
-          await db
-            .prepare(
-              'UPDATE "wohnungen" SET latitude = $latitude, longitude = $longitude WHERE id = $id'
-            )
-            .run({
+          await this.statements.updateLocation.run({
               $id: id,
               $latitude: latitude,
               $longitude: longitude
@@ -328,11 +321,8 @@ module.exports = class App {
           }
         }
       }
-      const stmt = db.prepare(
-        'UPDATE "wohnungen" SET latitude = $latitude, longitude = $longitude WHERE id = $id'
-      );
       const promises = toUpdate.map(obj => {
-        return stmt.run(obj);
+        return this.statements.updateLocation.run(obj);
       });
       await Promise.all(promises);
       res.send(log.join("<br/>"));
