@@ -1,6 +1,6 @@
 # Wohnung Scraper
 
-This tool scrapes several online real estate listing websites and visualizes offers in a map. 
+This tool scrapes several online real estate listing websites and visualizes offers in a map.
 
 ## Screenshot
 
@@ -30,20 +30,21 @@ This tool scrapes several online real estate listing websites and visualizes off
 
 ## Set up
 
-1. Create your own `config.js` by using the `config.template.js`
-2. Create a SQLite db `wohnungen.db` using the `wohnungen.db.sql` file
-3. `npm install` and `npm start` 
-4. Get lucky on [localhost:3000](http://localhost:3000)
+1. Create your own `config.js` by using the `config.template.js` (especially fill API keys)
+2. Run `npm start` 
+3. Get lucky on [localhost:3000](http://localhost:3000)
 
 ## Roadmap
 
 This was privately developed to get a new flat in Berlin (which worked very quickly and well btw). The following features might be very helpful:
 
-- [ ] fix scrapers (some broke due to some missing dynamics in the screen scraping process)
-- [ ] make the set up process easier (e.g. create db automatically)
-- [ ] localize app (it's currently German only...)
-- [ ] rewrite bad Angular code in React perhaps? Also, there's still Bower on board...
-- [ ] add support for more cities (map layers, let users create scripts for cities which can be reused)
+- [x] fix scrapers (some broke due to some missing dynamics in the screen scraping process)
+- [x] make the set up process easier (e.g. create db automatically)
+- [ ] Fix frontend
+  - [ ] Rewrite in React (it's a quick and dirty Angular and Bower solution currently)
+  - [ ] Localize frontend
+  - [ ] Fix map layers
+- [ ] add support for more cities (more dynamic map layers & service integration... also, let users create scripts for cities which can be reused)
 - [ ] there's definitely more 🚀
 
 ## Remarks

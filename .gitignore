@@ -2,5 +2,5 @@
 node_modules
 bower_components
 npm-debug.log
-/wohnungen.db
+wohnungen.db
 /config.js

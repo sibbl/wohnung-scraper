@@ -1,12 +1,10 @@
-var AbstractScraper = require('./AbstractScraper'),
-    config = require('../config'),
-    request = require('request'),
-    cheerio = require('cheerio'),
-    urlLib = require('url'),
-    moment = require('moment'),
-    q = require('q'),
-    geocoder = require('geocoder'),
-    iconv = require("iconv-lite");
+var AbstractScraper = require("./AbstractScraper"),
+  config = require("../config"),
+  request = require("request-promise"),
+  cheerio = require("cheerio"),
+  urlLib = require("url"),
+  moment = require("moment"),
+  iconv = require("iconv-lite");
 
 iconv.skipDecodeWarning = true;
 
@@ -17,7 +15,7 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
   }
   _isAngebot(tableRow) {
     var id = tableRow.attr("id");
-    if(id != null && id.indexOf("wg-ergrow") === 0) {
+    if (id != null && id.indexOf("wg-ergrow") === 0) {
       return true;
     }
     return false;
@@ -26,184 +24,205 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
     return false; //unfortunately we cannot get this from the table row, we need to update it via updateItems
   }
   _getNextPage(url, $) {
-    const nextLink = $("#innercontent .wg-blaetternbox a:contains('»')");
-    if(nextLink.length > 0) {
+    const nextLink = $(".pagination li:not(.disabled) a:contains('»')");
+    if (nextLink.length > 0) {
       return urlLib.resolve(url, nextLink.attr("href"));
-    }else{
+    } else {
       return false;
     }
   }
-  _getDbObject(url, tableRow, itemId, exists) {
-    var defer = q.defer();
-    const miete = tableRow.find("td:nth-child(3)").text().replace("€","").trim();
-    const groesse = tableRow.find("td:nth-child(4)").text().replace("m²","").trim();
-    const freiab_str = tableRow.find("td:nth-child(7)").text().trim();
+  async _getDbObject(url, tableRow, itemId, exists) {
+    const prices = tableRow
+      .find(".property-features p:nth-child(2)")
+      .text()
+      .match(/(\d+)/);
 
+    const groesse = tableRow
+      .find(".property-features p:nth-child(1)")
+      .text()
+      .replace("m2", "")
+      .trim();
+    const freiab_str = tableRow.find(".property-text small").text();
 
     let freiab;
-    if(freiab_str.indexOf("sofort") >= 0) {
+    if (freiab_str.indexOf("sofort") >= 0) {
       freiab = moment();
-    }else{
-      freiab = moment(freiab_str, "DD.MM.YYYY");
+    } else {
+      freiab = moment(
+        freiab_str.match(/Miete ab (\d+\.\d+\.\d+)/),
+        "DD.MM.YYYY"
+      );
     }
 
     const relativeItemUrl = tableRow.find("a").attr("href");
-    const urlParts = relativeItemUrl.match(/_([0-9]+)\.html/);
     const itemUrl = urlLib.resolve(url, relativeItemUrl);
 
-    this.scrapeItemDetails(itemUrl, exists).then(data => {
-      data.websiteId = itemId;
-      data.size = parseInt(groesse);
-      data.price = parseInt(miete);
-      data.url = itemUrl;
-      data.free_from = freiab.toISOString();
-      data.active = true;
+    const result = await this.scrapeItemDetails(itemUrl, exists);
+    result.websiteId = itemId;
+    result.size = parseInt(groesse);
+    result.price = parseInt(prices[1]);
+    result.url = itemUrl;
+    result.free_from = freiab.toISOString();
+    result.active = true;
 
-      defer.resolve(data);
-    });
-    return defer.promise;
+    return result;
   }
-  _scrapeItem(url, tableRow) {
-    const defer = q.defer();
+  async _scrapeItem(url, tableRow) {
     const relativeItemUrl = tableRow.find("a").attr("href");
-    if(relativeItemUrl == null) {
-      defer.resolve(false);
-      return defer.promise;
+    if (relativeItemUrl == null) {
+      return false;
     }
     const urlParts = relativeItemUrl.match(/_([0-9]+)\.html/);
-    if(urlParts == null || urlParts.length < 2) {
-      defer.resolve(false);
-      return defer.promise;
+    if (urlParts == null || urlParts.length < 2) {
+      return false;
     }
     const itemId = urlParts[1];
-    this.hasItemInDb(itemId).then(isInDb => {
-      var ignore = !this._isAngebot(tableRow);
-      if(ignore) {
-        if(isInDb) {
-          this.removeFromDb(itemId).then(() => defer.resolve(true));
-        }else{
-          defer.resolve(false);
-        }
-      }else if(this._isVermietetByTableRow(tableRow)) {
-        if(isInDb) {
-          this._getDbObject(url, tableRow, itemId, true).then(data => {
-            this.updateInDb(data).then(() => defer.resolve({
-              type: "updated",
-              data: data
-            }));
-          });
-        }else{
-          defer.resolve(false);
-        }
-      }else{
-        if(!isInDb) {
-          this._getDbObject(url, tableRow, itemId).then(data => {
-            this.insertIntoDb(data).then(id => defer.resolve({
-              type: "added",
-              id: id,
-              data: data
-            }));
-          });
-        }else{
-          defer.resolve(false);
-        }
+    const isInDb = await this.hasItemInDb(itemId);
+
+    var ignore = !this._isAngebot(tableRow);
+    if (ignore) {
+      if (isInDb) {
+        await this.removeFromDb(itemId);
+        return true;
+      } else {
+        return false;
       }
-    });
-    return defer.promise;
+    } else if (this._isVermietetByTableRow(tableRow)) {
+      if (isInDb) {
+        const data = await this._getDbObject(url, tableRow, itemId, true);
+        await this.updateInDb(data);
+        return {
+          type: "updated",
+          data: data
+        };
+      } else {
+        return false;
+      }
+    } else {
+      if (!isInDb) {
+        const data = await this._getDbObject(url, tableRow, itemId);
+        const { lastID } = await this.insertIntoDb(data);
+        return {
+          type: "added",
+          id: lastID,
+          data
+        };
+      } else {
+        return false;
+      }
+    }
   }
   _getRequestOptions() {
-    return Object.assign({
+    return {
+      resolveWithFullResponse: true,
       jar: this.cookieJar,
-      encoding: null
-    }, config.httpOptions);
+      encoding: null,
+      ...config.httpOptions
+    };
   }
-  scrapeItemDetails(url, exists) {
-    var defer = q.defer();
-    request.get(url, this._getRequestOptions(), (error, response, body) => {
-      if(error) {
-        console.error("error while scraping item details", url, error);
-        defer.reject();
-      }else{
-        var result = {};
+  async scrapeItemDetails(url, exists) {
+    const { body, statusCode } = await this.doRequest(
+      url,
+      request.get(url, this._getRequestOptions())
+    );
 
-        // var $ = cheerio.load(body);
-        var $ = cheerio.load(iconv.decode(body, 'iso-8859-1'));
+    const result = {};
 
-        let adresse = null;
-        result.gone = false;
-        try{
-          var infoBlock = $(".wg-detailinfoblock");
+    const $ = cheerio.load(iconv.decode(body, "iso-8859-1"));
 
-          const ort = infoBlock.find("tr.wg-inforow:nth-child(2) td:nth-child(2)").text().trim();
-          const strasse = infoBlock.find("tr.wg-inforowb:nth-child(3) td:nth-child(2)").text().trim();
-          adresse = config.city + ", " + strasse;
+    result.gone = statusCode !== 200;
+    try {
+      const adresse = $("#xlocation h4")
+        .first()
+        .text()
+        .trim();
 
-          const zimmer_str = infoBlock.find("tr td:contains('Zimmer')").text();
-          const zimmer = parseInt(zimmer_str.match(/^([0-9]+)\-/)[1]);
-          if(Number.isNaN(zimmer)) {
-            zimmer = null;
-          }
-
-          var [kaltmiete, nebenkosten, kaution] = ["Kaltmiete", "Nebenkosten", "Kaution"].map(item => {
-            let preis = infoBlock.find("tr td:contains('" + item + "')").text().trim();
-            const preis_index = preis.indexOf(item);
-            const preis_int = parseInt(preis.substr(0, preis_index).replace("€", "").trim());
-            if(Number.isNaN(preis_int)) {
-              return null;
-            }
-            return preis_int;
-          });
-
-          result.rooms = zimmer;
-          result.data = {
-            miete: kaltmiete,
-            nebenkosten: nebenkosten,
-            kaution: kaution,
-            adresse: adresse
-          }
-        }catch(ex) {
-          console.log("CATCHED error while scraping item", this.id, url, ex);
-          result.gone = true;
-          if(result.removed == null) {
-            result.removed = new Date();
-          }
-        }
-        if(result.gone || adresse == null) {
-          defer.resolve(result);
-        }else{
-          if(exists) {
-            defer.resolve(result); 
-          }else{
-            this.getLocationOfAddress(adresse).then(res => {
-              result.latitude = res.latitude;
-              result.longitude = res.longitude;
-              defer.resolve(result);
-            });
-          }
+      const zimmer_str = $(".ausstattung")
+        .first()
+        .text()
+        .match(/(\d+)-Zimmer-Wohnung/);
+      let zimmer;
+      if (!zimmer_str) {
+        zimmer = null;
+      } else {
+        zimmer = parseInt(zimmer_str[1]);
+        if (Number.isNaN(zimmer)) {
+          zimmer = null;
         }
       }
-    });
-    return defer.promise;
-  }
-  scrapeSite(url) {
-    const defer = q.defer();
-    request.get(url, this._getRequestOptions(), (error, response, body) => {
-      if(error) {
-        console.error("Error while getting URL", url);
-      }else{
-        const $ = cheerio.load(body);
-        const defers = [];
-        $("#wg-ergtable tr").each((index, element) => {
-          defers.push(this._scrapeItem(url, $(element)));
-        });
-        const nextPageUrl = this._getNextPage(url, $);
-        if(nextPageUrl !== false && this.scrapeSiteCounter < this.config.maxPages) {
-          this.scrapeSiteCounter++;
-          defers.push(this.scrapeSite(nextPageUrl));
+
+      var [kaltmiete, nebenkosten, kaution] = [
+        "Kaltmiete",
+        "Nebenkosten",
+        "Kaution"
+      ].map(item => {
+        const preis_str = $("#detail h3 ~div:contains('" + item + "') h4")
+          .text()
+          .match(/(\d+)\s€/);
+
+        if (!preis_str) {
+          return null;
         }
-        q.all(defers).then(result => defer.resolve(result));
+        const preis = parseInt(preis_str[1]);
+        if (Number.isNaN(preis)) {
+          return null;
+        }
+        return preis;
+      });
+
+      result.rooms = zimmer;
+      result.data = {
+        miete: kaltmiete,
+        nebenkosten: nebenkosten,
+        kaution: kaution,
+        adresse: adresse
+      };
+    } catch (ex) {
+      console.log("CATCHED error while scraping item", this.id, url, ex);
+      result.gone = true;
+      if (result.removed == null) {
+        result.removed = new Date();
       }
-    });
-    return defer.promise;
+    }
+    if (result.gone || result.data.adresse == null) {
+      return result;
+    } else {
+      if (exists) {
+        return result;
+      } else {
+        let resolvedAddress;
+        try {
+          resolvedAddress = await this.getLocationOfAddress(
+            result.data.adresse
+          );
+        } catch (_) {
+          return result;
+        }
+        result.latitude = resolvedAddress.latitude;
+        result.longitude = resolvedAddress.longitude;
+        return result;
+      }
+    }
   }
-}
+  async scrapeSite(url) {
+    const { body } = await this.doRequest(
+      url,
+      request.get(url, this._getRequestOptions())
+    );
+
+    const $ = cheerio.load(body);
+    const promises = [];
+    $(".container-realestate .property-container").each((index, element) => {
+      promises.push(this._scrapeItem(url, $(element)));
+    });
+    const nextPageUrl = this._getNextPage(url, $);
+    if (
+      nextPageUrl !== false &&
+      this.scrapeSiteCounter < this.config.maxPages
+    ) {
+      this.scrapeSiteCounter++;
+      promises.push(this.scrapeSite(nextPageUrl));
+    }
+    return Promise.all(promises);
+  }
+};

@@ -1,4 +1,5 @@
 module.exports = {
+  baseUrl: "http://localhost:3000/",
   map: {
     initialView: {
       lat: 52.504703,
@@ -15,12 +16,16 @@ module.exports = {
     }
   ],
   transportRoutes: {
-    // this currently supports BVG routing only
-    zoo_berlin: {
-      label: "Zoo Berlin",
-      name: "S+U Zoologischer Garten Bhf (Berlin)",
-      id: "A=1@O=S+U Zoologischer Garten Bhf (Berlin)@X=13332710@Y=52506918@U=86@L=009023201@B=1@V=3.9,@p=1472124910@",
-    },
+    provider: "berlin_vbb",
+    options: {
+      berlin_vbb: {
+        zoo: {
+          label: "Zoo",
+          name: "S+U Zoologischer Garten Bhf (Berlin)",
+          id: "A=1@O=S+U Zoologischer Garten Bhf (Berlin)@X=13332710@Y=52506918@U=86@L=009023201@B=1@V=3.9,@p=1472124910@",
+        },
+      }
+    }
   },
   dataFilter: {
     lat: 52.49281508540494,
@@ -39,6 +44,7 @@ module.exports = {
   },
   defaultTransportTime: 30, // minutes
   defaultShowTransportRangeAutomatically: false,
+  maxPricePerSqM: 20,
   filters: {
     // usually, the upper bound is set automatically. But we crop them at these values
     upperLimits: {
@@ -77,7 +83,7 @@ module.exports = {
     update: '30 * * * *',
   },
   city: "Berlin",
-  database: "wohnungen.db",
+  database: "data/wohnungen.db",
   geocoder: {
     provider: "here", //supported: here, google, mapquest
     options: {
