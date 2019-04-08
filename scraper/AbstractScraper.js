@@ -261,12 +261,7 @@ module.exports = class AbstractScraper {
           return false;
         }
       }
-      if (
-        flat.latitude == undefined ||
-        flat.longitude == undefined ||
-        flat.latitude == null ||
-        flat.longitude == null
-      ) {
+      if (!flat.latitude || !flat.longitude) {
         return false;
       }
       const filterCenter = {

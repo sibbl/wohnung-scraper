@@ -32,8 +32,7 @@ if (!fs.existsSync(pathToDatabase)) {
   const startScraperCronjob = (cronTime, scraperFuncName) => {
     const job = new CronJob({
       cronTime,
-      onTick: scraperRunner(scraperFuncName),
-      start: true
+      onTick: () => scraperRunner(scraperFuncName)
     });
     job.start();
   };
