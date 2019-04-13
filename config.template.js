@@ -42,6 +42,10 @@ module.exports = {
     username: "<USERNAME>",
     password: "<PASSWORD>"
   },
+  transportTimeMapnificentConfig: {
+    // please find supported cities over at https://github.com/mapnificent/mapnificent_cities
+    cityid: "berlin"
+  },
   defaultTransportTime: 30, // minutes
   defaultShowTransportRangeAutomatically: false,
   maxPricePerSqM: 20,

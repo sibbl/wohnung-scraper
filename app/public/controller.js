@@ -602,19 +602,9 @@ angular.module('dataVis')
 
   var mapnificent;
   var initMapnificent = function() {
-    var city = {
-      cityid: "berlin",
-      cityname: "Berlin",
-      lat: 52.525592,
-      lng: 13.369545,
-      northwest: {"lat":52.755362,"lng":12.901471},
-      southeast: {"lat":52.295934,"lng":13.909891},
-      options: {"estimatedMaxCalculateCalls":2100000} || {},
-      zoom: 11,
-      dataPath: "http://www.mapnificent.net/data/berlin/"
-    };
-    mapnificent = new Mapnificent(map, city, {
-      baseurl: '/lib/mapnificent/'
+    mapnificent = new Mapnificent(map, config.transportTimeMapnificentConfig, {
+      dataPath: `https://cdn.jsdelivr.net/gh/mapnificent/mapnificent_cities/${config.transportTimeMapnificentConfig.cityid}/`,
+      baseurl: './lib/mapnificent/'
     });
     mapnificent.init();
   }
@@ -622,7 +612,10 @@ angular.module('dataVis')
   $scope.showTransportOverlay = function(flat) {
     var marker = markers[flat.id];
     $scope.transport.visible = flat.id;
-    currentTransportPos = mapnificent.addPosition(marker, $scope.transport.minutes * 60);
+    if(currentTransportPos) {
+      mapnificent.removePosition(currentTransportPos);
+    }
+    currentTransportPos = mapnificent.addPosition(marker._latlng, $scope.transport.minutes * 60);
     currentTransportPos.setProgressCallback(function(percent) {
       $timeout(function() {
         $scope.transportLoadingPercentage = percent;
@@ -632,10 +625,9 @@ angular.module('dataVis')
 
   $scope.resetTransportOverlay = function() {
     $scope.transport.visible = undefined;
-    if(angular.isDefined(currentTransportPos)) {
-      // currentTransportPos.destroy();
+    if(currentTransportPos) {
+      mapnificent.removePosition(currentTransportPos);
       currentTransportPos = undefined;
-      mapnificent.reset();
     }
   }
 
