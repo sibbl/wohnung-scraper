@@ -625,10 +625,9 @@ angular.module('dataVis')
 
   $scope.resetTransportOverlay = function() {
     $scope.transport.visible = undefined;
-    if(angular.isDefined(currentTransportPos)) {
-      // currentTransportPos.destroy();
+    if(currentTransportPos) {
+      mapnificent.removePosition(currentTransportPos);
       currentTransportPos = undefined;
-      mapnificent.reset();
     }
   }
 
