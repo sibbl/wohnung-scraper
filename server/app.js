@@ -1,22 +1,23 @@
-var express = require("express"),
+const express = require("express"),
+  { BUILD_DIR, PUBLIC_DIR } = require('../paths'),
   bodyParser = require("body-parser"),
   moment = require("moment"),
   config = require("../config.js"),
   basicAuth = require("basic-auth-connect"),
   geolib = require("geolib"),
   NodeGeocoder = require("node-geocoder"),
-  request = require("request-promise"),
-  getScraperRunner = require("../utils/scraperRunner");
+  getScraperRunner = require("./utils/scraperRunner");
 
 module.exports = class App {
   constructor(db, scaperList) {
     this.db = db;
     this.app = express();
-    this.port = process.env.PORT || 3000;
+    this.port = process.env.PORT || 3001;
 
     this.app.use(basicAuth(config.auth.username, config.auth.password));
-    this.app.use(express.static("./app/public"));
     this.app.use(bodyParser.json());
+    this.app.use(express.static(BUILD_DIR));
+    this.app.use(express.static(PUBLIC_DIR));
 
     const scraperRunner = getScraperRunner(scaperList);
 
@@ -50,7 +51,7 @@ module.exports = class App {
     });
 
     this.app.get("/config", (_, res) => {
-      res.send("window.appConfig = " + JSON.stringify(config) + ";");
+      res.send(JSON.stringify(config));
     });
 
     this.app.get("/forward/:id", async (req, res) => {

@@ -1,19 +1,20 @@
-const config = require("./config"),
+const config = require("../config"),
   app = require("./app"),
   sqlite = require("sqlite"),
   CronJob = require("cron").CronJob,
-  { SETUP_SQL } = require("./app/database"),
+  { SETUP_SQL } = require("./database"),
   fs = require("fs"),
   path = require("path"),
   getScraperRunner = require("./utils/scraperRunner");
 
-const pathToDatabase = path.dirname(config.database);
+const dbPath = path.resolve("../", config.database);  
+const pathToDatabase = path.dirname(dbPath);
 if (!fs.existsSync(pathToDatabase)) {
   fs.mkdirSync(pathToDatabase, { recursive: true });
 }
 
 (async () => {
-  const db = await sqlite.open(config.database);
+  const db = await sqlite.open(dbPath);
   await db.run(SETUP_SQL);
 
   const scraperList = [
@@ -22,7 +23,7 @@ if (!fs.existsSync(pathToDatabase)) {
     "ImmoscoutScraper",
     "ImmonetScraper"
   ]
-    .map(scraperModuleName => require("./scraper/" + scraperModuleName))
+    .map(scraperModuleName => require("../scraper/" + scraperModuleName))
     .map(scraper => new scraper(db));
 
   await Promise.all(scraperList.map(s => s.init()));
