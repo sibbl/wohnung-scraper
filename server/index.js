@@ -7,7 +7,7 @@ const config = require("../config"),
   path = require("path"),
   getScraperRunner = require("./utils/scraperRunner");
 
-const dbPath = path.resolve("../", config.database);  
+const dbPath = path.resolve(__dirname, "../", config.database);  
 const pathToDatabase = path.dirname(dbPath);
 if (!fs.existsSync(pathToDatabase)) {
   fs.mkdirSync(pathToDatabase, { recursive: true });
