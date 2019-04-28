@@ -1,6 +1,6 @@
 !.gitkeep
-node_modules
-bower_components
+node_modules/
+build/
 npm-debug.log
 wohnungen.db
 /config.js
