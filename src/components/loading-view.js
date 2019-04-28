@@ -7,7 +7,6 @@ const StyledLoadingView = styled.div`
   width: 100%;
   text-align: center;
   margin-top: -6px;
-  font-size: 12px;
 `;
 
 export const LoadingView = () => (
