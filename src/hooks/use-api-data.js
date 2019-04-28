@@ -5,8 +5,8 @@ export const useApiData = (loadFunction, initialValue = null) => {
 
   useEffect(() => {
     (async () => {
-      const newData = await loadFunction();
-      setData(newData);
+      const { data } = await loadFunction();
+      setData(data);
     })();
   }, []);
 
