@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { AccordionItem } from "./accordion";
-import { SidebarFilterPanel } from "./sidebar-filter-panel";
+import SidebarFilterPanelContainer from "../containers/sidebar-filter-panel-container";
 
 const StyledSidebar = styled.div`
   width: 320px;
@@ -13,7 +13,7 @@ export const Sidebar = ({ ...other }) => {
     <StyledSidebar>
       <AccordionItem title="Public Transport">TODO</AccordionItem>
       <AccordionItem title="Filter" initialIsOpen={true}>
-        <SidebarFilterPanel />
+        <SidebarFilterPanelContainer />
       </AccordionItem>
     </StyledSidebar>
   );

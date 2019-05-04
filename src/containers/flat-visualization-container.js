@@ -5,21 +5,12 @@ import { LoadingView } from "../components/loading-view";
 import { getConfig } from "../actions/config-actions";
 import { getFlats } from "../actions/flat-actions";
 
-const FlatVisualizationContainer = ({
-  config_isWorking,
-  flat_isWorking,
-  getFlats,
-  getConfig
-}) => {
+const FlatVisualizationContainer = ({ config, flats, getFlats, getConfig }) => {
   useEffect(() => {
     getConfig();
     getFlats();
   }, []);
-  return config_isWorking || flat_isWorking ? (
-    <LoadingView />
-  ) : (
-    <FlatVisualization />
-  );
+  return config && flats ? <FlatVisualization /> : <LoadingView />;
 };
 
 export default connect(

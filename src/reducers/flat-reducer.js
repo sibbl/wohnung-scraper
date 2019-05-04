@@ -8,7 +8,7 @@ import {
 const initialState = {
   isWorking: false,
   error: null,
-  flats: {}
+  flats: null
 };
 
 export const flatReducer = (state = initialState, action) => {

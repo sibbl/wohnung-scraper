@@ -14,7 +14,7 @@ const Divider = styled.hr`
   margin: 12px 0;
 `;
 
-export const Checkbox = ({ name, label, checked, onCheckedChanged }) => {
+const Checkbox = ({ name, label, checked, onCheckedChanged }) => {
   const onCheckboxValueChanged = e => {
     const newValue = e.target.checked;
     onCheckedChanged(newValue);
@@ -36,12 +36,18 @@ export const Checkbox = ({ name, label, checked, onCheckedChanged }) => {
   );
 };
 
-export const SidebarFilterPanel = () => {
-  const [hideInactiveChecked, setHideInactiveChecked] = React.useState(true);
-  const [onlyFavoritesChecked, setOnlyFavoritesChecked] = React.useState(false);
-  const [price, setPrice] = useState({ min: 0, max: 1200 });
-  const [size, setSize] = useState({ min: 60, max: 160 });
-  const [rooms, setRooms] = useState({ min: 3, max: 5 });
+export const SidebarFilterPanel = ({ flats, config, ...other }) => {
+  const defaultFilters = config.filters.default;
+  const upperLimits = config.filters.upperLimits;
+  const [hideInactiveChecked, setHideInactiveChecked] = React.useState(
+    defaultFilters.hideInactive
+  );
+  const [onlyFavoritesChecked, setOnlyFavoritesChecked] = React.useState(
+    defaultFilters.showOnlyFavs
+  );
+  const [price, setPrice] = useState(defaultFilters.price);
+  const [size, setSize] = useState(defaultFilters.size);
+  const [rooms, setRooms] = useState(defaultFilters.rooms);
   return (
     <div>
       <Checkbox
@@ -60,7 +66,7 @@ export const SidebarFilterPanel = () => {
       <StyledSlider
         title="Price:"
         minValue={0}
-        maxValue={1500}
+        maxValue={upperLimits.price}
         value={price}
         onChange={setPrice}
         formatLabel={value => `${value} €`}
@@ -68,7 +74,7 @@ export const SidebarFilterPanel = () => {
       <StyledSlider
         title="Size:"
         minValue={0}
-        maxValue={400}
+        maxValue={upperLimits.size}
         value={size}
         onChange={setSize}
         formatLabel={value => `${value} m²`}
@@ -76,7 +82,7 @@ export const SidebarFilterPanel = () => {
       <StyledSlider
         title="Rooms:"
         minValue={0}
-        maxValue={6}
+        maxValue={upperLimits.rooms}
         value={rooms}
         onChange={setRooms}
       />
