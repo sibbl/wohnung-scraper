@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { AccordionItem } from "./accordion";
-import { SidebarFilterPanel } from "./sidebarFilterPanel";
+import { SidebarFilterPanel } from "./sidebar-filter-panel";
 
 const StyledSidebar = styled.div`
   width: 320px;
