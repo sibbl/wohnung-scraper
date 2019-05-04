@@ -8,7 +8,7 @@ import {
 const initialState = {
   isWorking: false,
   error: null,
-  config: {}
+  config: null
 };
 
 export const configReducer = (state = initialState, action) => {
