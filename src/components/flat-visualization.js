@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { FlatMap } from "./flat-map";
+import FlatMapContainer from "../containers/flat-map-container";
 import { Sidebar } from "./sidebar";
 
 const StyledFlatVisualization = styled.div`
@@ -9,14 +9,14 @@ const StyledFlatVisualization = styled.div`
   height: 100%;
 `;
 
-const StyledFlatMap = styled(FlatMap)`
+const StyledFlatMapContainer = styled(FlatMapContainer)`
   height: 100%;
   flex: 1;
 `;
 
 export const FlatVisualization = ({ ...other }) => (
   <StyledFlatVisualization {...other}>
-    <StyledFlatMap />
+    <StyledFlatMapContainer />
     <Sidebar />
   </StyledFlatVisualization>
 );
