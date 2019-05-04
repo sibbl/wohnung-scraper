@@ -1,4 +1,5 @@
-const config = require("../config"),
+const configObj = require("../config"),
+  configLoader = require("./utils/config-loader"),
   app = require("./app"),
   sqlite = require("sqlite"),
   CronJob = require("cron").CronJob,
@@ -7,13 +8,15 @@ const config = require("../config"),
   path = require("path"),
   getScraperRunner = require("./utils/scraperRunner");
 
-const dbPath = path.resolve(__dirname, "../", config.database);  
-const pathToDatabase = path.dirname(dbPath);
-if (!fs.existsSync(pathToDatabase)) {
-  fs.mkdirSync(pathToDatabase, { recursive: true });
-}
-
 (async () => {
+  const config = await configLoader(configObj);
+
+  const dbPath = path.resolve(__dirname, "../", config.database);
+  const pathToDatabase = path.dirname(dbPath);
+  if (!fs.existsSync(pathToDatabase)) {
+    fs.mkdirSync(pathToDatabase, { recursive: true });
+  }
+
   const db = await sqlite.open(dbPath);
   await db.run(SETUP_SQL);
 
@@ -24,7 +27,7 @@ if (!fs.existsSync(pathToDatabase)) {
     "ImmonetScraper"
   ]
     .map(scraperModuleName => require("../scraper/" + scraperModuleName))
-    .map(scraper => new scraper(db));
+    .map(scraper => new scraper(db, config));
 
   await Promise.all(scraperList.map(s => s.init()));
 
@@ -41,5 +44,5 @@ if (!fs.existsSync(pathToDatabase)) {
   startScraperCronjob(config.cronTimes.scrape, "scrape");
   startScraperCronjob(config.cronTimes.update, "updateItems");
 
-  new app(db, scraperList);
+  new app(db, scraperList, config);
 })();

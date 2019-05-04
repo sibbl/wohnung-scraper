@@ -1,16 +1,16 @@
 const express = require("express"),
-  { BUILD_DIR, PUBLIC_DIR } = require('../paths'),
+  { BUILD_DIR, PUBLIC_DIR } = require("../paths"),
   bodyParser = require("body-parser"),
   moment = require("moment"),
-  config = require("../config.js"),
   basicAuth = require("basic-auth-connect"),
   geolib = require("geolib"),
   NodeGeocoder = require("node-geocoder"),
   getScraperRunner = require("./utils/scraperRunner");
 
 module.exports = class App {
-  constructor(db, scaperList) {
+  constructor(db, scaperList, config) {
     this.db = db;
+    this.config = config;
     this.app = express();
     this.port = process.env.PORT || 3001;
 
@@ -23,11 +23,17 @@ module.exports = class App {
 
     (async () => {
       this.statements = {
-        updateActive: await db.prepare('UPDATE "wohnungen" SET active = $active WHERE id = $id'),
-        updateFavorite: await db.prepare('UPDATE "wohnungen" SET favorite = $favorite WHERE id = $id'),
-        updateLocation: await db.prepare('UPDATE "wohnungen" SET latitude = $latitude, longitude = $longitude WHERE id = $id'),
+        updateActive: await db.prepare(
+          'UPDATE "wohnungen" SET active = $active WHERE id = $id'
+        ),
+        updateFavorite: await db.prepare(
+          'UPDATE "wohnungen" SET favorite = $favorite WHERE id = $id'
+        ),
+        updateLocation: await db.prepare(
+          'UPDATE "wohnungen" SET latitude = $latitude, longitude = $longitude WHERE id = $id'
+        ),
         getById: await db.prepare('SELECT * FROM "wohnungen" WHERE id = $id')
-      }
+      };
     })();
 
     this.app.get("/scrape", async (_, res) => {
@@ -51,15 +57,15 @@ module.exports = class App {
     });
 
     this.app.get("/config", (_, res) => {
-      res.send(JSON.stringify(config));
+      res.send(JSON.stringify(this.config));
     });
 
     this.app.get("/forward/:id", async (req, res) => {
       let row;
       try {
         row = await this.statements.getById.get({
-            $id: req.params.id
-          });
+          $id: req.params.id
+        });
       } catch (error) {
         res.send(
           JSON.stringify({
@@ -150,9 +156,9 @@ module.exports = class App {
       } else {
         try {
           await this.statements.updateActive.run({
-              $active: active,
-              $id: req.params.id
-            });
+            $active: active,
+            $id: req.params.id
+          });
         } catch (error) {
           res.send(
             JSON.stringify({
@@ -172,11 +178,11 @@ module.exports = class App {
       if (typeof favorite !== "boolean") {
         res.send(JSON.stringify({ success: false, message: "missing body" }));
       } else {
-        try {;
+        try {
           await this.statements.updateFavorite.run({
-              $favorite: favorite,
-              $id: req.params.id
-            });
+            $favorite: favorite,
+            $id: req.params.id
+          });
         } catch (error) {
           res.send(
             JSON.stringify({
@@ -193,7 +199,11 @@ module.exports = class App {
 
     this.app.get("/:id/route/:direction", async (req, res) => {
       if (
-        Object.keys(config.transportRoutes.options[config.transportRoutes.provider]).indexOf(req.params.direction) < 0
+        Object.keys(
+          this.config.transportRoutes.options[
+            this.config.transportRoutes.provider
+          ]
+        ).indexOf(req.params.direction) < 0
       ) {
         res.send("invalid param", 400);
         return;
@@ -201,8 +211,8 @@ module.exports = class App {
       let row;
       try {
         row = await this.statements.getById.get({
-            $id: req.params.id
-          });
+          $id: req.params.id
+        });
       } catch (error) {
         res.send(
           JSON.stringify({
@@ -220,9 +230,16 @@ module.exports = class App {
         return;
       }
 
-      const transportModule = require(`../transport/${config.transportRoutes.provider}`);
+      const transportModule = require(`../transport/${
+        this.config.transportRoutes.provider
+      }`);
 
-      await transportModule.redirectToTransport(row, req.params.direction, config, res);
+      await transportModule.redirectToTransport(
+        row,
+        req.params.direction,
+        this.config,
+        res
+      );
     });
 
     this.app.post("/update/location", async (req, res) => {
@@ -230,10 +247,10 @@ module.exports = class App {
       if (id && latitude && longitude) {
         try {
           await this.statements.updateLocation.run({
-              $id: id,
-              $latitude: latitude,
-              $longitude: longitude
-            });
+            $id: id,
+            $latitude: latitude,
+            $longitude: longitude
+          });
         } catch (error) {
           res.send(JSON.stringify({ success: false, error }), 500);
           return;
@@ -274,10 +291,10 @@ module.exports = class App {
         res.send("No missing latlng found.");
         return;
       }
-      const provider = req.params.provider || config.geocoder.provider;
+      const provider = req.params.provider || this.config.geocoder.provider;
       const params = {};
-      if (provider in config.geocoder.options) {
-        params = config.geocoder.options[provider];
+      if (provider in this.config.geocoder.options) {
+        params = this.config.geocoder.options[provider];
       }
       params.provider = provider;
       const geocoder = NodeGeocoder(params);

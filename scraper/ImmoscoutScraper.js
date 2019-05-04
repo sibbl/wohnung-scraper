@@ -1,13 +1,12 @@
 var AbstractScraper = require("./AbstractScraper"),
-  config = require("../config"),
   request = require("request-promise"),
   cheerio = require("cheerio"),
   urlLib = require("url"),
   moment = require("moment");
 
 module.exports = class ImmoscoutScraper extends AbstractScraper {
-  constructor(db) {
-    super(db, "immoscout24");
+  constructor(db, globalConfig) {
+    super(db, globalConfig, "immoscout24");
     this.cookieJar = request.jar();
   }
   _getNextPage(url, $) {
@@ -77,7 +76,7 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
     return {
       resolveWithFullResponse: true,
       jar: this.cookieJar,
-      ...config.httpOptions
+      ...this.globalConfig.httpOptions
     };
   }
   async scrapeItemDetails(url, exists) {

@@ -1,11 +1,10 @@
-var config = require("../config"),
-  NodeGeocoder = require("node-geocoder"),
+const NodeGeocoder = require("node-geocoder"),
   moment = require("moment"),
   TelegramBot = require("node-telegram-bot-api"),
   geolib = require("geolib");
 
 module.exports = class AbstractScraper {
-  constructor(db, scraperId) {
+  constructor(db, globalConfig, scraperId) {
     if (typeof scraperId === "undefined") {
       throw new TypeError("Constructor of scraper needs a ID.");
     }
@@ -17,8 +16,9 @@ module.exports = class AbstractScraper {
     }
 
     this.db = db;
+    this.globalConfig = globalConfig;
+    this.config = globalConfig.scraper[this.id];
     this.id = scraperId;
-    this.config = config.scraper[this.id];
 
     if (typeof this.config === "undefined") {
       console.error("Scraper " + scraperId + " config could not be loaded.");
@@ -130,10 +130,10 @@ module.exports = class AbstractScraper {
     if (addressWithoutPhrasesInParentheses.length == 0) {
       throw new Error(`Trying to geocode invalid address: ${address}`);
     } else {
-      const provider = config.geocoder.provider;
+      const provider = this.globalConfig.geocoder.provider;
       let params = {};
-      if (provider in config.geocoder.options) {
-        params = config.geocoder.options[provider];
+      if (provider in this.globalConfig.geocoder.options) {
+        params = this.globalConfig.geocoder.options[provider];
       }
       params.provider = provider;
       const geocoder = NodeGeocoder(params);
@@ -190,7 +190,7 @@ module.exports = class AbstractScraper {
       if (result.type != "added") {
         return false;
       }
-      var filters = config.filters.default;
+      var filters = this.globalConfig.filters.default;
       if (flat.price < filters.price.min || flat.price > filters.price.max) {
         return false;
       }
@@ -265,11 +265,11 @@ module.exports = class AbstractScraper {
         return false;
       }
       const filterCenter = {
-        latitude: config.dataFilter.lat,
-        longitude: config.dataFilter.lng
+        latitude: this.globalConfig.dataFilter.lat,
+        longitude: this.globalConfig.dataFilter.lng
       };
       const distance = geolib.getDistance(flat, filterCenter);
-      return distance <= config.dataFilter.radius;
+      return distance <= this.globalConfig.dataFilter.radius;
     });
     console.log(
       "Sending " + flatsOfInterest.length + " message(s) from " + this.id
@@ -319,7 +319,7 @@ module.exports = class AbstractScraper {
     };
     fillResult(result);
 
-    var enabledBots = config.bots.filter(bot => bot.enabled === true);
+    var enabledBots = this.globalConfig.bots.filter(bot => bot.enabled === true);
     if (enabledBots.length > 0) {
       console.log(
         "Start sending to bots " +

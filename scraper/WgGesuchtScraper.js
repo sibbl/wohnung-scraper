@@ -1,13 +1,12 @@
 var AbstractScraper = require("./AbstractScraper"),
-    config = require("../config"),
     request = require("request-promise"),
     cheerio = require("cheerio"),
     urlLib = require("url"),
     moment = require("moment");
 
 module.exports = class WgGesuchtScraper extends AbstractScraper {
-    constructor(db) {
-        super(db, "wgGesucht");
+    constructor(db, globalConfig) {
+        super(db, globalConfig, "wgGesucht");
         this.cookieJar = request.jar();
     }
     _isTeaser(trElement) {
@@ -127,7 +126,7 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
         return {
             resolveWithFullResponse: true,
             jar: this.cookieJar,
-            ...config.httpOptions
+            ...this.globalConfig.httpOptions
         };
     }
     async scrapeItemDetails(url, exists) {
