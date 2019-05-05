@@ -16,6 +16,10 @@ const Divider = styled.hr`
   margin: 12px 0;
 `;
 
+const Title = styled.div`
+  margin-bottom: 4px;
+`;
+
 const Checkbox = ({ name, label, checked, onCheckedChanged }) => {
   const onCheckboxValueChanged = e => {
     const newValue = e.target.checked;
@@ -41,6 +45,8 @@ const Checkbox = ({ name, label, checked, onCheckedChanged }) => {
 const getDate = date =>
   date === "now" ? DateTime.local().startOf("day") : DateTime.fromISO(date);
 
+let defaultEnabledSites;
+
 export const SidebarFilterPanel = ({ flats, config, ...other }) => {
   const defaultFilters = config.filters.default;
   const limits = config.filters.limits;
@@ -62,6 +68,14 @@ export const SidebarFilterPanel = ({ flats, config, ...other }) => {
     max: getDate(defaultFilters.age.max)
   });
 
+  if (!defaultEnabledSites) {
+    defaultEnabledSites = {};
+    Object.keys(config.scraper).forEach(
+      key => (defaultEnabledSites[key] = true)
+    );
+  }
+  const [enabledSites, setEnabledSites] = useState(defaultEnabledSites);
+
   return (
     <div>
       <Checkbox
@@ -76,7 +90,9 @@ export const SidebarFilterPanel = ({ flats, config, ...other }) => {
         checked={onlyFavoritesChecked}
         onCheckedChanged={setOnlyFavoritesChecked}
       />
+
       <Divider />
+
       <StyledSlider
         title="Price:"
         minValue={0}
@@ -120,6 +136,24 @@ export const SidebarFilterPanel = ({ flats, config, ...other }) => {
         value={age}
         onChange={setAge}
       />
+
+      <Divider />
+
+      <Title>Sources:</Title>
+      {Object.entries(config.scraper).map(([key, value]) => (
+        <Checkbox
+          key={key}
+          name={key}
+          label={value.name}
+          checked={enabledSites[key]}
+          onCheckedChanged={newValue =>
+            setEnabledSites({
+              ...enabledSites,
+              [key]: newValue
+            })
+          }
+        />
+      ))}
     </div>
   );
 };
