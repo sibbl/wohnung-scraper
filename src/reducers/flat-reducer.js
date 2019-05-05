@@ -13,6 +13,7 @@ import { SET_FAVORITE_FLAT_SUCCESS } from "../actions/flat-favorite-actions";
 import { SET_ACTIVE_FLAT_SUCCESS } from "../actions/flat-active-actions";
 import { GET_CONFIG_SUCCESS } from "../actions/config-actions";
 import { getDateTime } from "../services/date-utils";
+import { DateTime } from "luxon";
 
 const initialState = {
   isWorking: false,
@@ -28,6 +29,7 @@ const getVisibleFlatIds = ({ flats, filters }) => {
   if (!flats || !filters) {
     return null;
   }
+
   return Object.entries(flats)
     .filter(([, flat]) => {
       if (
@@ -37,6 +39,27 @@ const getVisibleFlatIds = ({ flats, filters }) => {
       ) {
         return false;
       }
+
+      if (flat.free_from) {
+        const parsedFreeFromDateTime = DateTime.fromISO(flat.free_from);
+        if (
+          parsedFreeFromDateTime < filters.free_from.min ||
+          parsedFreeFromDateTime > filters.free_from.max
+        ) {
+          return false;
+        }
+      }
+
+      if (flat.added) {
+        const parsedAddedTime = DateTime.fromISO(flat.added);
+        if (
+          parsedAddedTime < filters.age.min ||
+          parsedAddedTime > filters.age.max
+        ) {
+          return false;
+        }
+      }
+
       return true;
     })
     .map(([id]) => id);

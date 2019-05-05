@@ -112,6 +112,8 @@ module.exports = class App {
         item.data = JSON.parse(item.data);
         //set age
         item.age = now.diff(moment(item.added), "days");
+        item.free_from = moment(item.free_from).toISOString();
+        item.added = moment(item.added).toISOString();
         return item;
       });
       // filter by center coordinate & radius
