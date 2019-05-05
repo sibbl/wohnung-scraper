@@ -1,8 +1,9 @@
-import { line as d3Line } from "d3";
+import { line as d3Line, event as d3Event } from "d3";
 import { select as d3Select } from "d3-selection";
 import { scaleLinear, scaleSequential } from "d3-scale";
 import { interpolateRdYlGn } from "d3-scale-chromatic";
 import styles from "./flat-drawing-helper.module.css";
+import L from "leaflet";
 
 const path = d3Line()
   .x(d => d.x)
@@ -32,48 +33,75 @@ export const createNgon = ({ x, y, sides, radius, rotation = 0 }) => {
   return coords;
 };
 
-export const getDrawFunction = ({ config }) => ({ container, map, data }) => {
+export const getDrawFunction = ({ config }) => ({
+  container,
+  map,
+  flats,
+  onMouseOver,
+  onMouseOut,
+  onClick,
+  selectedFlat
+}) => {
+  container.classed(styles.containerWithSelection, selectedFlat !== null);
+
   const feature = container.selectAll(".flat").data(
-    data.map(item => {
-      const { x, y } = map.latLngToLayerPoint([item.latitude, item.longitude]);
-      const radius = sizeScale(item.size);
+    flats.map(flat => {
+      const { x, y } = map.latLngToLayerPoint([flat.latitude, flat.longitude]);
+      const radius = sizeScale(flat.size);
       return {
-        ...item,
+        flat,
         x,
         y,
         radius,
         polygon: createNgon({
           x,
           y,
-          sides: item.rooms + 1,
+          sides: flat.rooms + 1,
           radius,
           rotation: 270
         })
       };
     }),
-    d => d.id
+    ({ flat }) => flat.id
   );
 
   const addOrUpdatePath = feature => {
-    feature.attr("d", d => (d.rooms === 1 ? null : path(d.polygon)));
+    feature.attr("d", ({ flat, polygon }) =>
+      flat.rooms === 1 ? null : path(polygon)
+    );
   };
 
   const addOrUpdateCircle = feature => {
-    feature.attr("cx", d => (d.rooms === 1 ? d.x : null));
-    feature.attr("cy", d => (d.rooms === 1 ? d.y : null));
-    feature.attr("r", d => (d.rooms === 1 ? d.radius : null));
+    feature.attr("cx", ({ flat, x }) => (flat.rooms === 1 ? x : null));
+    feature.attr("cy", ({ flat, y }) => (flat.rooms === 1 ? y : null));
+    feature.attr("r", ({ flat, radius }) => (flat.rooms === 1 ? radius : null));
   };
 
   const addOrUpdate = feature => {
     addOrUpdateCircle(feature);
     addOrUpdatePath(feature);
-    feature.style("fill", d => sqMPriceScale(d.price / d.size));
-    feature.on("mouseover", function() {
-      d3Select(this).classed(styles.flatmarkerHovered, true);
-    });
-    feature.on("mouseout", function() {
-      d3Select(this).classed(styles.flatmarkerHovered, false);
-    });
+    feature
+      .style("fill", ({ flat }) => sqMPriceScale(flat.price / flat.size))
+      .attr("class", ({ flat }) => {
+        const classes = ["flat", styles.flatmarker];
+        if (selectedFlat && flat.id === selectedFlat.id) {
+          classes.push(styles.flatmarkerSelected);
+        }
+        return classes.join(" ");
+      })
+      .on("mouseover", function({ flat }) {
+        onMouseOver && onMouseOver(flat);
+        d3Select(this).classed(styles.flatmarkerHovered, true);
+      })
+      .on("mouseout", function({ flat }) {
+        onMouseOut && onMouseOut(flat);
+        d3Select(this).classed(styles.flatmarkerHovered, false);
+      })
+      .on("click", function({ flat }) {
+        onClick && onClick(flat);
+        L.DomEvent.stopPropagation(d3Event);
+        return false;
+      });
   };
 
   feature
@@ -84,7 +112,6 @@ export const getDrawFunction = ({ config }) => ({ container, map, data }) => {
         d.rooms === 1 ? "circle" : "path"
       )
     )
-    .attr("class", `flat ${styles.flatmarker}`)
     .call(addOrUpdate);
 
   feature.exit().remove();

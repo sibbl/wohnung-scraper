@@ -38,17 +38,30 @@ const DynamicTileLayer = ({ type, layer }) => {
   return <LayerComponent {...layer} />;
 };
 
-export const FlatMap = ({ flats, config, ...other }) => {
+export const FlatMap = ({
+  flats,
+  config,
+  onFlatPreview,
+  onFlatSelect,
+  selectedFlat,
+  ...other
+}) => {
   return (
     <Map
       center={config.map.initialView}
       zoom={config.map.initialView.zoom}
+      onClick={() => onFlatSelect(null)}
       {...other}
     >
       <LeafletD3Layer
-        data={flats}
         drawFunction={getDrawFunction(config)}
+        flats={flats}
+        selectedFlat={selectedFlat}
+        onMouseOver={onFlatPreview}
+        onMouseOut={() => onFlatPreview(null)}
+        onClick={onFlatSelect}
       />
+
       <LayersControl>
         {config.map.layers &&
           config.map.layers.map(({ name, type, ...layer }, i) => (

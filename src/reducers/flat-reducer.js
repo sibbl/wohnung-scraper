@@ -2,14 +2,20 @@ import produce from "immer";
 import {
   GET_FLATS,
   GET_FLATS_SUCCESS,
-  GET_FLATS_FAILURE
+  GET_FLATS_FAILURE,
+  SET_PREVIEWED_FLAT,
+  UNSET_PREVIEWED_FLAT,
+  SET_SELECTED_FLAT,
+  UNSET_SELECTED_FLAT
 } from "../actions/flat-actions";
 
 const initialState = {
   isWorking: false,
   error: null,
   flats: null,
-  visibleFlats: null
+  visibleFlats: null,
+  selectedFlat: null,
+  previewedFlat: null
 };
 
 export const flatReducer = (state = initialState, action) => {
@@ -30,6 +36,22 @@ export const flatReducer = (state = initialState, action) => {
       case GET_FLATS_FAILURE:
         draftState.isWorking = false;
         draftState.error = action.error;
+        return;
+
+      case SET_PREVIEWED_FLAT:
+        draftState.previewedFlat = action.flat;
+        return;
+
+      case UNSET_PREVIEWED_FLAT:
+        draftState.previewedFlat = null;
+        return;
+
+      case SET_SELECTED_FLAT:
+        draftState.selectedFlat = action.flat;
+        return;
+
+      case UNSET_SELECTED_FLAT:
+        draftState.selectedFlat = null;
         return;
 
       default:
