@@ -11,6 +11,8 @@ import {
 } from "../actions/flat-actions";
 import { SET_FAVORITE_FLAT_SUCCESS } from "../actions/flat-favorite-actions";
 import { SET_ACTIVE_FLAT_SUCCESS } from "../actions/flat-active-actions";
+import { GET_CONFIG_SUCCESS } from "../actions/config-actions";
+import { getDateTime } from "../services/date-utils";
 
 const initialState = {
   isWorking: false,
@@ -19,15 +21,22 @@ const initialState = {
   visibleFlatIds: null,
   selectedFlatId: null,
   previewedFlatId: null,
-  filters: {
-    //TODO: use GET_CONFIG_SUCCESSFUL to fill this the first time
-  }
+  filters: null
 };
 
 const getVisibleFlatIds = ({ flats, filters }) => {
+  if (!flats || !filters) {
+    return null;
+  }
   return Object.entries(flats)
     .filter(([, flat]) => {
-      //TODO: implement filters and return true if flat should be shown
+      if (
+        ["price", "rooms", "size"].some(key => {
+          return flat[key] < filters[key].min || flat[key] > filters[key].max;
+        })
+      ) {
+        return false;
+      }
       return true;
     })
     .map(([id]) => id);
@@ -88,6 +97,31 @@ export const flatReducer = (state = initialState, action) => {
           filters: newFilters
         });
         return;
+
+      case GET_CONFIG_SUCCESS:
+        const configFilters = action.config.filters.default;
+
+        if (!configFilters.enabledSites) {
+          // enable all sites by default
+          configFilters.enabledSites = {};
+          Object.keys(action.config.scraper).forEach(
+            key => (configFilters.enabledSites[key] = true)
+          );
+        }
+
+        ["free_from", "age"].forEach(dateRangeKey => {
+          configFilters[dateRangeKey] = {
+            min: getDateTime(configFilters[dateRangeKey].min),
+            max: getDateTime(configFilters[dateRangeKey].max)
+          };
+        });
+
+        draftState.filters = configFilters;
+        draftState.visibleFlatIds = getVisibleFlatIds({
+          flats: state.flats,
+          filters: configFilters
+        });
+        break;
 
       default:
         return;

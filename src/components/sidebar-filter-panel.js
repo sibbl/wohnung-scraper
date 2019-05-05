@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import styled from "styled-components";
 import Slider from "./slider";
 import DateSlider from "./date-slider";
-import { DateTime } from "luxon";
+import { getDateTime } from "../services/date-utils";
 
 const StyledSlider = styled(Slider)`
   & + & {
@@ -42,53 +42,31 @@ const Checkbox = ({ name, label, checked, onCheckedChanged }) => {
   );
 };
 
-const getDate = date =>
-  date === "now" ? DateTime.local().startOf("day") : DateTime.fromISO(date);
-
-let defaultEnabledSites;
-
-export const SidebarFilterPanel = ({ flats, config, ...other }) => {
-  const defaultFilters = config.filters.default;
+export const SidebarFilterPanel = ({
+  flats,
+  config,
+  filters,
+  updateFilter,
+  ...other
+}) => {
   const limits = config.filters.limits;
-  const [hideInactiveChecked, setHideInactiveChecked] = React.useState(
-    defaultFilters.hideInactive
-  );
-  const [onlyFavoritesChecked, setOnlyFavoritesChecked] = React.useState(
-    defaultFilters.showOnlyFavs
-  );
-  const [price, setPrice] = useState(defaultFilters.price);
-  const [size, setSize] = useState(defaultFilters.size);
-  const [rooms, setRooms] = useState(defaultFilters.rooms);
-  const [freeFrom, setFreeFrom] = useState({
-    min: getDate(defaultFilters.free_from.min),
-    max: getDate(defaultFilters.free_from.max)
-  });
-  const [age, setAge] = useState({
-    min: getDate(defaultFilters.age.min),
-    max: getDate(defaultFilters.age.max)
-  });
-
-  if (!defaultEnabledSites) {
-    defaultEnabledSites = {};
-    Object.keys(config.scraper).forEach(
-      key => (defaultEnabledSites[key] = true)
-    );
-  }
-  const [enabledSites, setEnabledSites] = useState(defaultEnabledSites);
+  const update = key => value => {
+    updateFilter && updateFilter({ [key]: value });
+  };
 
   return (
-    <div>
+    <div {...other}>
       <Checkbox
         name="hideInactive"
         label="Hide inactive"
-        checked={hideInactiveChecked}
-        onCheckedChanged={setHideInactiveChecked}
+        checked={filters.hideInactive}
+        onCheckedChanged={update("hideInactive")}
       />
       <Checkbox
         name="onlyFavorites"
         label="Show only favorites"
-        checked={onlyFavoritesChecked}
-        onCheckedChanged={setOnlyFavoritesChecked}
+        checked={filters.showOnlyFavs}
+        onCheckedChanged={update("showOnlyFavs")}
       />
 
       <Divider />
@@ -97,44 +75,44 @@ export const SidebarFilterPanel = ({ flats, config, ...other }) => {
         title="Price:"
         minValue={0}
         maxValue={limits.price}
-        value={price}
-        onChange={setPrice}
+        value={filters.price}
+        onChange={update("price")}
         formatLabel={value => `${value} €`}
       />
       <StyledSlider
         title="Size:"
         minValue={0}
         maxValue={limits.size}
-        value={size}
-        onChange={setSize}
+        value={filters.size}
+        onChange={update("size")}
         formatLabel={value => `${value} m²`}
       />
       <StyledSlider
         title="Rooms:"
-        minValue={0}
+        minValue={1}
         maxValue={limits.rooms}
-        value={rooms}
-        onChange={setRooms}
+        value={filters.rooms}
+        onChange={update("rooms")}
       />
       <StyledSlider
         as={DateSlider}
         title="Free from:"
-        minValue={getDate("now")}
-        maxValue={getDate(limits.free_from)}
+        minValue={getDateTime("now")}
+        maxValue={getDateTime(limits.free_from)}
         unit="month"
         step={1}
-        value={freeFrom}
-        onChange={setFreeFrom}
+        value={filters.free_from}
+        onChange={update("free_from")}
       />
       <StyledSlider
         as={DateSlider}
         title="Age:"
-        minValue={getDate(limits.age)}
-        maxValue={getDate("now")}
+        minValue={getDateTime(limits.age)}
+        maxValue={getDateTime("now")}
         unit="day"
         step={1}
-        value={age}
-        onChange={setAge}
+        value={filters.age}
+        onChange={update("age")}
       />
 
       <Divider />
@@ -145,10 +123,10 @@ export const SidebarFilterPanel = ({ flats, config, ...other }) => {
           key={key}
           name={key}
           label={value.name}
-          checked={enabledSites[key]}
+          checked={filters.enabledSites[key]}
           onCheckedChanged={newValue =>
-            setEnabledSites({
-              ...enabledSites,
+            update("enabledSites")({
+              ...filters.enabledSites,
               [key]: newValue
             })
           }
