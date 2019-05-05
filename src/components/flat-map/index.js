@@ -11,7 +11,7 @@ import {
 import "leaflet/dist/leaflet.css";
 import LeafletD3Layer from "./leaflet-d3-layer";
 import { fixIconUrls } from "./leaflet-utils";
-import { getDrawFunction } from "../flat-drawing-helper";
+import { getDrawFunction } from "./flat-drawing-helper";
 
 const SupportedLayerMap = {
   TileLayer,
