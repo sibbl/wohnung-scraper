@@ -40,9 +40,9 @@ export const getDrawFunction = ({ config }) => ({
   onMouseOver,
   onMouseOut,
   onClick,
-  selectedFlat
+  selectedFlatId
 }) => {
-  container.classed(styles.containerWithSelection, selectedFlat !== null);
+  container.classed(styles.containerWithSelection, selectedFlatId !== null);
 
   const feature = container.selectAll(".flat").data(
     flats.map(flat => {
@@ -84,7 +84,7 @@ export const getDrawFunction = ({ config }) => ({
       .style("fill", ({ flat }) => sqMPriceScale(flat.price / flat.size))
       .attr("class", ({ flat }) => {
         const classes = ["flat", styles.flatmarker];
-        if (selectedFlat && flat.id === selectedFlat.id) {
+        if (selectedFlatId && flat.id === selectedFlatId) {
           classes.push(styles.flatmarkerSelected);
         }
         return classes.join(" ");

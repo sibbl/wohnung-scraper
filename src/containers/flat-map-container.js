@@ -25,11 +25,12 @@ const FlatMapContainer = ({
   visibleFlatIds,
   setPreviewedFlat,
   setSelectedFlat,
-  selectedFlat,
-  previewedFlat,
+  selectedFlatId,
+  previewedFlatId,
   ...other
 }) => {
   const [visibleFlats, setVisibleFlats] = useState([]);
+  const [currentPreviewedFlat, setCurrentPreviewedFlat] = useState(null);
 
   useEffect(() => {
     setVisibleFlats(
@@ -39,15 +40,21 @@ const FlatMapContainer = ({
     );
   }, [flats, visibleFlatIds]);
 
+  useEffect(() => {
+    setCurrentPreviewedFlat(flats[previewedFlatId]);
+  }, [flats, previewedFlatId]);
+
   return (
     <StyledContainer {...other}>
-      {previewedFlat && <StyledFlatMapItemPreviewPopup flat={previewedFlat} />}
+      {currentPreviewedFlat && (
+        <StyledFlatMapItemPreviewPopup flat={currentPreviewedFlat} />
+      )}
       <StyledFlatMap
         config={config}
         flats={visibleFlats}
         onFlatPreview={setPreviewedFlat}
         onFlatSelect={setSelectedFlat}
-        selectedFlat={selectedFlat}
+        selectedFlatId={selectedFlatId}
       />
     </StyledContainer>
   );
@@ -58,8 +65,8 @@ export default connect(
     config: state.config.config,
     flats: state.flat.flats,
     visibleFlatIds: state.flat.visibleFlatIds,
-    selectedFlat: state.flat.selectedFlat,
-    previewedFlat: state.flat.previewedFlat
+    selectedFlatId: state.flat.selectedFlatId,
+    previewedFlatId: state.flat.previewedFlatId
   }),
   dispatch => ({
     setPreviewedFlat: flat => dispatch(setPreviewedFlat({ flat })),
