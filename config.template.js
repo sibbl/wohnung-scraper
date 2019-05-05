@@ -51,12 +51,15 @@ module.exports = {
   defaultShowTransportRangeAutomatically: false,
   maxPricePerSqM: 20,
   filters: {
-    upperLimits: {
+    // limits - where to crop the filters
+    limits: {
       price: 1500,
       rooms: 5,
       size: 200,
-      age: 100
+      free_from: "2019-10-01",
+      age: "2019-02-01"
     },
+    // default - actual default values for the filters
     default: {
       hideInactive: true,
       showOnlyFavs: false,
@@ -72,13 +75,13 @@ module.exports = {
         min: 30,
         max: 120
       },
-      age: {
-        min: 0,
-        max: 14
-      },
       free_from: {
-        min: 0,
-        max: 3
+        min: "2019-06-01",
+        max: "2019-08-01"
+      },
+      age: {
+        min: "2019-04-01",
+        max: "now"
       }
     }
   },

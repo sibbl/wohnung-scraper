@@ -12,7 +12,7 @@ const Slider = ({ title, className, ...other }) => {
     <div className={className}>
       <div>{title}</div>
       <StyledInputRangeContainer>
-        <InputRange draggableTrack {...other} />
+        <InputRange draggableTrack allowSameValues={true} {...other} />
       </StyledInputRangeContainer>
     </div>
   );
