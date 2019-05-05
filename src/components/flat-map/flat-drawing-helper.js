@@ -56,7 +56,7 @@ export const getDrawFunction = ({ config }) => ({
         polygon: createNgon({
           x,
           y,
-          sides: flat.rooms + 1,
+          sides: Math.ceil(flat.rooms + 1),
           radius,
           rotation: 270
         })
