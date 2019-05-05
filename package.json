@@ -50,6 +50,7 @@
     "d3-selection": "^1.4.0",
     "immer": "^3.1.1",
     "leaflet": "^1.4.0",
+    "luxon": "^1.13.0",
     "moment": "^2.24.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
