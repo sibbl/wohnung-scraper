@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import { FlatMap } from "../components/flat-map";
-import { FlatPreview } from "../components/flat-preview";
+import { FlatMapItemPreviewPopup } from "../components/flat-map-item-preview-popup";
 import { setPreviewedFlat, setSelectedFlat } from "../actions/flat-actions";
 import styled from "styled-components";
 
@@ -13,7 +13,7 @@ const StyledContainer = styled.div`
   position: relative;
 `;
 
-const StyledFlatPreview = styled(FlatPreview)`
+const StyledFlatMapItemPreviewPopup = styled(FlatMapItemPreviewPopup)`
   position: absolute;
   bottom: 16px;
   right: 16px;
@@ -39,11 +39,9 @@ const FlatMapContainer = ({
     );
   }, [flats, visibleFlatIds]);
 
-  console.log(visibleFlats);
-
   return (
     <StyledContainer {...other}>
-      {previewedFlat && <StyledFlatPreview flat={previewedFlat} />}
+      {previewedFlat && <StyledFlatMapItemPreviewPopup flat={previewedFlat} />}
       <StyledFlatMap
         config={config}
         flats={visibleFlats}
