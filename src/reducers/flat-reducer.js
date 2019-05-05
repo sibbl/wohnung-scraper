@@ -8,7 +8,8 @@ import {
 const initialState = {
   isWorking: false,
   error: null,
-  flats: null
+  flats: null,
+  visibleFlats: null
 };
 
 export const flatReducer = (state = initialState, action) => {
@@ -23,6 +24,7 @@ export const flatReducer = (state = initialState, action) => {
         draftState.isWorking = false;
         draftState.error = null;
         draftState.flats = action.flats;
+        draftState.visibleFlats = Object.values(action.flats);
         return;
 
       case GET_FLATS_FAILURE:

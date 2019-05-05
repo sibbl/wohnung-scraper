@@ -9,7 +9,9 @@ import {
   GeoJSON
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import LeafletD3Layer from "./leaflet-d3-layer";
+import { fixIconUrls } from "./leaflet-utils";
+import { getDrawFunction } from "../flat-drawing-helper";
 
 const SupportedLayerMap = {
   TileLayer,
@@ -25,15 +27,7 @@ const onEachGeoJsonFeature = (feature, layer) => {
   }
 };
 
-(function fixIconUrls() {
-  delete L.Icon.Default.prototype._getIconUrl;
-
-  L.Icon.Default.mergeOptions({
-    iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
-    iconUrl: require("leaflet/dist/images/marker-icon.png"),
-    shadowUrl: require("leaflet/dist/images/marker-shadow.png")
-  });
-})();
+fixIconUrls();
 
 const DynamicTileLayer = ({ type, layer }) => {
   const LayerComponent = SupportedLayerMap[type] || TileLayer;
@@ -45,16 +39,16 @@ const DynamicTileLayer = ({ type, layer }) => {
 };
 
 export const FlatMap = ({ flats, config, ...other }) => {
-  console.log("FlatMap", flats, config);
-  if (!config.map) {
-    return null;
-  }
   return (
     <Map
       center={config.map.initialView}
       zoom={config.map.initialView.zoom}
       {...other}
     >
+      <LeafletD3Layer
+        data={flats}
+        drawFunction={getDrawFunction(config)}
+      />
       <LayersControl>
         {config.map.layers &&
           config.map.layers.map(({ name, type, ...layer }, i) => (
