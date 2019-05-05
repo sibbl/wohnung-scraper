@@ -39,8 +39,6 @@ const FlatMapContainer = ({
     );
   }, [flats, visibleFlatIds]);
 
-  console.log(visibleFlats);
-
   return (
     <StyledContainer {...other}>
       {previewedFlat && <StyledFlatPreview flat={previewedFlat} />}

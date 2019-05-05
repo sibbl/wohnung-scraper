@@ -6,7 +6,8 @@ import {
   SET_PREVIEWED_FLAT,
   UNSET_PREVIEWED_FLAT,
   SET_SELECTED_FLAT,
-  UNSET_SELECTED_FLAT
+  UNSET_SELECTED_FLAT,
+  SET_FLAT_FILTERS
 } from "../actions/flat-actions";
 import { SET_FAVORITE_FLAT_SUCCESS } from "../actions/flat-favorite-actions";
 import { SET_ACTIVE_FLAT_SUCCESS } from "../actions/flat-active-actions";
@@ -17,7 +18,19 @@ const initialState = {
   flats: null,
   visibleFlatIds: null,
   selectedFlat: null,
-  previewedFlat: null
+  previewedFlat: null,
+  filters: {
+    //TODO: use GET_CONFIG_SUCCESSFUL to fill this the first time
+  }
+};
+
+const getVisibleFlatIds = ({ flats, filters }) => {
+  return Object.entries(flats)
+    .filter(([, flat]) => {
+      //TODO: implement filters and return true if flat should be shown
+      return true;
+    })
+    .map(([id]) => id);
 };
 
 export const flatReducer = (state = initialState, action) => {
@@ -32,7 +45,10 @@ export const flatReducer = (state = initialState, action) => {
         draftState.isWorking = false;
         draftState.error = null;
         draftState.flats = action.flats;
-        draftState.visibleFlatIds = Object.keys(action.flats);
+        draftState.visibleFlatIds = getVisibleFlatIds({
+          flats: action.flats,
+          filters: state.filters
+        });
         return;
 
       case GET_FLATS_FAILURE:
@@ -62,6 +78,15 @@ export const flatReducer = (state = initialState, action) => {
 
       case SET_ACTIVE_FLAT_SUCCESS:
         draftState.flats[action.flat.id].active = action.active;
+        return;
+
+      case SET_FLAT_FILTERS:
+        const newFilters = { ...state.filters, ...action.filters };
+        draftState.filters = newFilters;
+        draftState.visibleFlatIds = getVisibleFlatIds({
+          flats: state.flats,
+          filters: newFilters
+        });
         return;
 
       default:

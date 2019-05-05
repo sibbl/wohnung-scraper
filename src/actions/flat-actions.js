@@ -6,8 +6,11 @@ export const GET_FLATS_FAILURE = "GET_FLATS_FAILURE";
 
 export const SET_PREVIEWED_FLAT = "SET_PREVIEWED_FLAT";
 export const UNSET_PREVIEWED_FLAT = "UNSET_PREVIEWED_FLAT";
+
 export const SET_SELECTED_FLAT = "SET_SELECTED_FLAT";
 export const UNSET_SELECTED_FLAT = "UNSET_SELECTED_FLAT";
+
+export const SET_FLAT_FILTERS = "SET_FLAT_FILTERS";
 
 export const getFlats = () => {
   return async dispatch => {
@@ -37,4 +40,8 @@ export const setSelectedFlat = ({ flat }) => dispatch => {
   } else {
     dispatch({ type: UNSET_SELECTED_FLAT });
   }
+};
+
+export const setFlatFilters = filters => dispatch => {
+  dispatch({ type: SET_FLAT_FILTERS, filters });
 };
