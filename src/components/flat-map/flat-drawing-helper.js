@@ -40,7 +40,8 @@ export const getDrawFunction = ({ config }) => ({
   onMouseOver,
   onMouseOut,
   onClick,
-  selectedFlatId
+  selectedFlatId,
+  previewedFlatId
 }) => {
   container.classed(styles.containerWithSelection, selectedFlatId !== null);
 
@@ -82,19 +83,17 @@ export const getDrawFunction = ({ config }) => ({
     addOrUpdatePath(feature);
     feature
       .style("fill", ({ flat }) => sqMPriceScale(flat.price / flat.size))
-      .attr("class", ({ flat }) => {
-        const classes = ["flat", styles.flatmarker];
-        if (selectedFlatId && flat.id === selectedFlatId) {
-          classes.push(styles.flatmarkerSelected);
-        }
-        return classes.join(" ");
-      })
+      .attr("class", `flat ${styles.flatmarker}`)
+      .classed(styles.flatmarkerSelected, ({flat}) => selectedFlatId && flat.id === selectedFlatId)
+      .classed(styles.flatmarkerHovered, ({flat}) => previewedFlatId && flat.id === previewedFlatId)
       .on("mouseover", function({ flat }) {
+        console.log("in", flat.id);
         onMouseOver && onMouseOver(flat);
         d3Select(this).classed(styles.flatmarkerHovered, true);
       })
       .on("mouseout", function({ flat }) {
         onMouseOut && onMouseOut(flat);
+        console.log("out", flat.id);
         d3Select(this).classed(styles.flatmarkerHovered, false);
       })
       .on("click", function({ flat }) {

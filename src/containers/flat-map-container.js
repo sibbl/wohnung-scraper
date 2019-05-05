@@ -55,6 +55,7 @@ const FlatMapContainer = ({
         onFlatPreview={setPreviewedFlat}
         onFlatSelect={setSelectedFlat}
         selectedFlatId={selectedFlatId}
+        previewedFlatId={previewedFlatId}
       />
     </StyledContainer>
   );

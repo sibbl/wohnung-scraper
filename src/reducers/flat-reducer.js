@@ -57,7 +57,7 @@ export const flatReducer = (state = initialState, action) => {
         return;
 
       case SET_PREVIEWED_FLAT:
-        draftState.previewedFlatId = action.flat;
+        draftState.previewedFlatId = action.flat.id;
         return;
 
       case UNSET_PREVIEWED_FLAT:

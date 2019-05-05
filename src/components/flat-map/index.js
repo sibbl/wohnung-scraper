@@ -44,6 +44,7 @@ export const FlatMap = ({
   onFlatPreview,
   onFlatSelect,
   selectedFlatId,
+  previewedFlatId,
   ...other
 }) => {
   return (
@@ -56,6 +57,7 @@ export const FlatMap = ({
       <LeafletD3Layer
         drawFunction={getDrawFunction(config)}
         flats={flats}
+        previewedFlatId={previewedFlatId}
         selectedFlatId={selectedFlatId}
         onMouseOver={onFlatPreview}
         onMouseOut={() => onFlatPreview(null)}
