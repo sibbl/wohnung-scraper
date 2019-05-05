@@ -1,8 +1,8 @@
 import React from "react";
 
-export const FlatShortDetails = ({ flat }) => {
+export const FlatShortDetails = ({ flat, ...other }) => {
   return (
-    <div>
+    <div {...other}>
       <div>
         Free from:{" "}
         {flat.free_from ? new Date(flat.free_from).toLocaleDateString() : "-"}
