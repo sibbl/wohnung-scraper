@@ -1,0 +1,10 @@
+.flatmarker {
+    opacity: 0.8;
+    cursor: pointer;
+    pointer-events: all !important;
+}
+.flatmarkerHovered {
+    stroke-width: 1px;
+    stroke: #000;
+    opacity: 1;
+}
