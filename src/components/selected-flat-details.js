@@ -66,7 +66,7 @@ export const SelectedFlatDetails = ({
     <StyledContainer>
       <Title>Selected Flat:</Title>
       <StyledFlatShortDetails flat={selectedFlat} />
-      <StyledLink href={selectedFlat.url}>
+      <StyledLink href={selectedFlat.url} target="_blank">
         Auf {selectedFlat.website} öffnen
       </StyledLink>
       {Object.entries(selectedFlat.data).map(([key, value]) => (
