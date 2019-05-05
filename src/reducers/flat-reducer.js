@@ -32,6 +32,14 @@ const getVisibleFlatIds = ({ flats, filters }) => {
 
   return Object.entries(flats)
     .filter(([, flat]) => {
+      if (filters.showOnlyFavs && !flat.favorite) {
+        return false;
+      }
+
+      if (filters.hideInactive && !flat.active) {
+        return false;
+      }
+
       if (
         ["price", "rooms", "size"].some(key => {
           return flat[key] < filters[key].min || flat[key] > filters[key].max;
@@ -58,6 +66,10 @@ const getVisibleFlatIds = ({ flats, filters }) => {
         ) {
           return false;
         }
+      }
+
+      if(filters.enabledSites[flat.website] !== true) {
+        return false;
       }
 
       return true;
@@ -106,10 +118,18 @@ export const flatReducer = (state = initialState, action) => {
 
       case SET_FAVORITE_FLAT_SUCCESS:
         draftState.flats[action.flat.id].favorite = action.favorite;
+        draftState.visibleFlatIds = getVisibleFlatIds({
+          flats: draftState.flats,
+          filters: state.filters
+        });
         return;
 
       case SET_ACTIVE_FLAT_SUCCESS:
         draftState.flats[action.flat.id].active = action.active;
+        draftState.visibleFlatIds = getVisibleFlatIds({
+          flats: draftState.flats,
+          filters: state.filters
+        });
         return;
 
       case SET_FLAT_FILTERS:
