@@ -17,8 +17,8 @@ const initialState = {
   error: null,
   flats: null,
   visibleFlatIds: null,
-  selectedFlat: null,
-  previewedFlat: null,
+  selectedFlatId: null,
+  previewedFlatId: null,
   filters: {
     //TODO: use GET_CONFIG_SUCCESSFUL to fill this the first time
   }
@@ -57,19 +57,19 @@ export const flatReducer = (state = initialState, action) => {
         return;
 
       case SET_PREVIEWED_FLAT:
-        draftState.previewedFlat = action.flat;
+        draftState.previewedFlatId = action.flat.id;
         return;
 
       case UNSET_PREVIEWED_FLAT:
-        draftState.previewedFlat = null;
+        draftState.previewedFlatId = null;
         return;
 
       case SET_SELECTED_FLAT:
-        draftState.selectedFlat = action.flat;
+        draftState.selectedFlatId = action.flat.id;
         return;
 
       case UNSET_SELECTED_FLAT:
-        draftState.selectedFlat = null;
+        draftState.selectedFlatId = null;
         return;
 
       case SET_FAVORITE_FLAT_SUCCESS:
