@@ -8,12 +8,14 @@ import {
   SET_SELECTED_FLAT,
   UNSET_SELECTED_FLAT
 } from "../actions/flat-actions";
+import { SET_FAVORITE_FLAT_SUCCESS } from "../actions/flat-favorite-actions";
+import { SET_ACTIVE_FLAT_SUCCESS } from "../actions/flat-active-actions";
 
 const initialState = {
   isWorking: false,
   error: null,
   flats: null,
-  visibleFlats: null,
+  visibleFlatIds: null,
   selectedFlat: null,
   previewedFlat: null
 };
@@ -30,7 +32,7 @@ export const flatReducer = (state = initialState, action) => {
         draftState.isWorking = false;
         draftState.error = null;
         draftState.flats = action.flats;
-        draftState.visibleFlats = Object.values(action.flats);
+        draftState.visibleFlatIds = Object.keys(action.flats);
         return;
 
       case GET_FLATS_FAILURE:
@@ -52,6 +54,14 @@ export const flatReducer = (state = initialState, action) => {
 
       case UNSET_SELECTED_FLAT:
         draftState.selectedFlat = null;
+        return;
+
+      case SET_FAVORITE_FLAT_SUCCESS:
+        draftState.flats[action.flat.id].favorite = action.favorite;
+        return;
+
+      case SET_ACTIVE_FLAT_SUCCESS:
+        draftState.flats[action.flat.id].active = action.active;
         return;
 
       default:
