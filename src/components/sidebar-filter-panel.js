@@ -76,6 +76,7 @@ export const SidebarFilterPanel = ({
         minValue={0}
         maxValue={limits.price}
         value={filters.price}
+        step={50}
         onChange={update("price")}
         formatLabel={value => `${value} €`}
       />
