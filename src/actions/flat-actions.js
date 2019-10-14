@@ -21,6 +21,7 @@ export const getFlats = () => {
 
       dispatch({ type: GET_FLATS_SUCCESS, flats });
     } catch (error) {
+      console.error(error);
       dispatch({ type: GET_FLATS_FAILURE, error });
     }
   };

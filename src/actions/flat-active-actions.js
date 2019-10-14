@@ -20,6 +20,7 @@ export const setActiveFlat = ({ flat, active = true }) => {
         dispatch({ type: SET_ACTIVE_FLAT_FAILURE, error: message, details });
       }
     } catch (error) {
+      console.error(error);
       dispatch({ type: SET_ACTIVE_FLAT_FAILURE, error });
     }
   };

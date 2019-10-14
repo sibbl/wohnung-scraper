@@ -1,142 +1,208 @@
-module.exports = {
-  baseUrl: "http://localhost:3000/",
-  map: {
-    initialView: {
-      lat: 52.504703,
-      lng: 13.324861,
-      zoom: 12
-    }
-  },
-  bots: [
-    {
-      id: "telegram",
-      enabled: false,
-      key: "<telegram-bot-key>",
-      chats: ["<telegram-chat-id>"]
-    }
-  ],
-  transportRoutes: {
-    provider: "berlin_vbb",
-    options: {
-      berlin_vbb: {
-        zoo: {
-          label: "Zoo",
-          name: "S+U Zoologischer Garten Bhf (Berlin)",
-          id:
-            "A=1@O=S+U Zoologischer Garten Bhf (Berlin)@X=13332710@Y=52506918@U=86@L=009023201@B=1@V=3.9,@p=1472124910@"
+const { DateTime } = require("luxon");
+
+const mapboxLayers = require("./map-content/layers/mapbox")({
+  apiKey: "<mapbox key>"
+});
+const NextBike = require("./map-content/overlays/nextbike");
+const OsmOverpass = require("./map-content/overlays/osm-overpass");
+
+module.exports = async () => {
+  const mapOverlays = (await Promise.all([
+    NextBike.getFlexZoneGeoJsonAsync({
+      cityName: "Leipzig",
+      domain: "le"
+    }),
+    NextBike.getStationsGeoJsonAsync({
+      cityName: "Leipzig",
+      cityId: 1
+    }),
+    OsmOverpass.executeQueryAsync({
+      name: "Drink Water",
+      query: `node [amenity=drinking_water](around:10000,52.504703,13.324861);`
+    }),
+    OsmOverpass.executeQueryAsync({
+      name: "Supermarkets & general shops",
+      query: `(
+          node [shop=supermarket](around:5000,52.504703,13.324861);
+          node [shop=general](around:5000,52.504703,13.324861);
+        );`
+    })
+  ])).filter(o => o);
+  return {
+    baseUrl: "http://localhost:3000/",
+    map: {
+      initialView: {
+        lat: 52.504703,
+        lng: 13.324861,
+        zoom: 12
+      },
+      layers: [
+        {
+          name: "Default Layer",
+          url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        },
+        ...Object.values(mapboxLayers)
+      ],
+      overlays: mapOverlays
+    },
+    bots: [
+      {
+        id: "telegram",
+        enabled: false,
+        key: "<telegram-bot-key>",
+        chats: ["<telegram-chat-id>"]
+      }
+    ],
+    transportRoutes: {
+      provider: "berlin_vbb",
+      options: {
+        berlin_vbb: {
+          zoo: {
+            label: "Zoo",
+            name: "S+U Zoologischer Garten Bhf (Berlin)",
+            id:
+              "A=1@O=S+U Zoologischer Garten Bhf (Berlin)@X=13332710@Y=52506918@U=86@L=009023201@B=1@V=3.9,@p=1472124910@"
+          }
         }
       }
-    }
-  },
-  dataFilter: {
-    lat: 52.49281508540494,
-    lng: 13.302726745605469,
-    radius: 5000
-  },
-  dataFilterRange: {
-    min: 500,
-    max: 10000,
-    step: 100,
-    ticks: 1000
-  },
-  auth: {
-    username: "<USERNAME>",
-    password: "<PASSWORD>"
-  },
-  transportTimeMapnificentConfig: {
-    // please find supported cities over at https://github.com/mapnificent/mapnificent_cities
-    cityid: "berlin"
-  },
-  defaultTransportTime: 30, // minutes
-  defaultShowTransportRangeAutomatically: false,
-  maxPricePerSqM: 20,
-  filters: {
-    // limits - where to crop the filters
-    limits: {
-      price: 1500,
-      rooms: 5,
-      size: 200,
-      free_from: "2019-10-01",
-      age: "2019-02-01"
     },
-    // default - actual default values for the filters
-    default: {
-      hideInactive: true,
-      showOnlyFavs: false,
-      price: {
-        min: 0,
-        max: 1200
+    dataFilter: {
+      lat: 52.49281508540494,
+      lng: 13.302726745605469,
+      radius: 5000
+    },
+    dataFilterRange: {
+      min: 500,
+      max: 10000,
+      step: 100,
+      ticks: 1000
+    },
+    auth: {
+      username: "<USERNAME>",
+      password: "<PASSWORD>"
+    },
+    transportTimeMapnificentConfig: {
+      // please find supported cities over at https://github.com/mapnificent/mapnificent_cities
+      cityid: "berlin"
+    },
+    defaultTransportTime: 30, // minutes
+    defaultShowTransportRangeAutomatically: false,
+    maxPricePerSqM: 20,
+    filters: {
+      // limits - defines start and end of filter range slider domain
+      limits: {
+        price: {
+          min: 0,
+          max: 1600
+        },
+        rooms: {
+          min: 1,
+          max: 10
+        },
+        size: {
+          min: 0,
+          max: 200
+        },
+        free_from: {
+          min: "now",
+          max: DateTime.local()
+            .startOf("month")
+            .plus({ months: 6 })
+            .toISODate()
+        },
+        age: {
+          min: DateTime.local()
+            .startOf("month")
+            .plus({ months: -6 })
+            .toISODate(),
+          max: "now"
+        }
       },
-      rooms: {
-        min: 2,
-        max: 3
+      // default - defines default values for the filters range sliders
+      default: {
+        hideInactive: true,
+        showOnlyFavs: false,
+        price: {
+          min: 0,
+          max: 1200
+        },
+        rooms: {
+          min: 3,
+          max: 5
+        },
+        size: {
+          min: 60,
+          max: 160
+        },
+        free_from: {
+          min: "now",
+          max: DateTime.local()
+            .startOf("month")
+            .plus({ months: 3 })
+            .toISODate()
+        },
+        age: {
+          min: DateTime.local()
+            .startOf("month")
+            .plus({ months: -3 })
+            .toISODate(),
+          max: "now"
+        }
+      }
+    },
+    cronTimes: {
+      scrape: "0,20,45 * * * *",
+      update: "30 * * * *"
+    },
+    city: "Berlin",
+    database: "data/wohnungen.db",
+    geocoder: {
+      provider: "here", //supported: here, google, mapquest
+      options: {
+        google: {
+          apiKey: "<google-maps-api-key>",
+          language: "de-DE",
+          region: ".de"
+        },
+        here: {
+          appId: "<here-api-app-id>",
+          appCode: "<here-api-app-code>"
+        },
+        mapquest: {
+          apiKey: "<mapquest-api-key>"
+        }
+      }
+    },
+    httpOptions: {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
+      }
+    },
+    scraper: {
+      wgGesucht: {
+        name: "wg-gesucht.de",
+        url: "http://www.wg-gesucht.de/wohnungen-in-Berlin.8.2.0.0.html",
+        maxPages: 5
       },
-      size: {
-        min: 30,
-        max: 120
+      studentenWg: {
+        name: "studenten-wg.de",
+        url:
+          "https://www.studenten-wg.de/angebote_lesen.html?preismode=2&newsort=&stadt=Berlin&fuer=Wohnungen&mietart=1&zimin=2&zimax=4&lmode=2&proseite=50",
+        maxPages: 5
       },
-      free_from: {
-        min: "2019-06-01",
-        max: "2019-08-01"
+      immoscout24: {
+        name: "immobilienscout24.de",
+        url:
+          "https://www.immobilienscout24.de/Suche/S-2/Wohnung-Miete/Berlin/Berlin/-/-/-/-/-/-/false",
+        maxPages: 10
       },
-      age: {
-        min: "2019-04-01",
-        max: "now"
+      immonet: {
+        name: "immonet.de",
+        url:
+          "http://www.immonet.de/immobiliensuche/sel.do?marketingtype=2&city=87372&parentcat=1&suchart=2&radius=0&listsize=25&objecttype=1&pageoffset=1&sortby=19",
+        maxPages: 5
       }
     }
-  },
-  cronTimes: {
-    scrape: "0,20,45 * * * *",
-    update: "30 * * * *"
-  },
-  city: "Berlin",
-  database: "data/wohnungen.db",
-  geocoder: {
-    provider: "here", //supported: here, google, mapquest
-    options: {
-      google: {
-        apiKey: "<google-maps-api-key>",
-        language: "de-DE",
-        region: ".de"
-      },
-      here: {
-        appId: "<here-api-app-id>",
-        appCode: "<here-api-app-code>"
-      },
-      mapquest: {
-        apiKey: "<mapquest-api-key>"
-      }
-    }
-  },
-  httpOptions: {
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
-    }
-  },
-  scraper: {
-    wgGesucht: {
-      name: "wg-gesucht.de",
-      url: "http://www.wg-gesucht.de/wohnungen-in-Berlin.8.2.0.0.html",
-      maxPages: 5
-    },
-    studentenWg: {
-      name: "studenten-wg.de",
-      url:
-        "https://www.studenten-wg.de/angebote_lesen.html?preismode=2&newsort=&stadt=Berlin&fuer=Wohnungen&mietart=1&zimin=2&zimax=4&lmode=2&proseite=50",
-      maxPages: 5
-    },
-    immoscout24: {
-      name: "immobilienscout24.de",
-      url:
-        "https://www.immobilienscout24.de/Suche/S-2/Wohnung-Miete/Berlin/Berlin/-/-/-/-/-/-/false",
-      maxPages: 10
-    },
-    immonet: {
-      name: "immonet.de",
-      url:
-        "http://www.immonet.de/immobiliensuche/sel.do?marketingtype=2&city=87372&parentcat=1&suchart=2&radius=0&listsize=25&objecttype=1&pageoffset=1&sortby=19",
-      maxPages: 5
-    }
-  }
+  };
 };

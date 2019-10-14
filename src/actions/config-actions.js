@@ -13,6 +13,7 @@ export const getConfig = () => {
 
             dispatch({ type: GET_CONFIG_SUCCESS, config });
         } catch (error) {
+            console.error(error);
             dispatch({ type: GET_CONFIG_FAILURE, error });
         }
     };

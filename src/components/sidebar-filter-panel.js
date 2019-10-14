@@ -73,8 +73,8 @@ export const SidebarFilterPanel = ({
 
       <StyledSlider
         title="Price:"
-        minValue={0}
-        maxValue={limits.price}
+        minValue={limits.price.min}
+        maxValue={limits.price.max}
         value={filters.price}
         step={50}
         onChange={update("price")}
@@ -82,24 +82,24 @@ export const SidebarFilterPanel = ({
       />
       <StyledSlider
         title="Size:"
-        minValue={0}
-        maxValue={limits.size}
+        minValue={limits.size.min}
+        maxValue={limits.size.max}
         value={filters.size}
         onChange={update("size")}
         formatLabel={value => `${value} m²`}
       />
       <StyledSlider
         title="Rooms:"
-        minValue={1}
-        maxValue={limits.rooms}
+        minValue={limits.rooms.min}
+        maxValue={limits.rooms.max}
         value={filters.rooms}
         onChange={update("rooms")}
       />
       <StyledSlider
         as={DateSlider}
         title="Free from:"
-        minValue={getDateTime("now")}
-        maxValue={getDateTime(limits.free_from)}
+        minValue={getDateTime(limits.free_from.min)}
+        maxValue={getDateTime(limits.free_from.max)}
         unit="month"
         step={1}
         value={filters.free_from}
@@ -108,8 +108,8 @@ export const SidebarFilterPanel = ({
       <StyledSlider
         as={DateSlider}
         title="Age:"
-        minValue={getDateTime(limits.age)}
-        maxValue={getDateTime("now")}
+        minValue={getDateTime(limits.age.min)}
+        maxValue={getDateTime(limits.age.max)}
         unit="day"
         step={1}
         value={filters.age}

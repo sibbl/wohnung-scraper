@@ -20,6 +20,7 @@ export const setFavoriteFlat = ({ flat, favorite = true }) => {
         dispatch({ type: SET_FAVORITE_FLAT_FAILURE, error: message, details });
       }
     } catch (error) {
+      console.error(error);
       dispatch({ type: SET_FAVORITE_FLAT_FAILURE, error });
     }
   };

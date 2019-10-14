@@ -68,7 +68,7 @@ const getVisibleFlatIds = ({ flats, filters }) => {
         }
       }
 
-      if(filters.enabledSites[flat.website] !== true) {
+      if (filters.enabledSites[flat.website] !== true) {
         return false;
       }
 
@@ -142,7 +142,7 @@ export const flatReducer = (state = initialState, action) => {
         return;
 
       case GET_CONFIG_SUCCESS:
-        const configFilters = action.config.filters.default;
+        const configFilters = { ...action.config.filters.default };
 
         if (!configFilters.enabledSites) {
           // enable all sites by default
