@@ -36,7 +36,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "dev": "concurrently --names \"React,Express\" --prefix-colors \"green,blue\" \"react-scripts start\" \"nodemon server/index.js\"",
-    "server": "nodemon server/index.js",
+    "dev:server": "nodemon server/index.js",
+    "server": "node server/index.js",
     "storybook": "start-storybook -p 9009 -s public",
     "build-storybook": "build-storybook -s public"
   },
