@@ -55,7 +55,7 @@ export const FlatMap = ({
       {...other}
     >
       <LeafletD3Layer
-        drawFunction={getDrawFunction(config)}
+        drawFunction={getDrawFunction({config})}
         flats={flats}
         previewedFlatId={previewedFlatId}
         selectedFlatId={selectedFlatId}

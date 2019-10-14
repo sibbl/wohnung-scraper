@@ -12,7 +12,7 @@ const path = d3Line()
 const sizeScale = scaleLinear()
   .range([20, 50])
   .domain([10, 200]);
-const sqMPriceScale = scaleSequential(interpolateRdYlGn).domain([15, 7]);
+const sqMPriceScale = scaleSequential(interpolateRdYlGn);
 
 export const createNgon = ({ x, y, sides, radius, rotation = 0 }) => {
   const coords = [];
@@ -78,14 +78,27 @@ export const getDrawFunction = ({ config }) => ({
     feature.attr("r", ({ flat, radius }) => (flat.rooms === 1 ? radius : null));
   };
 
+  const sqMPriceScaleWithDomain = sqMPriceScale.domain([
+    config.pricePerSqM.max,
+    config.pricePerSqM.min
+  ]);
+
   const addOrUpdate = feature => {
     addOrUpdateCircle(feature);
     addOrUpdatePath(feature);
     feature
-      .style("fill", ({ flat }) => sqMPriceScale(flat.price / flat.size))
+      .style("fill", ({ flat }) =>
+        sqMPriceScaleWithDomain(flat.price / flat.size)
+      )
       .attr("class", `flat ${styles.flatmarker}`)
-      .classed(styles.flatmarkerSelected, ({flat}) => selectedFlatId && flat.id === selectedFlatId)
-      .classed(styles.flatmarkerHovered, ({flat}) => previewedFlatId && flat.id === previewedFlatId)
+      .classed(
+        styles.flatmarkerSelected,
+        ({ flat }) => selectedFlatId && flat.id === selectedFlatId
+      )
+      .classed(
+        styles.flatmarkerHovered,
+        ({ flat }) => previewedFlatId && flat.id === previewedFlatId
+      )
       .on("mouseover", function({ flat }) {
         onMouseOver && onMouseOver(flat);
         d3Select(this).classed(styles.flatmarkerHovered, true);

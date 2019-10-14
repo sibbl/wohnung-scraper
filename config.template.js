@@ -87,7 +87,10 @@ module.exports = async () => {
     },
     defaultTransportTime: 30, // minutes
     defaultShowTransportRangeAutomatically: false,
-    maxPricePerSqM: 20,
+    pricePerSqM: {
+      min: 8, // will be colored green
+      max: 20 // will be colored red
+    },
     filters: {
       // limits - defines start and end of filter range slider domain
       limits: {
@@ -188,7 +191,7 @@ module.exports = async () => {
       studentenWg: {
         name: "studenten-wg.de",
         url:
-          "https://www.studenten-wg.de/angebote_lesen.html?preismode=2&newsort=&stadt=Berlin&fuer=Wohnungen&mietart=1&zimin=2&zimax=4&lmode=2&proseite=50",
+          "https://www.studenten-wg.de/angebote_lesen.html?stadt=Berlin",
         maxPages: 5
       },
       immoscout24: {
@@ -200,7 +203,7 @@ module.exports = async () => {
       immonet: {
         name: "immonet.de",
         url:
-          "http://www.immonet.de/immobiliensuche/sel.do?marketingtype=2&city=87372&parentcat=1&suchart=2&radius=0&listsize=25&objecttype=1&pageoffset=1&sortby=19",
+          "https://www.immonet.de/immobiliensuche/sel.do?city=87372&sortby=19",
         maxPages: 5
       }
     }
