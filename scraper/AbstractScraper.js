@@ -30,10 +30,10 @@ module.exports = class AbstractScraper {
   async prepareStatements() {
     this.statements = {
       insert: await this.db.prepare(
-        'INSERT INTO "wohnungen" (website, websiteId, url, latitude, longitude, rooms, size, price, free_from, active, gone, data) VALUES ($website, $websiteId, $url, $latitude, $longitude, $rooms, $size, $price, $free_from, $active, $gone, $data)'
+        'INSERT INTO "wohnungen" (website, websiteId, url, latitude, longitude, rooms, size, price, free_from, active, gone, data, title) VALUES ($website, $websiteId, $url, $latitude, $longitude, $rooms, $size, $price, $free_from, $active, $gone, $data, $title)'
       ),
       update: await this.db.prepare(
-        'UPDATE "wohnungen" SET url = $url, latitude = $latitude, longitude = $longitude, rooms = $rooms, size = $size, price = $price, free_from = $free_from, active = $active, gone = $gone, data = $data, website = $website, websiteId = $websiteId, removed = $removed, comment = $comment, favorite = $favorite WHERE id = $id'
+        'UPDATE "wohnungen" SET url = $url, latitude = $latitude, longitude = $longitude, rooms = $rooms, size = $size, price = $price, free_from = $free_from, active = $active, gone = $gone, data = $data, website = $website, websiteId = $websiteId, removed = $removed, comment = $comment, favorite = $favorite, title = $title WHERE id = $id'
       ),
       hasId: await this.db.prepare(
         'SELECT COUNT(*) AS count FROM "wohnungen" WHERE website = $website AND websiteId = $websiteId'
@@ -61,7 +61,8 @@ module.exports = class AbstractScraper {
         $active: row.active,
         $gone: row.gone,
         $data:
-          typeof row.data === "string" ? row.data : JSON.stringify(row.data)
+          typeof row.data === "string" ? row.data : JSON.stringify(row.data),
+        $title: row.title
       });
     } catch (e) {
       throw new Error(
@@ -89,7 +90,8 @@ module.exports = class AbstractScraper {
         $comment: row.comment,
         $favorite: row.favorite,
         $data:
-          typeof row.data === "string" ? row.data : JSON.stringify(row.data)
+          typeof row.data === "string" ? row.data : JSON.stringify(row.data),
+        $title: row.title
       });
     } catch (e) {
       throw new Error(
@@ -163,9 +165,7 @@ module.exports = class AbstractScraper {
       });
     } catch (e) {
       throw new Error(
-        `Error while getting all active items from database (ID=${
-          this.id
-        } / ${id}) and error ${e}`
+        `Error while getting all active items from database (ID=${this.id} / ${id}) and error ${e}`
       );
     }
   }
@@ -319,7 +319,9 @@ module.exports = class AbstractScraper {
     };
     fillResult(result);
 
-    var enabledBots = this.globalConfig.bots.filter(bot => bot.enabled === true);
+    var enabledBots = this.globalConfig.bots.filter(
+      bot => bot.enabled === true
+    );
     if (enabledBots.length > 0) {
       console.log(
         "Start sending to bots " +
@@ -341,9 +343,7 @@ module.exports = class AbstractScraper {
     } catch (e) {
       response = e.response;
       console.warn(
-        `Received HTTP status code ${
-          response.statusCode
-        } at HTTP request for URL "${url}"`,
+        `Received HTTP status code ${response.statusCode} at HTTP request for URL "${url}"`,
         e
       );
     }
