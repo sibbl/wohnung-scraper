@@ -41,8 +41,8 @@ const fs = require("fs"),
     job.start();
   };
 
-  // startScraperCronjob(config.cronTimes.scrape, "scrape");
-  // startScraperCronjob(config.cronTimes.update, "updateItems");
+  startScraperCronjob(config.cronTimes.scrape, "scrape");
+  startScraperCronjob(config.cronTimes.update, "updateItems");
 
   new app(db, scraperList, config);
 })();
