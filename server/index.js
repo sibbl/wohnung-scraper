@@ -1,11 +1,11 @@
-const configObj = require("../config"),
+const fs = require("fs"),
+  path = require("path"),
+  configObj = require(path.join(__dirname, "../config")),
   configLoader = require("./utils/config-loader"),
   app = require("./app"),
   sqlite = require("sqlite"),
   CronJob = require("cron").CronJob,
   { SETUP_SQL } = require("./database"),
-  fs = require("fs"),
-  path = require("path"),
   getScraperRunner = require("./utils/scraperRunner");
 
 (async () => {
