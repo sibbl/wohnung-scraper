@@ -59,7 +59,7 @@ const getVisibleFlatIds = ({ flats, filters }) => {
       }
 
       if (flat.added) {
-        const parsedAddedTime = DateTime.fromISO(flat.added);
+        const parsedAddedTime = DateTime.fromISO(flat.added).startOf("day");
         if (
           parsedAddedTime < filters.age.min ||
           parsedAddedTime > filters.age.max
