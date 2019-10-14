@@ -17,8 +17,8 @@ module.exports = class AbstractScraper {
 
     this.db = db;
     this.globalConfig = globalConfig;
-    this.config = globalConfig.scraper[this.id];
     this.id = scraperId;
+    this.config = globalConfig.scraper[this.id];
 
     if (typeof this.config === "undefined") {
       console.error("Scraper " + scraperId + " config could not be loaded.");

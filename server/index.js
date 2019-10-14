@@ -1,3 +1,5 @@
+process.env.NTBA_FIX_319 = 1;
+
 const fs = require("fs"),
   path = require("path"),
   configObj = require(path.join(__dirname, "../config")),
@@ -5,8 +7,8 @@ const fs = require("fs"),
   app = require("./app"),
   sqlite = require("sqlite"),
   CronJob = require("cron").CronJob,
-  { SETUP_SQL } = require("./database"),
-  getScraperRunner = require("./utils/scraperRunner");
+  getScraperRunner = require("./utils/scraperRunner"),
+  DBMigrate = require("db-migrate");
 
 (async () => {
   const config = await configLoader(configObj);
@@ -17,8 +19,10 @@ const fs = require("fs"),
     fs.mkdirSync(pathToDatabase, { recursive: true });
   }
 
+  const dbm = DBMigrate.getInstance(true);
+  await dbm.up();
+
   const db = await sqlite.open(dbPath);
-  await db.run(SETUP_SQL);
 
   const scraperList = [
     "WgGesuchtScraper",
