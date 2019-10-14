@@ -53,10 +53,12 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
       );
     }
 
-    const relativeItemUrl = tableRow.find("a").attr("href");
+    const itemTitle = tableRow.find("a");
+    const relativeItemUrl = itemTitle.attr("href");
     const itemUrl = urlLib.resolve(url, relativeItemUrl);
 
     const result = await this.scrapeItemDetails(itemUrl, exists);
+    result.title = itemTitle.text().trim();
     result.websiteId = itemId;
     result.size = parseInt(groesse);
     result.price = parseInt(prices[1]);

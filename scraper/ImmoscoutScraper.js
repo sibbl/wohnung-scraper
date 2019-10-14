@@ -26,6 +26,16 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
     } catch (e) {
       console.log("Error whilte scrapping immo", e);
     }
+
+    const rawTitle = tableRow
+      .find(".result-list-entry__brand-title")
+      .text()
+      .trim();
+    const title = rawTitle.startsWith("NEU")
+      ? rawTitle.substr(3).trim()
+      : rawTitle;
+
+    data.title = title;
     data.url = itemUrl;
     data.websiteId = itemId;
     data.active = true;
@@ -35,14 +45,23 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
   async _scrapeItem(url, tableRow) {
     const linkElem = tableRow.find(".result-list-entry__brand-title-container");
     const relativeItemUrl = linkElem.attr("href");
+
     let itemId = null;
     if (typeof relativeItemUrl !== "undefined") {
       const urlParts = relativeItemUrl.match(/[0-9]+$/);
-      itemId = urlParts[0];
+      if (urlParts != null && urlParts.length > 0) {
+        itemId = urlParts[0];
+      } else {
+        console.error(
+          "[" + this.id + "] Scraping the following URL isn't supported: ",
+          relativeItemUrl
+        );
+      }
     }
     if (itemId == null) {
       return false;
     }
+
     const isInDb = await this.hasItemInDb(itemId);
     if (isInDb) {
       const data = await this._getDbObject(

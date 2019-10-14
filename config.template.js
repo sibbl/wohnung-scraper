@@ -8,13 +8,13 @@ const OsmOverpass = require("./map-content/overlays/osm-overpass");
 
 module.exports = async () => {
   const mapOverlays = (await Promise.all([
-    NextBike.getFlexZoneGeoJsonAsync({
-      cityName: "Leipzig",
-      domain: "le"
-    }),
+    // NextBike.getFlexZoneGeoJsonAsync({
+    //   cityName: "Leipzig",
+    //   domain: "le"
+    // }),
     NextBike.getStationsGeoJsonAsync({
-      cityName: "Leipzig",
-      cityId: 1
+      cityName: "Berlin",
+      cityId: 362  // see https://github.com/syssi/nextbike
     }),
     OsmOverpass.executeQueryAsync({
       name: "Drink Water",

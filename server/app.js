@@ -40,6 +40,7 @@ module.exports = class App {
       try {
         await scraperRunner("scrape");
       } catch (error) {
+        console.error("Scrape error", error);
         res.send(JSON.stringify({ status: "error", error }));
         return;
       }
@@ -50,6 +51,7 @@ module.exports = class App {
       try {
         await scraperRunner("updateItems");
       } catch (error) {
+        console.error("Update error", error);
         res.send(JSON.stringify({ status: "error", error }));
         return;
       }
@@ -67,6 +69,7 @@ module.exports = class App {
           $id: req.params.id
         });
       } catch (error) {
+        console.error("Forward error", error);
         res.send(
           JSON.stringify({
             success: false,
@@ -97,6 +100,7 @@ module.exports = class App {
       try {
         result = await db.all(query);
       } catch (error) {
+        console.error("Get data error", error);
         res.send(JSON.stringify(error));
         return;
       }
@@ -141,6 +145,7 @@ module.exports = class App {
       try {
         await db.run('DELETE FROM "wohnungen"');
       } catch (error) {
+        console.error("Reset error", error);
         res.send(JSON.stringify({ status: "error", error }));
         return;
       }
@@ -162,6 +167,7 @@ module.exports = class App {
             $id: req.params.id
           });
         } catch (error) {
+          console.error("Set active error", error);
           res.send(
             JSON.stringify({
               success: false,
@@ -186,6 +192,7 @@ module.exports = class App {
             $id: req.params.id
           });
         } catch (error) {
+          console.error("Set favorite error", error);
           res.send(
             JSON.stringify({
               success: false,
@@ -216,6 +223,7 @@ module.exports = class App {
           $id: req.params.id
         });
       } catch (error) {
+        console.error("Go to route direction error", error);
         res.send(
           JSON.stringify({
             success: false,
@@ -232,9 +240,7 @@ module.exports = class App {
         return;
       }
 
-      const transportModule = require(`../transport/${
-        this.config.transportRoutes.provider
-      }`);
+      const transportModule = require(`../transport/${this.config.transportRoutes.provider}`);
 
       await transportModule.redirectToTransport(
         row,
@@ -254,6 +260,7 @@ module.exports = class App {
             $longitude: longitude
           });
         } catch (error) {
+          console.error("Update location error", error);
           res.send(JSON.stringify({ success: false, error }), 500);
           return;
         }
@@ -274,6 +281,7 @@ module.exports = class App {
           'SELECT * from "wohnungen" WHERE latitude IS NULL OR longitude IS NULL'
         );
       } catch (error) {
+        console.error("Update lat lon error", error);
         res.send(JSON.stringify(error), 500);
         return;
       }
@@ -314,9 +322,7 @@ module.exports = class App {
         const isError = geoRes.error != null || geoRes.value.length < 1;
         if (isError) {
           log.push(
-            `ERROR: ${addresses[i]} -- ${geoRes.error} <a href='${
-              nonEmptyResults[i].url
-            }'>Link</a>`
+            `ERROR: ${addresses[i]} -- ${geoRes.error} <a href='${nonEmptyResults[i].url}'>Link</a>`
           );
         } else {
           const val = geoRes.value[0];
