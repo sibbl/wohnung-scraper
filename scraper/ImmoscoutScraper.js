@@ -189,12 +189,23 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
         return result;
       } else {
         let resolvedAddress;
-        try {
-          resolvedAddress = await this.getLocationOfAddress(
-            result.data.adresse
-          );
-        } catch (_) {
-          return result;
+        var latLngMatch = body.match(
+          /lat:\s*([0-9]+\.[0-9]+)[\s\S]+lng:\s*([0-9]+\.[0-9]+)/
+        );
+
+        if (latLngMatch && latLngMatch.length == 3) {
+          resolvedAddress = {
+            latitude: parseFloat(latLngMatch[1]),
+            longitude: parseFloat(latLngMatch[2])
+          };
+        } else {
+          try {
+            resolvedAddress = await this.getLocationOfAddress(
+              result.data.adresse
+            );
+          } catch (_) {
+            return result;
+          }
         }
 
         result.latitude = resolvedAddress.latitude;
