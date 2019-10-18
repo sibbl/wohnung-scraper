@@ -38,7 +38,7 @@ const getTitleSuffix = (flats, selectedFlatId, visibleFlatIds) => {
     return flats[selectedFlatId].title;
   } else {
     return (
-      visibleFlatIds.length + (visibleFlatIds.length == 1 ? " flat" : " flats")
+      visibleFlatIds.length + (visibleFlatIds.length === 1 ? " flat" : " flats")
     );
   }
 };
