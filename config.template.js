@@ -41,7 +41,7 @@ module.exports = async () => {
         require("./map-content/layers/openstreetmap").Default,
         require("./map-content/layers/memomaps-publictransport").Default,
         require("./map-content/layers/stamen").Default,
-        require("./map-content/layers/cities/Berlin/morgenpost-noise")(
+        require("./map-content/layers/cities/berlin/morgenpost-noise")(
           mapBoxConfig
         ).Default,
         ...Object.values(require("./map-content/layers/mapbox")(mapBoxConfig))
