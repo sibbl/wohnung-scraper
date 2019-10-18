@@ -1,12 +1,13 @@
 const { DateTime } = require("luxon");
 
-const mapboxLayers = require("./map-content/layers/mapbox")({
+const mapBoxConfig = {
   apiKey: "<mapbox key>"
-});
-const NextBike = require("./map-content/overlays/nextbike");
-const OsmOverpass = require("./map-content/overlays/osm-overpass");
+};
 
 module.exports = async () => {
+  const NextBike = require("./map-content/overlays/nextbike");
+  const OsmOverpass = require("./map-content/overlays/osm-overpass");
+
   const mapOverlays = (await Promise.all([
     // NextBike.getFlexZoneGeoJsonAsync({
     //   cityName: "Leipzig",
@@ -14,7 +15,7 @@ module.exports = async () => {
     // }),
     NextBike.getStationsGeoJsonAsync({
       cityName: "Berlin",
-      cityId: 362  // see https://github.com/syssi/nextbike
+      cityId: 362 // see https://github.com/syssi/nextbike
     }),
     OsmOverpass.executeQueryAsync({
       name: "Drink Water",
@@ -37,11 +38,13 @@ module.exports = async () => {
         zoom: 12
       },
       layers: [
-        {
-          name: "Default Layer",
-          url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        },
-        ...Object.values(mapboxLayers)
+        require("./map-content/layers/openstreetmap").Default,
+        require("./map-content/layers/memomaps-publictransport").Default,
+        require("./map-content/layers/stamen").Default,
+        require("./map-content/layers/cities/Berlin/morgenpost-noise")(
+          mapBoxConfig
+        ).Default,
+        ...Object.values(require("./map-content/layers/mapbox")(mapBoxConfig))
       ],
       overlays: mapOverlays
     },
@@ -190,8 +193,7 @@ module.exports = async () => {
       },
       studentenWg: {
         name: "studenten-wg.de",
-        url:
-          "https://www.studenten-wg.de/angebote_lesen.html?stadt=Berlin",
+        url: "https://www.studenten-wg.de/angebote_lesen.html?stadt=Berlin",
         maxPages: 5
       },
       immoscout24: {
