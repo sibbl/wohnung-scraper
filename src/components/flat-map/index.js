@@ -59,9 +59,9 @@ export const FlatMap = ({
         flats={flats}
         previewedFlatId={previewedFlatId}
         selectedFlatId={selectedFlatId}
-        onMouseOver={onFlatPreview}
+        onMouseOver={flat => onFlatPreview(flat ? flat.id : null)}
         onMouseOut={() => onFlatPreview(null)}
-        onClick={onFlatSelect}
+        onClick={flat => onFlatSelect(flat ? flat.id : null)}
       />
 
       <LayersControl>

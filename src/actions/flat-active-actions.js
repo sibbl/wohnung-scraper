@@ -4,18 +4,18 @@ export const SET_ACTIVE_FLAT = "SET_ACTIVE_FLAT";
 export const SET_ACTIVE_FLAT_SUCCESS = "SET_ACTIVE_FLAT_SUCCESS";
 export const SET_ACTIVE_FLAT_FAILURE = "SET_ACTIVE_FLAT_FAILURE";
 
-export const setActiveFlat = ({ flat, active = true }) => {
+export const setActiveFlat = ({ flatId, active = true }) => {
   return async dispatch => {
     dispatch({ type: SET_ACTIVE_FLAT });
 
     try {
       const { success, message, details } = await setActiveFlatFromApi({
-        id: flat.id,
+        id: flatId,
         active
       });
 
       if (success === true) {
-        dispatch({ type: SET_ACTIVE_FLAT_SUCCESS, flat, active });
+        dispatch({ type: SET_ACTIVE_FLAT_SUCCESS, flatId, active });
       } else {
         dispatch({ type: SET_ACTIVE_FLAT_FAILURE, error: message, details });
       }

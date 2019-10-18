@@ -78,7 +78,7 @@ export const SelectedFlatDetails = ({
       <StyledButton
         onClick={() =>
           setActiveFlat({
-            flat: selectedFlat,
+            flatId: selectedFlat.id,
             active: !selectedFlat.active
           })
         }
@@ -88,7 +88,7 @@ export const SelectedFlatDetails = ({
       <StyledButton
         onClick={() =>
           setFavoriteFlat({
-            flat: selectedFlat,
+            flatId: selectedFlat.id,
             favorite: !selectedFlat.favorite
           })
         }

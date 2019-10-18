@@ -6,6 +6,7 @@ import { Provider } from "react-redux";
 import { createStore, applyMiddleware, compose } from "redux";
 import thunk from "redux-thunk";
 import reducers from "./reducers";
+import storeUrlQuerySync from "./store-url-query-sync";
 
 let middleware = applyMiddleware(thunk);
 
@@ -20,6 +21,7 @@ if (process.env.REACT_APP_ENABLE_REDUX_DEVTOOLS_EXTENSION) {
 }
 
 const store = createStore(reducers, middleware);
+storeUrlQuerySync(store);
 
 ReactDOM.render(
   <Provider store={store}>

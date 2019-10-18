@@ -27,17 +27,17 @@ export const getFlats = () => {
   };
 };
 
-export const setPreviewedFlat = ({ flat }) => dispatch => {
-  if (flat) {
-    dispatch({ type: SET_PREVIEWED_FLAT, flat });
+export const setPreviewedFlat = ({ flatId }) => dispatch => {
+  if (flatId != null) {
+    dispatch({ type: SET_PREVIEWED_FLAT, flatId });
   } else {
     dispatch({ type: UNSET_PREVIEWED_FLAT });
   }
 };
 
-export const setSelectedFlat = ({ flat }) => dispatch => {
-  if (flat) {
-    dispatch({ type: SET_SELECTED_FLAT, flat });
+export const setSelectedFlat = ({ flatId }) => dispatch => {
+  if (flatId != null) {
+    dispatch({ type: SET_SELECTED_FLAT, flatId });
   } else {
     dispatch({ type: UNSET_SELECTED_FLAT });
   }

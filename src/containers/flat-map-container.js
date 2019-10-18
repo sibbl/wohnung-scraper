@@ -70,7 +70,7 @@ export default connect(
     previewedFlatId: state.flat.previewedFlatId
   }),
   dispatch => ({
-    setPreviewedFlat: flat => dispatch(setPreviewedFlat({ flat })),
-    setSelectedFlat: flat => dispatch(setSelectedFlat({ flat }))
+    setPreviewedFlat: flatId => dispatch(setPreviewedFlat({ flatId })),
+    setSelectedFlat: flatId => dispatch(setSelectedFlat({ flatId }))
   })
 )(FlatMapContainer);

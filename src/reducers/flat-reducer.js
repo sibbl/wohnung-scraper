@@ -101,7 +101,7 @@ export const flatReducer = (state = initialState, action) => {
         return;
 
       case SET_PREVIEWED_FLAT:
-        draftState.previewedFlatId = action.flat.id;
+        draftState.previewedFlatId = action.flatId;
         return;
 
       case UNSET_PREVIEWED_FLAT:
@@ -109,7 +109,7 @@ export const flatReducer = (state = initialState, action) => {
         return;
 
       case SET_SELECTED_FLAT:
-        draftState.selectedFlatId = action.flat.id;
+        draftState.selectedFlatId = action.flatId;
         return;
 
       case UNSET_SELECTED_FLAT:
@@ -117,7 +117,7 @@ export const flatReducer = (state = initialState, action) => {
         return;
 
       case SET_FAVORITE_FLAT_SUCCESS:
-        draftState.flats[action.flat.id].favorite = action.favorite;
+        draftState.flats[action.flatId].favorite = action.favorite;
         draftState.visibleFlatIds = getVisibleFlatIds({
           flats: draftState.flats,
           filters: state.filters
@@ -125,7 +125,7 @@ export const flatReducer = (state = initialState, action) => {
         return;
 
       case SET_ACTIVE_FLAT_SUCCESS:
-        draftState.flats[action.flat.id].active = action.active;
+        draftState.flats[action.flatId].active = action.active;
         draftState.visibleFlatIds = getVisibleFlatIds({
           flats: draftState.flats,
           filters: state.filters
