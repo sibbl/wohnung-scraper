@@ -111,7 +111,18 @@ module.exports = class ImmonetScraper extends AbstractScraper {
     const bodyStr = iconv.decode(body, "iso-8859-1");
     const $ = cheerio.load(body);
 
-    result.gone = statusCode !== 200;
+    let isGone = false;
+    $("h2").each((_, elem) => {
+      if (
+        $(elem)
+          .text()
+          .trim() === "Objekt nicht mehr verfügbar."
+      ) {
+        isGone = true;
+      }
+    });
+
+    result.gone = statusCode !== 200 || isGone;
     try {
       const title = $("#expose-headline")
         .text()
