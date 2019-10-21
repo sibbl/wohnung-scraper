@@ -341,11 +341,17 @@ module.exports = class AbstractScraper {
     try {
       response = await req;
     } catch (e) {
+      console.warn(`Failed to scrape ${url} because of`, e.message);
       response = e.response;
-      console.warn(
-        `Received HTTP status code ${response.statusCode} at HTTP request for URL "${url}"`,
-        e
-      );
+
+      // transform as we rely on valid objects here and there :(
+      if (!response) {
+        console.warn(`Didn't get any response for ${url} and will use statusCode -1 and empty body.`);
+        response = {
+          statusCode: -1,
+          body: ""
+        };
+      }
     }
     return response;
   }
