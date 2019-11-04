@@ -9,7 +9,7 @@ const getQueryGeoJsonAsync = async ({ query }) => {
     return {
       type: "Feature",
       properties: {
-        popupContent: tags.name || id
+        popupContent: tags.name || tags.description || id
       },
       geometry: {
         type: "Point",
@@ -31,7 +31,7 @@ const executeQueryAsync = async ({ name, query }) => {
       data: await getQueryGeoJsonAsync({ query })
     };
   } catch (e) {
-    console.error(`Failed to query OSM overpass ${name} with query ${query}.`);
+    console.error(`Failed to query OSM overpass ${name} with query ${query}.`, e);
     return null;
   }
 };
