@@ -1,13 +1,12 @@
 var AbstractScraper = require("./AbstractScraper"),
-  config = require("../config"),
   request = require("request-promise"),
   cheerio = require("cheerio"),
   urlLib = require("url"),
   moment = require("moment");
 
 module.exports = class ImmoscoutScraper extends AbstractScraper {
-  constructor(db) {
-    super(db, "immoscout24");
+  constructor(db, globalConfig) {
+    super(db, globalConfig, "immoscout24");
     this.cookieJar = request.jar();
   }
   _getNextPage(url, $) {
@@ -27,6 +26,16 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
     } catch (e) {
       console.log("Error whilte scrapping immo", e);
     }
+
+    const rawTitle = tableRow
+      .find(".result-list-entry__brand-title")
+      .text()
+      .trim();
+    const title = rawTitle.startsWith("NEU")
+      ? rawTitle.substr(3).trim()
+      : rawTitle;
+
+    data.title = title;
     data.url = itemUrl;
     data.websiteId = itemId;
     data.active = true;
@@ -36,14 +45,23 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
   async _scrapeItem(url, tableRow) {
     const linkElem = tableRow.find(".result-list-entry__brand-title-container");
     const relativeItemUrl = linkElem.attr("href");
+
     let itemId = null;
     if (typeof relativeItemUrl !== "undefined") {
       const urlParts = relativeItemUrl.match(/[0-9]+$/);
-      itemId = urlParts[0];
+      if (urlParts != null && urlParts.length > 0) {
+        itemId = urlParts[0];
+      } else {
+        console.error(
+          "[" + this.id + "] Scraping the following URL isn't supported: ",
+          relativeItemUrl
+        );
+      }
     }
     if (itemId == null) {
       return false;
     }
+
     const isInDb = await this.hasItemInDb(itemId);
     if (isInDb) {
       const data = await this._getDbObject(
@@ -77,7 +95,7 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
     return {
       resolveWithFullResponse: true,
       jar: this.cookieJar,
-      ...config.httpOptions
+      ...this.globalConfig.httpOptions
     };
   }
   async scrapeItemDetails(url, exists) {
@@ -175,12 +193,23 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
         return result;
       } else {
         let resolvedAddress;
-        try {
-          resolvedAddress = await this.getLocationOfAddress(
-            result.data.adresse
-          );
-        } catch (_) {
-          return result;
+        var latLngMatch = body.match(
+          /lat:\s*([0-9]+\.[0-9]+)[\s\S]+lng:\s*([0-9]+\.[0-9]+)/
+        );
+
+        if (latLngMatch && latLngMatch.length == 3) {
+          resolvedAddress = {
+            latitude: parseFloat(latLngMatch[1]),
+            longitude: parseFloat(latLngMatch[2])
+          };
+        } else {
+          try {
+            resolvedAddress = await this.getLocationOfAddress(
+              result.data.adresse
+            );
+          } catch (_) {
+            return result;
+          }
         }
 
         result.latitude = resolvedAddress.latitude;

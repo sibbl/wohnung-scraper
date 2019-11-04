@@ -1,5 +1,4 @@
 var AbstractScraper = require("./AbstractScraper"),
-  config = require("../config"),
   request = require("request-promise"),
   cheerio = require("cheerio"),
   urlLib = require("url"),
@@ -9,8 +8,8 @@ var AbstractScraper = require("./AbstractScraper"),
 iconv.skipDecodeWarning = true;
 
 module.exports = class WgGesuchtScraper extends AbstractScraper {
-  constructor(db) {
-    super(db, "studentenWg");
+  constructor(db, globalConfig) {
+    super(db, globalConfig, "studentenWg");
     this.cookieJar = request.jar();
   }
   _isAngebot(tableRow) {
@@ -54,10 +53,12 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
       );
     }
 
-    const relativeItemUrl = tableRow.find("a").attr("href");
+    const itemTitle = tableRow.find("a");
+    const relativeItemUrl = itemTitle.attr("href");
     const itemUrl = urlLib.resolve(url, relativeItemUrl);
 
     const result = await this.scrapeItemDetails(itemUrl, exists);
+    result.title = itemTitle.text().trim();
     result.websiteId = itemId;
     result.size = parseInt(groesse);
     result.price = parseInt(prices[1]);
@@ -117,7 +118,7 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
       resolveWithFullResponse: true,
       jar: this.cookieJar,
       encoding: null,
-      ...config.httpOptions
+      ...this.globalConfig.httpOptions
     };
   }
   async scrapeItemDetails(url, exists) {
