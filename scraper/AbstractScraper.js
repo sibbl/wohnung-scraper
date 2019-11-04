@@ -35,6 +35,9 @@ module.exports = class AbstractScraper {
       update: await this.db.prepare(
         'UPDATE "wohnungen" SET url = $url, latitude = $latitude, longitude = $longitude, rooms = $rooms, size = $size, price = $price, free_from = $free_from, active = $active, gone = $gone, data = $data, website = $website, websiteId = $websiteId, removed = $removed, comment = $comment, favorite = $favorite, title = $title WHERE id = $id'
       ),
+      update_gone: await this.db.prepare(
+        'UPDATE "wohnungen" SET gone = $gone, removed = $removed WHERE id = $id'
+      ),
       hasId: await this.db.prepare(
         'SELECT COUNT(*) AS count FROM "wohnungen" WHERE website = $website AND websiteId = $websiteId'
       ),
@@ -72,7 +75,9 @@ module.exports = class AbstractScraper {
   }
   async updateInDb(row) {
     try {
-      return await this.statements.update.run({
+      const statement = row.gone ? this.statements.update_gone : this.statements.update;
+      
+      return await statement.run({
         $id: row.id,
         $website: this.id,
         $websiteId: row.websiteId,
