@@ -75,29 +75,36 @@ module.exports = class AbstractScraper {
   }
   async updateInDb(row) {
     try {
-      const statement = row.gone ? this.statements.update_gone : this.statements.update;
-      
-      return await statement.run({
-        $id: row.id,
-        $website: this.id,
-        $websiteId: row.websiteId,
-        $latitude: row.latitude,
-        $longitude: row.longitude,
-        $rooms: row.rooms,
-        $size: row.size,
-        $price: row.price,
-        $free_from: row.free_from,
-        $url: row.url,
-        $active: row.active,
-        $gone: row.gone,
-        $removed:
-          row.removed == null ? null : moment(row.removed).toISOString(),
-        $comment: row.comment,
-        $favorite: row.favorite,
-        $data:
-          typeof row.data === "string" ? row.data : JSON.stringify(row.data),
-        $title: row.title
-      });
+      if (row.gone) {
+        return await this.statements.update_gone.run({
+          $id: row.id,
+          $gone: row.gone,
+          $removed:
+            row.removed == null ? null : moment(row.removed).toISOString()
+        });
+      } else {
+        return await this.statements.update.run({
+          $id: row.id,
+          $website: this.id,
+          $websiteId: row.websiteId,
+          $latitude: row.latitude,
+          $longitude: row.longitude,
+          $rooms: row.rooms,
+          $size: row.size,
+          $price: row.price,
+          $free_from: row.free_from,
+          $url: row.url,
+          $active: row.active,
+          $gone: row.gone,
+          $removed:
+            row.removed == null ? null : moment(row.removed).toISOString(),
+          $comment: row.comment,
+          $favorite: row.favorite,
+          $data:
+            typeof row.data === "string" ? row.data : JSON.stringify(row.data),
+          $title: row.title
+        });
+      }
     } catch (e) {
       throw new Error(
         `Error while updating in database (ID=${this.id}, error: ${e})`
@@ -351,7 +358,9 @@ module.exports = class AbstractScraper {
 
       // transform as we rely on valid objects here and there :(
       if (!response) {
-        console.warn(`Didn't get any response for ${url} and will use statusCode -1 and empty body.`);
+        console.warn(
+          `Didn't get any response for ${url} and will use statusCode -1 and empty body.`
+        );
         response = {
           statusCode: -1,
           body: ""
