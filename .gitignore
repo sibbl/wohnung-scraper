@@ -1,6 +1,7 @@
 !.gitkeep
 node_modules/
 build/
+data/
 npm-debug.log
-wohnungen.db
-/config.js
+config.js
+docker-compose.override.yml

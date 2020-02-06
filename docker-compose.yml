@@ -1,0 +1,9 @@
+version: "3"
+services:
+  composer:
+    build: .
+    ports:
+      - "3000:80"
+    volumes:
+      - ./data:/app/data
+      - ./config.js:/app/config.js

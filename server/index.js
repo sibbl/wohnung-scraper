@@ -2,13 +2,25 @@ process.env.NTBA_FIX_319 = 1;
 
 const fs = require("fs"),
   path = require("path"),
-  configObj = require(path.join(__dirname, "../config")),
   configLoader = require("./utils/config-loader"),
   app = require("./app"),
   sqlite = require("sqlite"),
   CronJob = require("cron").CronJob,
   getScraperRunner = require("./utils/scraperRunner"),
   DBMigrate = require("db-migrate");
+
+let configObj;
+try {
+  configObj = require(path.join(__dirname, "../config"));
+} catch (e) {
+  console.error("Could not start because no config.js was found. See the README for more information.");
+  if (process.env.IS_DOCKER) {
+    console.error(
+      "Please mount your local_config.js to /app/config.js in Docker using -v ~/local_config.js:/app/config.js.\nYou may also want to mount -v ~/data:/app/data."
+    );
+  }
+  process.exit();
+}
 
 (async () => {
   const config = await configLoader(configObj);

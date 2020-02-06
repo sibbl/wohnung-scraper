@@ -1,6 +1,7 @@
 FROM node:11-alpine
 
 WORKDIR /app
+ENV IS_DOCKER 1
 
 COPY package*.json ./
 

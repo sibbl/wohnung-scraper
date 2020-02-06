@@ -2,3 +2,5 @@ node_modules/
 data/
 images/
 npm-debug.log
+docker-compose*.yml
+config*.js
