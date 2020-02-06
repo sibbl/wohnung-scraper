@@ -106,83 +106,87 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
 
     const result = {};
     result.data = {};
-    result.gone = statusCode !== 200;
-    try {
-      const $ = cheerio.load(body);
-      const getNumericValue = selector => {
-        const elem = $(selector);
-        elem.find(".is24-operator").remove();
-        let number = parseInt(
-          elem
-            .text()
-            .replace(".", "")
-            .replace("ca", "")
-            .replace(",", ".")
-            .trim()
-        );
-        return Number.isNaN(number) ? null : number;
-      };
-      const getStrValue = selector => {
-        const elem = $(selector);
-        if (typeof elem === "undefined") {
-          return null;
+    result.gone =
+      body.includes("Angebot wurde deaktiviert") ||
+      body.includes("Angebot liegt im Archiv");
+    if (!result.gone) {
+      try {
+        const $ = cheerio.load(body);
+        const getNumericValue = selector => {
+          const elem = $(selector);
+          elem.find(".is24-operator").remove();
+          let number = parseInt(
+            elem
+              .text()
+              .replace(".", "")
+              .replace("ca", "")
+              .replace(",", ".")
+              .trim()
+          );
+          return Number.isNaN(number) ? null : number;
+        };
+        const getStrValue = selector => {
+          const elem = $(selector);
+          if (typeof elem === "undefined") {
+            return null;
+          }
+          elem.find(".is24-operator").remove();
+          return elem.text().trim();
+        };
+        result.size = getNumericValue(".is24qa-wohnflaeche-ca");
+        result.rooms = getNumericValue(".is24qa-zimmer");
+        result.price = getNumericValue(".is24qa-gesamtmiete");
+        result.data.miete = result.price;
+
+        const freiab_str = getStrValue(".is24qa-bezugsfrei-ab");
+        let freiab;
+        if (
+          freiab_str.toLowerCase().indexOf("sofort") >= 0 ||
+          freiab_str.toLowerCase().indexOf("bezugsfrei") >= 0
+        ) {
+          freiab = moment();
+        } else {
+          freiab = moment(freiab_str, "DD.MM.YYYY");
+          if (!freiab.isValid()) {
+            freiab = moment(); //fallback
+          }
         }
-        elem.find(".is24-operator").remove();
-        return elem.text().trim();
-      };
-      result.size = getNumericValue(".is24qa-wohnflaeche-ca");
-      result.rooms = getNumericValue(".is24qa-zimmer");
-      result.price = getNumericValue(".is24qa-gesamtmiete");
-      result.data.miete = result.price;
+        result.free_from = freiab.toISOString();
 
-      const freiab_str = getStrValue(".is24qa-bezugsfrei-ab");
-      let freiab;
-      if (
-        freiab_str.toLowerCase().indexOf("sofort") >= 0 ||
-        freiab_str.toLowerCase().indexOf("bezugsfrei") >= 0
-      ) {
-        freiab = moment();
-      } else {
-        freiab = moment(freiab_str, "DD.MM.YYYY");
-        if (!freiab.isValid()) {
-          freiab = moment(); //fallback
-        }
-      }
-      result.free_from = freiab.toISOString();
-
-      result.data.kaltmiete = getNumericValue(".is24qa-kaltmiete");
-      result.data.nebenkosten = getNumericValue(".is24qa-nebenkosten");
-      result.data.heizkosten = getNumericValue(".is24qa-heizkosten");
-      result.data.garageStellplatz = getNumericValue(
-        ".is24qa-miete-fuer-garagestellplatz"
-      );
-      result.data.kaution = getStrValue(
-        ".is24qa-kaution-o-genossenschaftsanteile"
-      );
-      result.data.etage = getStrValue(".is24qa-etage");
-      result.data.type = getStrValue(".is24qa-wohnungstyp");
-      result.data.tags = [];
-      $(".boolean-listing span").each((index, element) => {
-        result.data.tags.push($(element).text());
-      });
-
-      const addressBlock = $("span[data-qa='is24-expose-address']");
-      addressBlock.find("#is24-expose-map-teaser-link").remove();
-      result.data.adresse = addressBlock
-        .text()
-        .trim()
-        .replace(
-          "Die vollständige Adresse der Immobilie erhalten Sie vom Anbieter.",
-          ""
+        result.data.kaltmiete = getNumericValue(".is24qa-kaltmiete");
+        result.data.nebenkosten = getNumericValue(".is24qa-nebenkosten");
+        result.data.heizkosten = getNumericValue(".is24qa-heizkosten");
+        result.data.garageStellplatz = getNumericValue(
+          ".is24qa-miete-fuer-garagestellplatz"
         );
-    } catch (ex) {
-      console.log("CATCHED error while scraping item", this.id, url, ex);
-      result.gone = true;
-      if (result.removed == null) {
-        result.removed = new Date();
+        result.data.kaution = getStrValue(
+          ".is24qa-kaution-o-genossenschaftsanteile"
+        );
+        result.data.etage = getStrValue(".is24qa-etage");
+        result.data.type = getStrValue(".is24qa-wohnungstyp");
+        result.data.tags = [];
+        $(".boolean-listing span").each((index, element) => {
+          result.data.tags.push($(element).text());
+        });
+
+        const addressBlock = $("span[data-qa='is24-expose-address']");
+        addressBlock.find("#is24-expose-map-teaser-link").remove();
+        result.data.adresse = addressBlock
+          .text()
+          .trim()
+          .replace(
+            "Die vollständige Adresse der Immobilie erhalten Sie vom Anbieter.",
+            ""
+          );
+      } catch (ex) {
+        console.log("CATCHED error while scraping item", this.id, url, ex);
+        result.gone = true;
       }
     }
     if (result.gone) {
+      if (result.removed == null) {
+        result.removed = new Date();
+      }
       return result;
     } else {
       if (exists) {
