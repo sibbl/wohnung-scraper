@@ -13,7 +13,9 @@ let configObj;
 try {
   configObj = require(path.join(__dirname, "../config"));
 } catch (e) {
-  console.error("Could not start because no config.js was found. See the README for more information.");
+  console.error(
+    "Could not start because no config.js was found. See the README for more information."
+  );
   if (process.env.IS_DOCKER) {
     console.error(
       "Please mount your local_config.js to /app/config.js in Docker using -v ~/local_config.js:/app/config.js.\nYou may also want to mount -v ~/data:/app/data."
@@ -36,16 +38,19 @@ try {
 
   const db = await sqlite.open(dbPath);
 
-  const scraperList = [
-    "WgGesuchtScraper",
-    "StudentenWgScraper",
-    "ImmoscoutScraper",
-    "ImmonetScraper"
-  ]
-    .map(scraperModuleName => require("../scraper/" + scraperModuleName))
-    .map(scraper => new scraper(db, config));
+  const allScrapers = await Promise.all(
+    [
+      "WgGesuchtScraper",
+      "StudentenWgScraper",
+      "ImmoscoutScraper",
+      "ImmonetScraper"
+    ]
+      .map(scraperModuleName => require("../scraper/" + scraperModuleName))
+      .map(scraper => new scraper(db, config))
+      .map(scraper => scraper.init())
+  );
 
-  await Promise.all(scraperList.map(s => s.init()));
+  const scraperList = allScrapers.filter(loadedScraper => loadedScraper);
 
   const scraperRunner = getScraperRunner(scraperList);
 

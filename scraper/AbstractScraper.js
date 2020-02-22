@@ -21,11 +21,17 @@ module.exports = class AbstractScraper {
     this.config = globalConfig.scraper[this.id];
 
     if (typeof this.config === "undefined") {
-      console.error("Scraper " + scraperId + " config could not be loaded.");
+      console.warn(
+        `Scraper ${scraperId} has no config and will not be loaded.`
+      );
     }
   }
   async init() {
+    if (!this.config) {
+      return null;
+    }
     await this.prepareStatements();
+    return this;
   }
   async prepareStatements() {
     this.statements = {
