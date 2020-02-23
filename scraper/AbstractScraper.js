@@ -311,7 +311,7 @@ module.exports = class AbstractScraper {
                     " € | frei ab: " +
                     moment(data.free_from).format("DD.MM.YYYY"),
                   "",
-                  `${this.globalConfig.baseUrl}#/${flat.id}`
+                  `${this.globalConfig.baseUrl}?id=${flat.id}`
                 ].join("\n")
               );
             });
