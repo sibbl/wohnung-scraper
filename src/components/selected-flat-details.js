@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { FlatShortDetails } from "./flat-short-details";
 
 const StyledContainer = styled.div`
-  margin-top: 12px;
+  margin-bottom: 12px;
 `;
 
 const Title = styled.div`

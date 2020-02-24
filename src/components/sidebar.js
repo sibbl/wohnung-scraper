@@ -14,11 +14,11 @@ const StyledSidebar = styled.div`
 export const Sidebar = ({ ...other }) => {
   return (
     <StyledSidebar>
+      <SelectedFlatDetailsContainer />
       <AccordionItem title="Public Transport">TODO</AccordionItem>
       <AccordionItem title="Filter" initialIsOpen={true}>
         <SidebarFilterPanelContainer />
       </AccordionItem>
-      <SelectedFlatDetailsContainer />
     </StyledSidebar>
   );
 };
