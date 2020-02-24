@@ -282,12 +282,20 @@ module.exports = class AbstractScraper {
       if (!flat.latitude || !flat.longitude) {
         return false;
       }
-      const filterCenter = {
-        latitude: this.globalConfig.dataFilter.lat,
-        longitude: this.globalConfig.dataFilter.lng
-      };
-      const distance = geolib.getDistance(flat, filterCenter);
-      return distance <= this.globalConfig.dataFilter.radius;
+      let dataFilter;
+      if (!Array.isArray(this.globalConfig.dataFilter)) {
+        dataFilter = [this.globalConfig.dataFilter];
+      } else {
+        dataFilter = [...this.globalConfig.dataFilter];
+      }
+      for (let { lat, lng } of dataFilter) {
+        const pos = { latitude: lat, longitude: lng };
+        const distance = geolib.getDistance(flat, pos);
+        if (distance <= this.globalConfig.dataFilter.radius) {
+          return true;
+        }
+      }
+      return false;
     });
     console.log(
       "Sending " + flatsOfInterest.length + " message(s) from " + this.id

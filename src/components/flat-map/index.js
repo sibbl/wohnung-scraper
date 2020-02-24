@@ -1,6 +1,7 @@
 import React from "react";
 import {
   Map,
+  Circle,
   TileLayer,
   WMSTileLayer,
   ImageOverlay,
@@ -47,6 +48,9 @@ export const FlatMap = ({
   previewedFlatId,
   ...other
 }) => {
+  const dataFilters = Array.isArray(config.dataFilter)
+    ? config.dataFilter
+    : [config.dataFilter];
   return (
     <Map
       center={config.map.initialView}
@@ -54,8 +58,19 @@ export const FlatMap = ({
       onClick={() => onFlatSelect(null)}
       {...other}
     >
+      {dataFilters.map(({ lat, lng, radius }, i) => (
+        <Circle
+          key={i}
+          center={[lat, lng]}
+          radius={radius}
+          fill={false}
+          color="rgba(0,0,0,0.2)"
+          weight={2}
+        />
+      ))}
+
       <LeafletD3Layer
-        drawFunction={getDrawFunction({config})}
+        drawFunction={getDrawFunction({ config })}
         flats={flats}
         previewedFlatId={previewedFlatId}
         selectedFlatId={selectedFlatId}

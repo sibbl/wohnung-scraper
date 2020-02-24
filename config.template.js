@@ -69,11 +69,11 @@ module.exports = async () => {
         }
       }
     },
-    dataFilter: {
+    dataFilter: [{
       lat: 52.49281508540494,
       lng: 13.302726745605469,
       radius: 5000
-    },
+    }],
     dataFilterRange: {
       min: 500,
       max: 10000,
