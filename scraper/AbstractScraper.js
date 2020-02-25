@@ -288,10 +288,10 @@ module.exports = class AbstractScraper {
       } else {
         dataFilter = [...this.globalConfig.dataFilter];
       }
-      for (let { lat, lng } of dataFilter) {
+      for (let { lat, lng, radius } of dataFilter) {
         const pos = { latitude: lat, longitude: lng };
         const distance = geolib.getDistance(flat, pos);
-        if (distance <= this.globalConfig.dataFilter.radius) {
+        if (distance <= radius) {
           return true;
         }
       }
