@@ -18,7 +18,7 @@
     "cron": "^1.8.2",
     "db-migrate": "^0.11.6",
     "db-migrate-sqlite3": "^0.4.0",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "geocoder": "^0.2.3",
     "geolib": "^3.2.1",
     "iconv-lite": "^0.5.1",
