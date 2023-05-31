@@ -17,7 +17,7 @@ const FlatVisualizationContainer = ({
   useEffect(() => {
     getConfig();
     getFlats();
-  }, []);
+  }, [getConfig, getFlats]);
   return config && flats ? (
     <React.Fragment>
       <Helmet>

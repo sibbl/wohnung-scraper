@@ -5,6 +5,7 @@ const fs = require("fs"),
   configLoader = require("./utils/config-loader"),
   app = require("./app"),
   sqlite = require("sqlite"),
+  sqlite3 = require("sqlite3"),
   CronJob = require("cron").CronJob,
   getScraperRunner = require("./utils/scraperRunner"),
   DBMigrate = require("db-migrate");
@@ -36,7 +37,7 @@ try {
   const dbm = DBMigrate.getInstance(true);
   await dbm.up();
 
-  const db = await sqlite.open(dbPath);
+  const db = await sqlite.open({ filename: dbPath, driver: sqlite3.Database });
 
   const allScrapers = await Promise.all(
     [

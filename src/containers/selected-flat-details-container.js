@@ -37,9 +37,9 @@ export default connect(
     selectedFlatId: state.flat.selectedFlatId
   }),
   dispatch => ({
-    setActiveFlat: ({ flat, active }) =>
-      dispatch(setActiveFlat({ flat, active })),
-    setFavoriteFlat: ({ flat, favorite }) =>
-      dispatch(setFavoriteFlat({ flat, favorite }))
+    setActiveFlat: ({ flatId, active }) =>
+      dispatch(setActiveFlat({ flatId, active })),
+    setFavoriteFlat: ({ flatId, favorite }) =>
+      dispatch(setFavoriteFlat({ flatId, favorite }))
   })
 )(SelectedFlatDetailsContainer);
