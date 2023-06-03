@@ -248,9 +248,11 @@ const Mapnificent = (function () {
     var secondsPerKm = this.mapnificent.settings.secondsPerKm;
 
     var latLngToLayerPointWithZoom = function (latLng, zoom) {
-      const projectedPoint = self.mapnificent.map.project(latLng, zoom)._round();
+      const projectedPoint = self.mapnificent.map
+        .project(latLng, zoom)
+        ._round();
       return projectedPoint._subtract(self.mapnificent.map.getPixelOrigin());
-    }
+    };
 
     var convert = function (station, reachableIn, zoom) {
       var secs = Math.min(self.time - reachableIn, maxWalkTime);
@@ -345,12 +347,12 @@ const Mapnificent = (function () {
   }
 
   Mapnificent.prototype.destroy = function () {
-    this.map.removeLayer(self.canvasTileLayer);
-  }
+    this.map.removeLayer(this.canvasTileLayer);
+  };
 
   Mapnificent.prototype.init = function () {
     var self = this;
-      // var t0;
+    // var t0;
     self.tilesLoading = false;
     return this.loadData().then(function (data) {
       self.prepareData(data);
@@ -369,25 +371,23 @@ const Mapnificent = (function () {
       });
 
       self.canvasTileLayer.createTile = function (tilePoint) {
-    
         var canvas = L.DomUtil.create("canvas", "leaflet-tile");
         var tileSize = this.getTileSize();
         var ctx = canvas.getContext("2d");
         canvas.width = tileSize.x;
         canvas.height = tileSize.y;
-    
+
         var maxWalkTime = self.settings.maxWalkTime;
         var secondsPerKm = self.settings.secondsPerKm;
-    
+
         if (!self.stationList || !self.positions.length) {
           return canvas;
-        }       
+        }
 
-    
         /* Figure out how many stations we have to look at around
              this tile.
           */
-    
+
         var start = tilePoint.scaleBy(tileSize);
         var end = start.add([tileSize.x, 0]);
         var startLatLng = self.map.unproject(start, tilePoint.z);
@@ -396,12 +396,12 @@ const Mapnificent = (function () {
         var maxWalkDistance = maxWalkTime * (1 / secondsPerKm) * 1000;
         var middle = start.add([tileSize.x / 2, tileSize.y / 2]);
         var latlng = self.map.unproject(middle, tilePoint.z);
-    
+
         var searchRadius = Math.sqrt(
           spanInMeters * spanInMeters + spanInMeters * spanInMeters
         );
         searchRadius += maxWalkDistance;
-    
+
         var stationsAround = self.quadtree.searchInRadius(
           latlng.lat,
           latlng.lng,
@@ -411,10 +411,10 @@ const Mapnificent = (function () {
         ctx.globalCompositeOperation = "source-over";
         ctx.fillStyle = "rgba(50,50,50,0.4)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
+
         ctx.globalCompositeOperation = "destination-out";
         ctx.fillStyle = "rgba(0,0,0,1)";
-    
+
         for (var i = 0; i < self.positions.length; i += 1) {
           var drawStations = self.positions[i].getReachableStations(
             stationsAround,
@@ -437,7 +437,7 @@ const Mapnificent = (function () {
         }
 
         return canvas;
-      }
+      };
       self.map.addLayer(self.canvasTileLayer);
       // self.map.on('click', function(e) {
       //     self.addPosition(e.latlng);
