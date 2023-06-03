@@ -6,15 +6,20 @@ import { useCallback, useEffect, useRef } from "react";
 function LeafletD3Layer({ drawFunction, ...drawProps }) {
   const map = useMap();
   const gRef = useRef(null);
+  const drawPropsRef = useRef({});
+
+  useEffect(() => {
+    drawPropsRef.current = drawProps;
+  }, [drawProps]);
 
   const draw = useCallback(() => {
     if (!drawFunction || !gRef.current || !map) return;
     return drawFunction({
       container: gRef.current,
       map: map,
-      ...drawProps
+      ...drawPropsRef.current
     });
-  }, [drawFunction, map, drawProps]);
+  }, [drawFunction, map]);
 
   useEffect(() => {
     draw();

@@ -42,7 +42,6 @@ export const getDrawFunction = ({ config }) => ({
   selectedFlatId,
   previewedFlatId
 }) => {
-  console.log("draw", {flats});
   container.classed(styles.containerWithSelection, selectedFlatId !== null);
 
   const feature = container.selectAll(".flat").data(

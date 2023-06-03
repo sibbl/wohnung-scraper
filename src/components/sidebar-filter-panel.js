@@ -43,7 +43,7 @@ const Checkbox = ({ name, label, checked, onCheckedChanged }) => {
 };
 
 export const SidebarFilterPanel = ({
-  flats,
+  // flats,
   config,
   filters,
   updateFilter,

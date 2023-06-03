@@ -7,10 +7,12 @@ import {
   ImageOverlay,
   VideoOverlay,
   LayersControl,
-  GeoJSON
+  GeoJSON,
+  useMapEvents
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import LeafletD3Layer from "./leaflet-d3-layer";
+import MapnificientLayerContainer from "../../containers/mapnificent-layer-container";
 import { fixIconUrls } from "./leaflet-utils";
 import { getDrawFunction } from "./flat-drawing-helper";
 
@@ -39,6 +41,10 @@ const DynamicTileLayer = ({ type, layer }) => {
   return <LayerComponent {...layer} />;
 };
 
+const MapEvents = ({...events}) => {
+  useMapEvents(events);
+}
+
 export const FlatMap = ({
   flats,
   config,
@@ -48,6 +54,9 @@ export const FlatMap = ({
   previewedFlatId,
   ...other
 }) => {
+  const selectedFlat = selectedFlatId
+    ? flats.find((x) => x.id === selectedFlatId)
+    : null;
   const dataFilters = Array.isArray(config.dataFilter)
     ? config.dataFilter
     : [config.dataFilter];
@@ -55,9 +64,9 @@ export const FlatMap = ({
     <MapContainer
       center={config.map.initialView}
       zoom={config.map.initialView.zoom}
-      onClick={() => onFlatSelect(null)}
       {...other}
     >
+      <MapEvents click={() => onFlatSelect(null)} />
       {dataFilters.map(({ lat, lng, radius }, i) => (
         <Circle
           key={i}
@@ -77,6 +86,13 @@ export const FlatMap = ({
         onMouseOver={(flat) => onFlatPreview(flat ? flat.id : null)}
         onMouseOut={() => onFlatPreview(null)}
         onClick={(flat) => onFlatSelect(flat ? flat.id : null)}
+      />
+
+      <MapnificientLayerContainer
+        config={config.transportTimeMapnificentConfig}
+        defaultDuration={config.defaultTransportTime}
+        position={selectedFlat}
+        duration={30}
       />
 
       <LayersControl>

@@ -46,16 +46,20 @@ try {
       "ImmoscoutScraper",
       "ImmonetScraper"
     ]
-      .map(scraperModuleName => require("../scraper/" + scraperModuleName))
-      .map(scraper => new scraper(db, config))
-      .map(scraper => scraper.init())
+      .map((scraperModuleName) => require("../scraper/" + scraperModuleName))
+      .map((scraper) => new scraper(db, config))
+      .map((scraper) => scraper.init())
   );
 
-  const scraperList = allScrapers.filter(loadedScraper => loadedScraper);
+  const scraperList = allScrapers.filter((loadedScraper) => loadedScraper);
 
   const scraperRunner = getScraperRunner(scraperList);
 
   const startScraperCronjob = (cronTime, scraperFuncName) => {
+    if (!cronTime) {
+      console.warn(`Cronjob ${scraperFuncName} is not enabled`);
+      return;
+    }
     const job = new CronJob({
       cronTime,
       onTick: () => scraperRunner(scraperFuncName)

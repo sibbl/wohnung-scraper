@@ -41,7 +41,7 @@ const getVisibleFlatIds = ({ flats, filters }) => {
       }
 
       if (
-        ["price", "rooms", "size"].some(key => {
+        ["price", "rooms", "size"].some((key) => {
           return flat[key] < filters[key].min || flat[key] > filters[key].max;
         })
       ) {
@@ -78,7 +78,7 @@ const getVisibleFlatIds = ({ flats, filters }) => {
 };
 
 export const flatReducer = (state = initialState, action) => {
-  return produce(state, draftState => {
+  return produce(state, (draftState) => {
     switch (action.type) {
       case GET_FLATS:
         draftState.isWorking = true;
@@ -132,7 +132,7 @@ export const flatReducer = (state = initialState, action) => {
         });
         return;
 
-      case SET_FLAT_FILTERS:
+      case SET_FLAT_FILTERS: {
         const newFilters = { ...state.filters, ...action.filters };
         draftState.filters = newFilters;
         draftState.visibleFlatIds = getVisibleFlatIds({
@@ -140,19 +140,20 @@ export const flatReducer = (state = initialState, action) => {
           filters: newFilters
         });
         return;
+      }
 
-      case GET_CONFIG_SUCCESS:
+      case GET_CONFIG_SUCCESS: {
         const configFilters = { ...action.config.filters.default };
 
         if (!configFilters.enabledSites) {
           // enable all sites by default
           configFilters.enabledSites = {};
           Object.keys(action.config.scraper).forEach(
-            key => (configFilters.enabledSites[key] = true)
+            (key) => (configFilters.enabledSites[key] = true)
           );
         }
 
-        ["free_from", "age"].forEach(dateRangeKey => {
+        ["free_from", "age"].forEach((dateRangeKey) => {
           configFilters[dateRangeKey] = {
             min: getDateTime(configFilters[dateRangeKey].min),
             max: getDateTime(configFilters[dateRangeKey].max)
@@ -165,6 +166,7 @@ export const flatReducer = (state = initialState, action) => {
           filters: configFilters
         });
         break;
+      }
 
       default:
         return;
