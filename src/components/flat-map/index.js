@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  Map,
+  MapContainer,
   Circle,
   TileLayer,
   WMSTileLayer,
@@ -34,7 +34,7 @@ const DynamicTileLayer = ({ type, layer }) => {
   const LayerComponent = SupportedLayerMap[type] || TileLayer;
   if (type === "GeoJSON") {
     layer.onEachFeature = onEachGeoJsonFeature;
-    layer.style = feature => feature.style || feature.properties;
+    layer.style = (feature) => feature.style || feature.properties;
   }
   return <LayerComponent {...layer} />;
 };
@@ -52,7 +52,7 @@ export const FlatMap = ({
     ? config.dataFilter
     : [config.dataFilter];
   return (
-    <Map
+    <MapContainer
       center={config.map.initialView}
       zoom={config.map.initialView.zoom}
       onClick={() => onFlatSelect(null)}
@@ -74,9 +74,9 @@ export const FlatMap = ({
         flats={flats}
         previewedFlatId={previewedFlatId}
         selectedFlatId={selectedFlatId}
-        onMouseOver={flat => onFlatPreview(flat ? flat.id : null)}
+        onMouseOver={(flat) => onFlatPreview(flat ? flat.id : null)}
         onMouseOut={() => onFlatPreview(null)}
-        onClick={flat => onFlatSelect(flat ? flat.id : null)}
+        onClick={(flat) => onFlatSelect(flat ? flat.id : null)}
       />
 
       <LayersControl>
@@ -93,6 +93,6 @@ export const FlatMap = ({
             </LayersControl.Overlay>
           ))}
       </LayersControl>
-    </Map>
+    </MapContainer>
   );
 };

@@ -6,7 +6,7 @@ import { getDateTime } from "../services/date-utils";
 
 const StyledSlider = styled(Slider)`
   & + & {
-    margin-top: 8px;
+    margin-top: 4px;
   }
 `;
 

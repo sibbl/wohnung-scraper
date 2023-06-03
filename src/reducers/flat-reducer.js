@@ -1,4 +1,4 @@
-import produce from "immer";
+import { produce } from "immer";
 import {
   GET_FLATS,
   GET_FLATS_SUCCESS,

@@ -1,54 +1,39 @@
-import { MapLayer, withLeaflet } from "react-leaflet";
+import { useMap } from "react-leaflet";
 import L from "leaflet";
 import { select } from "d3-selection";
+import { useCallback, useEffect, useRef } from "react";
 
-class LeafletD3Layer extends MapLayer {
-  constructor(...props) {
-    super(...props);
-    this._draw = this._draw.bind(this);
-  }
+function LeafletD3Layer({ drawFunction, ...drawProps }) {
+  const map = useMap();
+  const gRef = useRef(null);
 
-  createLeafletElement(props) {
-    return L.svg(props);
-  }
+  const draw = useCallback(() => {
+    if (!drawFunction || !gRef.current || !map) return;
+    return drawFunction({
+      container: gRef.current,
+      map: map,
+      ...drawProps
+    });
+  }, [drawFunction, map, drawProps]);
 
-  componentDidMount() {
-    const { layerContainer, map } = this.props.leaflet || this.context;
+  useEffect(() => {
+    draw();
+  }, [drawProps]);
 
-    this.leafletElement.addTo(layerContainer);
-
-    this.svg = select(this.leafletElement._container);
-    this.g = this.svg.append("g").attr("class", "leaflet-zoom-hide");
-
-    this.map = map;
-    this._draw();
-
-    map.on("viewreset", this._draw);
-    map.on("zoomend", this._draw);
-  }
-
-  componentWillUnmount() {
-    const { layerContainer, map } = this.props.leaflet || this.context;
-
-    map.removeLayer(this.leafletElement);
-    layerContainer.removeLayer(this.leafletElement);
-
-    this.svg = null;
-    this.g = null;
-  }
-
-  componentDidUpdate() {
-    this._draw();
-  }
-
-  _draw() {
-    this.props.drawFunction &&
-      this.props.drawFunction({
-        container: this.g,
-        map: this.map,
-        ...this.props
-      });
-  }
+  useEffect(() => {
+    const layer = L.svg(drawProps);
+    map.addLayer(layer);
+    const container = layer._container;
+    const svg = select(container);
+    const g = svg.append("g").attr("class", "leaflet-zoom-hide");
+    gRef.current = g;
+    draw();
+    map.on("viewreset", draw);
+    map.on("zoomend", draw);
+    return () => {
+      map.removeLayer(layer);
+    };
+  }, [map]);
 }
 
-export default withLeaflet(LeafletD3Layer);
+export default LeafletD3Layer;

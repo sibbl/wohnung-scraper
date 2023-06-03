@@ -1,4 +1,4 @@
-import produce from "immer";
+import { produce } from "immer";
 import {
   SET_FAVORITE_FLAT,
   SET_FAVORITE_FLAT_SUCCESS,

@@ -1,4 +1,4 @@
-import produce from "immer";
+import { produce } from "immer";
 import {
   GET_CONFIG,
   GET_CONFIG_SUCCESS,

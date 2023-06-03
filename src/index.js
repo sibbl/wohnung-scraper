@@ -1,5 +1,5 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import App from "./App";
 import { HashRouter } from "react-router-dom";
 import { Provider } from "react-redux";
@@ -23,11 +23,12 @@ if (process.env.REACT_APP_ENABLE_REDUX_DEVTOOLS_EXTENSION) {
 const store = createStore(reducers, middleware);
 storeUrlQuerySync(store);
 
-ReactDOM.render(
+const container = document.getElementById("root");
+const root = createRoot(container);
+root.render(
   <Provider store={store}>
     <HashRouter>
       <App />
     </HashRouter>
-  </Provider>,
-  document.getElementById("root")
+  </Provider>
 );

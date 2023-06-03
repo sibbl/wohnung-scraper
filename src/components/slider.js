@@ -1,19 +1,50 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import InputRange from "react-input-range";
-import "react-input-range/lib/css/index.css";
+import RangeSlider from "react-range-slider-input";
+import "react-range-slider-input/dist/style.css";
 
-const StyledInputRangeContainer = styled.div`
+const StyledRangeSliderContainer = styled.div`
   padding: 1.4rem 16px;
 `;
 
-const Slider = ({ title, className, ...other }) => {
+const StyledLabelsDiv = styled.div`
+  margin-top: 8px;
+`
+
+const Slider = ({
+  title,
+  className,
+  formatLabel,
+  minValue,
+  maxValue,
+  step,
+  value,
+  onChange,
+  ...other
+}) => {
+  const [internalValue, setInternalValue] = useState([value.min, value.max]);
+  useEffect(() => {
+    setInternalValue([value.min, value.max]);
+  }, [value]);
+  const onInput = (value) =>
+    value && onChange({ min: value[0], max: value[1] });
+  formatLabel ||= (x) => x;
   return (
     <div className={className}>
       <div>{title}</div>
-      <StyledInputRangeContainer>
-        <InputRange draggableTrack allowSameValues={true} {...other} />
-      </StyledInputRangeContainer>
+      <StyledRangeSliderContainer>
+        <RangeSlider
+          min={minValue}
+          max={maxValue}
+          step={step}
+          value={internalValue}
+          onInput={onInput}
+          {...other}
+        />
+        <StyledLabelsDiv>
+          {formatLabel(internalValue[0])} - {formatLabel(internalValue[1])}
+        </StyledLabelsDiv>
+      </StyledRangeSliderContainer>
     </div>
   );
 };

@@ -1,9 +1,8 @@
-import { line as d3Line, event as d3Event } from "d3";
+import { line as d3Line } from "d3";
 import { select as d3Select } from "d3-selection";
 import { scaleLinear, scaleSequential } from "d3-scale";
 import { interpolateRdYlGn } from "d3-scale-chromatic";
 import styles from "./flat-drawing-helper.module.css";
-import L from "leaflet";
 
 const path = d3Line()
   .x(d => d.x)
@@ -43,6 +42,7 @@ export const getDrawFunction = ({ config }) => ({
   selectedFlatId,
   previewedFlatId
 }) => {
+  console.log("draw", {flats});
   container.classed(styles.containerWithSelection, selectedFlatId !== null);
 
   const feature = container.selectAll(".flat").data(
@@ -99,17 +99,17 @@ export const getDrawFunction = ({ config }) => ({
         styles.flatmarkerHovered,
         ({ flat }) => previewedFlatId && flat.id === previewedFlatId
       )
-      .on("mouseover", function({ flat }) {
+      .on("mouseover", function(event, { flat }) {
         onMouseOver && onMouseOver(flat);
         d3Select(this).classed(styles.flatmarkerHovered, true);
       })
-      .on("mouseout", function({ flat }) {
+      .on("mouseout", function(event, { flat }) {
         onMouseOut && onMouseOut(flat);
         d3Select(this).classed(styles.flatmarkerHovered, false);
       })
-      .on("click", function({ flat }) {
+      .on("click", function(event, { flat }) {
         onClick && onClick(flat);
-        L.DomEvent.stopPropagation(d3Event);
+        event.stopPropagation();
         return false;
       });
   };

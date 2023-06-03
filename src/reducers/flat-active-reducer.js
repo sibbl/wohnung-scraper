@@ -1,4 +1,4 @@
-import produce from "immer";
+import { produce } from "immer";
 import {
   SET_ACTIVE_FLAT,
   SET_ACTIVE_FLAT_SUCCESS,
