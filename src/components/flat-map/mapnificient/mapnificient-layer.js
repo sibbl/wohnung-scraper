@@ -24,6 +24,8 @@ export default function MapnificientLayer({
     });
     mapnificent.init();
     setMapnificient(mapnificent);
+    map.on("viewreset", mapnificent.redraw);
+    map.on("zoomend", mapnificent.redraw);
     return () => {
       mapnificent.destroy();
     }

@@ -232,7 +232,8 @@ const Mapnificent = (function () {
   MapnificentPosition.prototype.getReachableStations = function (
     stationsAround,
     start,
-    tileSize
+    tileSize,
+    zoom
   ) {
     var self = this;
 
@@ -246,19 +247,24 @@ const Mapnificent = (function () {
     var maxWalkTime = this.mapnificent.settings.maxWalkTime;
     var secondsPerKm = this.mapnificent.settings.secondsPerKm;
 
-    var convert = function (station, reachableIn) {
+    var latLngToLayerPointWithZoom = function (latLng, zoom) {
+      const projectedPoint = self.mapnificent.map.project(latLng, zoom)._round();
+      return projectedPoint._subtract(self.mapnificent.map.getPixelOrigin());
+    }
+
+    var convert = function (station, reachableIn, zoom) {
       var secs = Math.min(self.time - reachableIn, maxWalkTime);
       var mradius = secs * (1 / secondsPerKm) * 1000;
       var point = new L.LatLng(station.lat, station.lng);
 
       var lngRadius = getLngRadius(station.lat, mradius);
       var latlng2 = new L.LatLng(station.lat, station.lng - lngRadius, true);
-      var point2 = self.mapnificent.map.latLngToLayerPoint(latlng2);
+      var point2 = latLngToLayerPointWithZoom(latlng2, zoom);
 
-      var lpoint = self.mapnificent.map.latLngToLayerPoint(point);
+      var lpoint = latLngToLayerPointWithZoom(point, zoom);
       var radius = Math.max(Math.round(lpoint.x - point2.x), 1);
 
-      var p = self.mapnificent.map.project(point);
+      var p = self.mapnificent.map.project(point, zoom);
       var x = Math.round(p.x - start.x);
       var y = Math.round(p.y - start.y);
       if (
@@ -279,7 +285,7 @@ const Mapnificent = (function () {
     }
 
     // You start walking from your position
-    var station = convert(this.latlng, 0);
+    var station = convert(this.latlng, 0, zoom);
     if (station !== null) {
       stations.push(station);
     }
@@ -290,7 +296,7 @@ const Mapnificent = (function () {
         continue;
       }
 
-      station = convert(stationsAround[i], stationTime);
+      station = convert(stationsAround[i], stationTime, zoom);
       if (station !== null) {
         stations.push(station);
       }
@@ -339,30 +345,30 @@ const Mapnificent = (function () {
   }
 
   Mapnificent.prototype.destroy = function () {
-    self.map.removeLayer(self.canvasTileLayer);
+    this.map.removeLayer(self.canvasTileLayer);
   }
 
   Mapnificent.prototype.init = function () {
-    var self = this,
-      t0;
+    var self = this;
+      // var t0;
     self.tilesLoading = false;
     return this.loadData().then(function (data) {
       self.prepareData(data);
       self.canvasTileLayer = L.gridLayer();
       self.canvasTileLayer.on("loading", function () {
         self.tilesLoading = true;
-        t0 = new Date().getTime();
+        // t0 = new Date().getTime();
       });
       self.canvasTileLayer.on("load", function () {
         self.tilesLoading = false;
-        if (self.needsRedraw) {
-          self.redraw();
-        }
-        self.redrawTime = new Date().getTime() - t0;
-        console.log("reloading tile layer took", self.redrawTime, "ms");
+        // if (self.needsRedraw) {
+        //   self.redraw();
+        // }
+        // self.redrawTime = new Date().getTime() - t0;
+        // console.log("reloading tile layer took", self.redrawTime, "ms");
       });
 
-      self.canvasTileLayer.createTile = function (coords) {
+      self.canvasTileLayer.createTile = function (tilePoint) {
     
         var canvas = L.DomUtil.create("canvas", "leaflet-tile");
         var tileSize = this.getTileSize();
@@ -375,21 +381,21 @@ const Mapnificent = (function () {
     
         if (!self.stationList || !self.positions.length) {
           return canvas;
-        }
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }       
+
     
         /* Figure out how many stations we have to look at around
              this tile.
           */
     
-        var start = coords.scaleBy(tileSize);
+        var start = tilePoint.scaleBy(tileSize);
         var end = start.add([tileSize.x, 0]);
-        var startLatLng = self.map.unproject(start);
-        var endLatLng = self.map.unproject(end);
+        var startLatLng = self.map.unproject(start, tilePoint.z);
+        var endLatLng = self.map.unproject(end, tilePoint.z);
         var spanInMeters = startLatLng.distanceTo(endLatLng);
         var maxWalkDistance = maxWalkTime * (1 / secondsPerKm) * 1000;
         var middle = start.add([tileSize.x / 2, tileSize.y / 2]);
-        var latlng = self.map.unproject(middle);
+        var latlng = self.map.unproject(middle, tilePoint.z);
     
         var searchRadius = Math.sqrt(
           spanInMeters * spanInMeters + spanInMeters * spanInMeters
@@ -401,7 +407,7 @@ const Mapnificent = (function () {
           latlng.lng,
           searchRadius
         );
-    
+
         ctx.globalCompositeOperation = "source-over";
         ctx.fillStyle = "rgba(50,50,50,0.4)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -413,7 +419,8 @@ const Mapnificent = (function () {
           var drawStations = self.positions[i].getReachableStations(
             stationsAround,
             start,
-            tileSize
+            tileSize,
+            tilePoint.z
           );
           for (var j = 0; j < drawStations.length; j += 1) {
             ctx.beginPath();
