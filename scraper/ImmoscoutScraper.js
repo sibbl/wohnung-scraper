@@ -1,13 +1,31 @@
 var AbstractScraper = require("./AbstractScraper"),
-  request = require("request-promise"),
+  { chromium } = require("playwright-extra"),
+  StealthPlugin = require("puppeteer-extra-plugin-stealth"),
+  RecaptchaPlugin = require("puppeteer-extra-plugin-recaptcha"),
   cheerio = require("cheerio"),
   urlLib = require("url"),
   moment = require("moment");
 
+chromium.use(StealthPlugin());
+chromium.use(
+  RecaptchaPlugin({
+    visualFeedback: true
+    // provider: {
+    //   id: "2captcha",
+    //   token: "XXXXXXX"
+    // }
+  })
+);
+
+async function waitFor(duration) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, duration);
+  });
+}
+
 module.exports = class ImmoscoutScraper extends AbstractScraper {
   constructor(db, globalConfig) {
     super(db, globalConfig, "immoscout24");
-    this.cookieJar = request.jar();
   }
   _getNextPage(url, $) {
     const nextLink = $("#listContainer a[data-is24-qa='paging_bottom_next']");
@@ -17,14 +35,14 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
       return false;
     }
   }
-  async _getDbObject(url, tableRow, itemId, relativeItemUrl, exists) {
+  async _getDbObject(browser, url, tableRow, itemId, relativeItemUrl, exists) {
     const itemUrl = urlLib.resolve(url, relativeItemUrl);
 
     let data = {};
     try {
-      data = await this.scrapeItemDetails(itemUrl, exists);
+      data = await this.scrapeItemDetails(browser, itemUrl, exists);
     } catch (e) {
-      console.log("Error whilte scrapping immo", e);
+      console.log("Error whilte scrapping immoscout24 item", e);
     }
 
     const rawTitle = tableRow
@@ -42,7 +60,7 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
 
     return data;
   }
-  async _scrapeItem(url, tableRow) {
+  async _scrapeItem(browser, url, tableRow) {
     const linkElem = tableRow.find(".result-list-entry__brand-title-container");
     const relativeItemUrl = linkElem.attr("href");
 
@@ -65,6 +83,7 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
     const isInDb = await this.hasItemInDb(itemId);
     if (isInDb) {
       const data = await this._getDbObject(
+        browser,
         url,
         tableRow,
         itemId,
@@ -78,6 +97,7 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
       };
     } else {
       const data = await this._getDbObject(
+        browser,
         url,
         tableRow,
         itemId,
@@ -98,10 +118,18 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
       ...this.globalConfig.httpOptions
     };
   }
-  async scrapeItemDetails(url, exists) {
-    const { body, statusCode } = await this.doRequest(
+  async getItemHtmlContent(browser, url) {
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: "networkidle" });
+    await page.waitForSelector("h1#expose-title");
+    const body = await page.content();
+    await page.close();
+    return { body };
+  }
+  async scrapeItemDetails(browser, url, exists) {
+    const { body } = await this.doRequest(
       url,
-      request.get(url, this._getRequestOptions())
+      this.getItemHtmlContent(browser, url)
     );
 
     const result = {};
@@ -112,7 +140,7 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
     if (!result.gone) {
       try {
         const $ = cheerio.load(body);
-        const getNumericValue = selector => {
+        const getNumericValue = (selector) => {
           const elem = $(selector);
           elem.find(".is24-operator").remove();
           let number = parseInt(
@@ -125,7 +153,7 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
           );
           return Number.isNaN(number) ? null : number;
         };
-        const getStrValue = selector => {
+        const getStrValue = (selector) => {
           const elem = $(selector);
           if (typeof elem === "undefined") {
             return null;
@@ -218,16 +246,86 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
       }
     }
   }
+
+  async tryGetListHtmlContent(page, url, retries) {
+    if (retries === 0) {
+      throw new Error("too many tries");
+    }
+
+    // TODO: localize
+    const botMessage = page.locator(
+      "text=Entschuldige bitte, dann hat unser System dich fälschlicherweise als Roboter identifiziert."
+    );
+    // TODO: localize
+    const captchaButton = page.locator('[aria-label="Klicken zum Überprüfen"]');
+    const resultListHeader = page.locator("h1.resultListHeadline");
+
+    const waitForBotMessage = botMessage.waitFor();
+    const waitForCaptchaButton = captchaButton.waitFor();
+    const waitForResultListHeader = resultListHeader.waitFor();
+
+    const fastestPromise = await Promise.race([
+      waitForBotMessage,
+      waitForCaptchaButton,
+      waitForResultListHeader
+    ]);
+    await waitFor(2000);
+    const captchaVisible = await captchaButton.isVisible();
+    const resultListVisible = await resultListHeader.isVisible();
+
+    // success case:
+    if (fastestPromise === waitForResultListHeader || resultListVisible) {
+      const body = await page.content();
+      await page.close();
+      return { body };
+    }
+    // captcha case if solveRecaptchas failed before
+    if (fastestPromise === waitForCaptchaButton || captchaVisible) {
+      await waitFor(500);
+      await captchaButton.click();
+      await waitFor(500);
+      await page.reload();
+      return await this.tryGetListHtmlContent(page, url, retries - 1);
+    }
+    // any other case... just reload and try again after a few seconds
+    await waitFor(5000);
+    await page.reload();
+    await waitFor(500);
+    return await this.tryGetListHtmlContent(page, url, retries - 1);
+  }
+
+  async getListHtmlContent(browser, url) {
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: "networkidle" });
+    await page.solveRecaptchas();
+    return await this.tryGetListHtmlContent(page, url, 5);
+  }
+
   async scrapeSite(url) {
+    const browser = await chromium.launch({ headless: false });
+    const page = await browser.newPage();
+    await page.goto("https://www.immobilienscout24.de", {
+      waitUntil: "networkidle"
+    });
+    try {
+      // TODO: localize cookie button
+      await page.click('text="Alle akzeptieren"', { timeout: 5000 });
+    } catch {
+      // ignore
+    }
+    return await this.scrapeSiteInternal(url, browser);
+  }
+
+  async scrapeSiteInternal(url, browser) {
     const { body } = await this.doRequest(
       url,
-      request.get(url, this._getRequestOptions())
+      this.getListHtmlContent(browser, url)
     );
 
     const $ = cheerio.load(body);
     const promises = [];
     $("#resultListItems .result-list__listing").each((_, element) => {
-      promises.push(this._scrapeItem(url, $(element)));
+      promises.push(this._scrapeItem(browser, url, $(element)));
     });
     const nextPageUrl = this._getNextPage(url, $);
     if (
