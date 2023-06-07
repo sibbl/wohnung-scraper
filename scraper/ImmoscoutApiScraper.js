@@ -80,6 +80,7 @@ module.exports = class ImmoscoutApiScraper extends AbstractScraper {
       result.rooms = expose.realEstate.numberOfRooms;
 
       result.data = {};
+      result.data.publicUrl = `https://www.immobilienscout24.de/expose/${expose["@id"]}`;
       result.data.kaltmiete = expose.realEstate.baseRent;
       result.data.warmmiete = expose.realEstate.totalRent;
       result.data.nebenkosten = expose.realEstate.parkingSpacePrice;

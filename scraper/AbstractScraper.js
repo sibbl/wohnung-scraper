@@ -316,7 +316,7 @@ module.exports = class AbstractScraper {
               telegramBot.sendMessage(
                 chatId,
                 [
-                  data.url,
+                  data.data && data.data.publicUrl ? data.data.publicUrl : data.url,
                   data.rooms +
                     " Zi. | " +
                     data.size +

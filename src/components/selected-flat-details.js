@@ -62,7 +62,9 @@ const FormatValue = ({ children }) => {
     return children.map((line, i) => <div key={i}>{line}</div>);
   } else if (typeof children === "object") {
     return Object.entries(children).map(([key, value]) => (
-      <div key={key}>{key}: {value || "?"}</div>
+      <div key={key}>
+        {key}: {value || "?"}
+      </div>
     ));
   }
   return children;
@@ -73,11 +75,15 @@ export const SelectedFlatDetails = ({
   setActiveFlat,
   setFavoriteFlat
 }) => {
+  const url =
+    selectedFlat.data && selectedFlat.data.publicUrl
+      ? selectedFlat.data.publicUrl
+      : selectedFlat.url;
   return (
     <StyledContainer>
       <Title>Selected Flat:</Title>
       <StyledFlatShortDetails flat={selectedFlat} />
-      <StyledLink href={selectedFlat.url} target="_blank">
+      <StyledLink href={url} target="_blank">
         View on {selectedFlat.website}
       </StyledLink>
       {Object.entries(selectedFlat.data).map(([key, value]) => (
