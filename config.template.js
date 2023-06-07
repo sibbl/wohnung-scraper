@@ -181,7 +181,7 @@ module.exports = async () => {
     },
     httpOptions: {
       headers: {
-        "User-Agent":
+        "user-agent":
           "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
       }
     },
@@ -196,11 +196,19 @@ module.exports = async () => {
         url: "https://www.studenten-wg.de/angebote_lesen.html?stadt=Berlin",
         maxPages: 5
       },
-      immoscout24: {
+      // immoscout24: {
+      //   name: "immobilienscout24.de",
+      //   url:
+      //     "https://www.immobilienscout24.de/Suche/S-2/Wohnung-Miete/Berlin/Berlin/-/-/-/-/-/-/false",
+      //   maxPages: 10
+      // },
+      immoscout24api: {
         name: "immobilienscout24.de",
-        url:
-          "https://www.immobilienscout24.de/Suche/S-2/Wohnung-Miete/Berlin/Berlin/-/-/-/-/-/-/false",
-        maxPages: 10
+        url: "https://api.mobile.immobilienscout24.de/search?publishedafter=2023-06-04T17:38:27&equipment=balcony&searchType=shape&sorting=-firstactivation&pagenumber=1&price=0-1600&pagesize=20&numberofrooms=3-&features=adKeysAndStringValues,virtualTour,contactDetails,viareporting,nextgen,listingsInListFirstSummary,grouping,projectsInAllRealestateTypes&realestatetype=apartmentrent&shape=uaawHgqhiApuBk%7C%5EyoAmnXkiPgdPaqGc%7B@kuCja@qoAp%7CHwzDb~EwdAbwMmTbwBapE~zKxYvfFtoCjdEz%60I%7CpC&channel=is24&exclusioncriteria=swapflat&priceType=rentpermonth",
+        clientId: "clientId from latest apk or ipa",
+        clientSecret: "clientSecret from latest apk or ipa",
+        userAgent: "ImmoScout_25.0_16.5_._", // from latest apk or ipa
+        maxPages: 1
       },
       immonet: {
         name: "immonet.de",

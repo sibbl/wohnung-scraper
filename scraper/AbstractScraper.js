@@ -194,11 +194,17 @@ module.exports = class AbstractScraper {
       await this.updateInDb({ ...row, ...data });
     }
   }
+
   async updateItems() {
     console.log(`Start updating ${this.id} at ${new Date().toISOString()}`);
+    this.beforeUpdateItems();
     const rows = await this.getActiveItems();
     await this._updateItemsSync(rows);
     console.log(`Finished updating ${this.id} at ${new Date().toISOString()}`);
+  }
+
+  async beforeUpdateItems() {
+    // can be overriden
   }
 
   sendBotNotifications(bots, result) {
