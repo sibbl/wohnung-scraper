@@ -44,6 +44,7 @@ try {
       "WgGesuchtScraper",
       "StudentenWgScraper",
       "ImmoscoutScraper",
+      "ImmoscoutApiScraper",
       "ImmonetScraper"
     ]
       .map((scraperModuleName) => require("../scraper/" + scraperModuleName))
