@@ -57,6 +57,17 @@ const StyledDiv = styled.div`
   font-size: 12px;
 `;
 
+const FormatValue = ({ children }) => {
+  if (Array.isArray(children)) {
+    return children.map((line, i) => <div key={i}>{line}</div>);
+  } else if (typeof children === "object") {
+    return Object.entries(children).map(([key, value]) => (
+      <div key={key}>{key}: {value || "?"}</div>
+    ));
+  }
+  return children;
+};
+
 export const SelectedFlatDetails = ({
   selectedFlat,
   setActiveFlat,
@@ -72,7 +83,9 @@ export const SelectedFlatDetails = ({
       {Object.entries(selectedFlat.data).map(([key, value]) => (
         <StyledDiv key={key}>
           <span>{key}: </span>
-          <span>{value}</span>
+          <span>
+            <FormatValue>{value}</FormatValue>
+          </span>
         </StyledDiv>
       ))}
       <StyledButton
