@@ -74,6 +74,12 @@ module.exports = class ImmoscoutApiScraper extends AbstractScraper {
     result.gone =
       response.status !== 200 ||
       expose.publicationState.deactivated !== "false";
+    if (result.gone) {
+      if (result.removed == null) {
+        result.removed = new Date();
+      }
+      return result;
+    }
     try {
       result.title = expose.realEstate.title;
       result.size = expose.realEstate.livingSpace;
