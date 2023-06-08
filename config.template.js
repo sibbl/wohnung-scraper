@@ -204,7 +204,7 @@ module.exports = async () => {
       // },
       immoscout24api: {
         name: "immobilienscout24.de",
-        url: "https://api.mobile.immobilienscout24.de/search?publishedafter=2023-06-04T17:38:27&equipment=balcony&searchType=shape&sorting=-firstactivation&pagenumber=1&price=0-1600&pagesize=20&numberofrooms=3-&features=adKeysAndStringValues,virtualTour,contactDetails,viareporting,nextgen,listingsInListFirstSummary,grouping,projectsInAllRealestateTypes&realestatetype=apartmentrent&shape=uaawHgqhiApuBk%7C%5EyoAmnXkiPgdPaqGc%7B@kuCja@qoAp%7CHwzDb~EwdAbwMmTbwBapE~zKxYvfFtoCjdEz%60I%7CpC&channel=is24&exclusioncriteria=swapflat&priceType=rentpermonth",
+        url: "https://api.mobile.immobilienscout24.de/search?equipment=balcony&searchType=shape&sorting=-firstactivation&price=0-1600&pagesize=20&numberofrooms=3-&features=adKeysAndStringValues,virtualTour,contactDetails,viareporting,nextgen,listingsInListFirstSummary,grouping,projectsInAllRealestateTypes&realestatetype=apartmentrent&shape=uaawHgqhiApuBk%7C%5EyoAmnXkiPgdPaqGc%7B@kuCja@qoAp%7CHwzDb~EwdAbwMmTbwBapE~zKxYvfFtoCjdEz%60I%7CpC&channel=is24&exclusioncriteria=swapflat&priceType=rentpermonth",
         clientId: "clientId from latest apk or ipa",
         clientSecret: "clientSecret from latest apk or ipa",
         userAgent: "ImmoScout_25.0_16.5_._", // from latest apk or ipa

@@ -120,14 +120,14 @@ module.exports = class ImmoscoutApiScraper extends AbstractScraper {
           `${address.street} ${address.houseNumber}, ${address.postcode} ${address.city} ${address.quarter}`.trim();
       }
 
-      let freiab;
-      const freiab_str = expose.realEstate.freeFrom;
-      if (freiab_str === "sofort" || freiab_str === "bezugsfrei") {
-        freiab = moment();
+      let freeFrom;
+      const freeFromStr = expose.realEstate.freeFrom;
+      if (freeFromStr === "sofort" || freeFromStr === "bezugsfrei" || freeFromStr === undefined) {
+        freeFrom = moment();
       } else {
-        freiab = moment(freiab_str, "DD.MM.YYYY");
+        freeFrom = moment(freeFromStr, "DD.MM.YYYY");
       }
-      result.free_from = freiab.toISOString();
+      result.free_from = freeFrom.toISOString();
 
       const features = this._aggregateFeatures(expose.realEstate, [
         "floorplan",
