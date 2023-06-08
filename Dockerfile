@@ -1,4 +1,4 @@
-FROM node:11-alpine
+FROM node:18-alpine
 
 WORKDIR /app
 ENV IS_DOCKER 1

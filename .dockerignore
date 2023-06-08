@@ -4,3 +4,6 @@ images/
 npm-debug.log
 docker-compose*.yml
 config*.js
+.vscode
+.github
+.storybook
