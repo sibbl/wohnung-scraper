@@ -109,7 +109,12 @@ module.exports = class KleinanzeigenApiScraper extends AbstractScraper {
       result.rooms = this._getAdAttribute(ad, "wohnung_mieten.zimmer");
 
       result.data = {};
-      result.data.publicUrl = `https://www.kleinanzeigen.de/s-anzeige/${ad.id}`;
+      const publicWebsiteLink = ad.link.find(
+        (x) => x.rel === "self-public-website"
+      );
+      result.data.publicUrl = publicWebsiteLink
+        ? publicWebsiteLink.href
+        : `https://www.kleinanzeigen.de/s-anzeige/${ad.id}`;
       result.data.kaltmiete = this._getAdAttribute(
         ad,
         "wohnung_mieten.kaltmiete"
