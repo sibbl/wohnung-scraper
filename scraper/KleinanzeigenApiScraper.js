@@ -159,7 +159,7 @@ module.exports = class KleinanzeigenApiScraper extends AbstractScraper {
 
       if (address) {
         result.data.adresse =
-          `${address.street}, ${address["zip-code"]} ${address.state}`.trim();
+          `${address.street.value}, ${address["zip-code"].value} ${address.state.value}`.trim();
       }
 
       let freeFrom;
