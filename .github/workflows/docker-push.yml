@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - react-rewrite
 
 jobs:
   multi:
