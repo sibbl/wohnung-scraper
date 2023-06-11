@@ -209,7 +209,7 @@ module.exports = class AbstractScraper {
 
   sendBotNotifications(bots, result) {
     // use only added flats
-    var flatsOfInterest = result.filter(result => {
+    var flatsOfInterest = result.filter((result) => {
       var flat = result.data;
       if (result.type != "added") {
         return false;
@@ -225,10 +225,7 @@ module.exports = class AbstractScraper {
         return false;
       }
       var free_from = [null];
-      var start = moment()
-        .startOf("month")
-        .startOf("day")
-        .subtract(1, "day"); //use last day of last month
+      var start = moment().startOf("month").startOf("day").subtract(1, "day"); //use last day of last month
       var startIsMonthBegin = true;
       var now = moment().startOf("day");
       if (start.isBefore(now)) {
@@ -306,17 +303,20 @@ module.exports = class AbstractScraper {
     console.log(
       "Sending " + flatsOfInterest.length + " message(s) from " + this.id
     );
-    flatsOfInterest.forEach(flat => {
+    flatsOfInterest.forEach((flat) => {
       var data = flat.data;
-      bots.forEach(bot => {
+      bots.forEach((bot) => {
         switch (bot.id) {
           case "telegram":
             var telegramBot = new TelegramBot(bot.key);
-            bot.chats.forEach(chatId => {
+            bot.chats.forEach((chatId) => {
               telegramBot.sendMessage(
                 chatId,
                 [
-                  data.data && data.data.publicUrl ? data.data.publicUrl : data.url,
+                  data.data && data.data.publicUrl
+                    ? data.data.publicUrl
+                    : data.url,
+                  data.data.adresse,
                   data.rooms +
                     " Zi. | " +
                     data.size +
@@ -326,7 +326,9 @@ module.exports = class AbstractScraper {
                     moment(data.free_from).format("DD.MM.YYYY"),
                   "",
                   `${this.globalConfig.baseUrl}?id=${flat.id}`
-                ].join("\n")
+                ]
+                  .where((x) => x)
+                  .join("\n")
               );
             });
             break;
@@ -340,7 +342,7 @@ module.exports = class AbstractScraper {
     this.scrapeSiteCounter = 1;
     const result = await this.scrapeSite(this.config.url);
     var flatResult = [];
-    var fillResult = result => {
+    var fillResult = (result) => {
       for (var i = 0; i < result.length; i++) {
         if (Array.isArray(result[i])) {
           fillResult(result[i]);
@@ -352,12 +354,12 @@ module.exports = class AbstractScraper {
     fillResult(result);
 
     var enabledBots = this.globalConfig.bots.filter(
-      bot => bot.enabled === true
+      (bot) => bot.enabled === true
     );
     if (enabledBots.length > 0) {
       console.log(
         "Start sending to bots " +
-          enabledBots.map(config => config.id).join(", ") +
+          enabledBots.map((config) => config.id).join(", ") +
           " (" +
           this.id +
           ")"
