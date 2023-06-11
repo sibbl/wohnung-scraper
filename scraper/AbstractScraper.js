@@ -1,11 +1,10 @@
-var config = require("../config"),
-  NodeGeocoder = require("node-geocoder"),
+const NodeGeocoder = require("node-geocoder"),
   moment = require("moment"),
   TelegramBot = require("node-telegram-bot-api"),
   geolib = require("geolib");
 
 module.exports = class AbstractScraper {
-  constructor(db, scraperId) {
+  constructor(db, globalConfig, scraperId) {
     if (typeof scraperId === "undefined") {
       throw new TypeError("Constructor of scraper needs a ID.");
     }
@@ -17,23 +16,33 @@ module.exports = class AbstractScraper {
     }
 
     this.db = db;
+    this.globalConfig = globalConfig;
     this.id = scraperId;
-    this.config = config.scraper[this.id];
+    this.config = globalConfig.scraper[this.id];
 
     if (typeof this.config === "undefined") {
-      console.error("Scraper " + scraperId + " config could not be loaded.");
+      console.warn(
+        `Scraper ${scraperId} has no config and will not be loaded.`
+      );
     }
   }
   async init() {
+    if (!this.config) {
+      return null;
+    }
     await this.prepareStatements();
+    return this;
   }
   async prepareStatements() {
     this.statements = {
       insert: await this.db.prepare(
-        'INSERT INTO "wohnungen" (website, websiteId, url, latitude, longitude, rooms, size, price, free_from, active, gone, data) VALUES ($website, $websiteId, $url, $latitude, $longitude, $rooms, $size, $price, $free_from, $active, $gone, $data)'
+        'INSERT INTO "wohnungen" (website, websiteId, url, latitude, longitude, rooms, size, price, free_from, active, gone, data, title) VALUES ($website, $websiteId, $url, $latitude, $longitude, $rooms, $size, $price, $free_from, $active, $gone, $data, $title)'
       ),
       update: await this.db.prepare(
-        'UPDATE "wohnungen" SET url = $url, latitude = $latitude, longitude = $longitude, rooms = $rooms, size = $size, price = $price, free_from = $free_from, active = $active, gone = $gone, data = $data, website = $website, websiteId = $websiteId, removed = $removed, comment = $comment, favorite = $favorite WHERE id = $id'
+        'UPDATE "wohnungen" SET url = $url, latitude = $latitude, longitude = $longitude, rooms = $rooms, size = $size, price = $price, free_from = $free_from, active = $active, gone = $gone, data = $data, website = $website, websiteId = $websiteId, removed = $removed, comment = $comment, favorite = $favorite, title = $title WHERE id = $id'
+      ),
+      update_gone: await this.db.prepare(
+        'UPDATE "wohnungen" SET gone = $gone, removed = $removed WHERE id = $id'
       ),
       hasId: await this.db.prepare(
         'SELECT COUNT(*) AS count FROM "wohnungen" WHERE website = $website AND websiteId = $websiteId'
@@ -61,7 +70,8 @@ module.exports = class AbstractScraper {
         $active: row.active,
         $gone: row.gone,
         $data:
-          typeof row.data === "string" ? row.data : JSON.stringify(row.data)
+          typeof row.data === "string" ? row.data : JSON.stringify(row.data),
+        $title: row.title
       });
     } catch (e) {
       throw new Error(
@@ -71,26 +81,36 @@ module.exports = class AbstractScraper {
   }
   async updateInDb(row) {
     try {
-      return await this.statements.update.run({
-        $id: row.id,
-        $website: this.id,
-        $websiteId: row.websiteId,
-        $latitude: row.latitude,
-        $longitude: row.longitude,
-        $rooms: row.rooms,
-        $size: row.size,
-        $price: row.price,
-        $free_from: row.free_from,
-        $url: row.url,
-        $active: row.active,
-        $gone: row.gone,
-        $removed:
-          row.removed == null ? null : moment(row.removed).toISOString(),
-        $comment: row.comment,
-        $favorite: row.favorite,
-        $data:
-          typeof row.data === "string" ? row.data : JSON.stringify(row.data)
-      });
+      if (row.gone) {
+        return await this.statements.update_gone.run({
+          $id: row.id,
+          $gone: row.gone,
+          $removed:
+            row.removed == null ? null : moment(row.removed).toISOString()
+        });
+      } else {
+        return await this.statements.update.run({
+          $id: row.id,
+          $website: this.id,
+          $websiteId: row.websiteId,
+          $latitude: row.latitude,
+          $longitude: row.longitude,
+          $rooms: row.rooms,
+          $size: row.size,
+          $price: row.price,
+          $free_from: row.free_from,
+          $url: row.url,
+          $active: row.active,
+          $gone: row.gone,
+          $removed:
+            row.removed == null ? null : moment(row.removed).toISOString(),
+          $comment: row.comment,
+          $favorite: row.favorite,
+          $data:
+            typeof row.data === "string" ? row.data : JSON.stringify(row.data),
+          $title: row.title
+        });
+      }
     } catch (e) {
       throw new Error(
         `Error while updating in database (ID=${this.id}, error: ${e})`
@@ -130,10 +150,10 @@ module.exports = class AbstractScraper {
     if (addressWithoutPhrasesInParentheses.length == 0) {
       throw new Error(`Trying to geocode invalid address: ${address}`);
     } else {
-      const provider = config.geocoder.provider;
+      const provider = this.globalConfig.geocoder.provider;
       let params = {};
-      if (provider in config.geocoder.options) {
-        params = config.geocoder.options[provider];
+      if (provider in this.globalConfig.geocoder.options) {
+        params = this.globalConfig.geocoder.options[provider];
       }
       params.provider = provider;
       const geocoder = NodeGeocoder(params);
@@ -163,9 +183,7 @@ module.exports = class AbstractScraper {
       });
     } catch (e) {
       throw new Error(
-        `Error while getting all active items from database (ID=${
-          this.id
-        } / ${id}) and error ${e}`
+        `Error while getting all active items from database (ID=${this.id} / ${id}) and error ${e}`
       );
     }
   }
@@ -176,11 +194,17 @@ module.exports = class AbstractScraper {
       await this.updateInDb({ ...row, ...data });
     }
   }
+
   async updateItems() {
     console.log(`Start updating ${this.id} at ${new Date().toISOString()}`);
+    this.beforeUpdateItems();
     const rows = await this.getActiveItems();
     await this._updateItemsSync(rows);
     console.log(`Finished updating ${this.id} at ${new Date().toISOString()}`);
+  }
+
+  async beforeUpdateItems() {
+    // can be overriden
   }
 
   sendBotNotifications(bots, result) {
@@ -190,7 +214,7 @@ module.exports = class AbstractScraper {
       if (result.type != "added") {
         return false;
       }
-      var filters = config.filters.default;
+      var filters = this.globalConfig.filters.default;
       if (flat.price < filters.price.min || flat.price > filters.price.max) {
         return false;
       }
@@ -264,12 +288,20 @@ module.exports = class AbstractScraper {
       if (!flat.latitude || !flat.longitude) {
         return false;
       }
-      const filterCenter = {
-        latitude: config.dataFilter.lat,
-        longitude: config.dataFilter.lng
-      };
-      const distance = geolib.getDistance(flat, filterCenter);
-      return distance <= config.dataFilter.radius;
+      let dataFilter;
+      if (!Array.isArray(this.globalConfig.dataFilter)) {
+        dataFilter = [this.globalConfig.dataFilter];
+      } else {
+        dataFilter = [...this.globalConfig.dataFilter];
+      }
+      for (let { lat, lng, radius } of dataFilter) {
+        const pos = { latitude: lat, longitude: lng };
+        const distance = geolib.getDistance(flat, pos);
+        if (distance <= radius) {
+          return true;
+        }
+      }
+      return false;
     });
     console.log(
       "Sending " + flatsOfInterest.length + " message(s) from " + this.id
@@ -284,7 +316,7 @@ module.exports = class AbstractScraper {
               telegramBot.sendMessage(
                 chatId,
                 [
-                  data.url,
+                  data.data && data.data.publicUrl ? data.data.publicUrl : data.url,
                   data.rooms +
                     " Zi. | " +
                     data.size +
@@ -293,7 +325,7 @@ module.exports = class AbstractScraper {
                     " € | frei ab: " +
                     moment(data.free_from).format("DD.MM.YYYY"),
                   "",
-                  `${config.baseUrl}#/${flat.id}`
+                  `${this.globalConfig.baseUrl}?id=${flat.id}`
                 ].join("\n")
               );
             });
@@ -319,7 +351,9 @@ module.exports = class AbstractScraper {
     };
     fillResult(result);
 
-    var enabledBots = config.bots.filter(bot => bot.enabled === true);
+    var enabledBots = this.globalConfig.bots.filter(
+      bot => bot.enabled === true
+    );
     if (enabledBots.length > 0) {
       console.log(
         "Start sending to bots " +
@@ -339,13 +373,19 @@ module.exports = class AbstractScraper {
     try {
       response = await req;
     } catch (e) {
+      console.warn(`Failed to scrape ${url} because of`, e.message);
       response = e.response;
-      console.warn(
-        `Received HTTP status code ${
-          response.statusCode
-        } at HTTP request for URL "${url}"`,
-        e
-      );
+
+      // transform as we rely on valid objects here and there :(
+      if (!response) {
+        console.warn(
+          `Didn't get any response for ${url} and will use statusCode -1 and empty body.`
+        );
+        response = {
+          statusCode: -1,
+          body: ""
+        };
+      }
     }
     return response;
   }
