@@ -145,7 +145,7 @@ module.exports = class KleinanzeigenApiScraper extends AbstractScraper {
         }
       }
 
-      if (warmmiete === 0) {
+      if (!warmmiete) {
         warmmiete = ad.price.amount.value;
       }
 
