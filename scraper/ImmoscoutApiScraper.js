@@ -122,7 +122,11 @@ module.exports = class ImmoscoutApiScraper extends AbstractScraper {
 
       let freeFrom;
       const freeFromStr = expose.realEstate.freeFrom;
-      if (freeFromStr === "sofort" || freeFromStr === "bezugsfrei" || freeFromStr === undefined) {
+      if (
+        freeFromStr === "sofort" ||
+        freeFromStr === "bezugsfrei" ||
+        freeFromStr === undefined
+      ) {
         freeFrom = moment();
       } else {
         freeFrom = moment(freeFromStr, "DD.MM.YYYY");
@@ -200,7 +204,7 @@ module.exports = class ImmoscoutApiScraper extends AbstractScraper {
 
     const allPageResults = [];
     // TODO: use https://api.mobile.immobilienscout24.de/home/search/total with publishedafter to only fetch differences?
-    for (let i = 1; i <= this.config.maxPages; i++) {
+    for (let i = 1; i <= (this.config.maxPages || 1); i++) {
       const results = await this._scrapeSiteWithPageNumber(url, i);
       allPageResults.push(results);
     }

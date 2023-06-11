@@ -210,6 +210,13 @@ module.exports = async () => {
         userAgent: "ImmoScout_25.0_16.5_._", // from latest apk or ipa
         maxPages: 1
       },
+      kleinanzeigenapi: {
+        name: "Kleinanzeigen",
+        url: "https://api.kleinanzeigen.de/api/ads.json?adType=OFFERED&categoryId=203&distance=20&histograms=CATEGORY&includeTopAds=false&limitTotalResultCount=false&locationId=4252&size=1000",
+        username: "ipad", // from latest apk or ipa
+        password: "g4Zi9q10", // from latest apk or ipa
+        maxPages: 1,
+      },
       immonet: {
         name: "immonet.de",
         url:
