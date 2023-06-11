@@ -179,6 +179,8 @@ module.exports = class KleinanzeigenApiScraper extends AbstractScraper {
         "wohnung_mieten.schlafzimmer",
         "wohnung_mieten.etage",
         "wohnung_mieten.balcony",
+        "wohnung_mieten.terrace",
+        "wohnung_mieten.built_in_kitchen",
         "wohnung_mieten.bathtub",
         "wohnung_mieten.celler_loft",
         "wohnung_mieten.garage",
