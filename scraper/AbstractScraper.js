@@ -327,7 +327,7 @@ module.exports = class AbstractScraper {
                   "",
                   `${this.globalConfig.baseUrl}?id=${flat.id}`
                 ]
-                  .where((x) => x)
+                  .filter((x) => x)
                   .join("\n")
               );
             });
