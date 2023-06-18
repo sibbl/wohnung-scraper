@@ -213,7 +213,7 @@ module.exports = class KleinanzeigenApiScraper extends AbstractScraper {
 
   async scrapeSite(url) {
     const allPageResults = [];
-    for (let i = 1; i <= (this.config.maxPages || 1); i++) {
+    for (let i = 0; i < (this.config.maxPages || 1); i++) {
       const results = await this._scrapeSiteWithPageNumber(url, i);
       allPageResults.push(results);
     }
