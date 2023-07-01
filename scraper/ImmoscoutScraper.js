@@ -207,7 +207,7 @@ module.exports = class ImmoscoutScraper extends AbstractScraper {
             ""
           );
       } catch (ex) {
-        console.log("CATCHED error while scraping item", this.id, url, ex);
+        console.log("CAUGHT error while scraping item", this.id, url, ex);
         result.gone = true;
       }
     }

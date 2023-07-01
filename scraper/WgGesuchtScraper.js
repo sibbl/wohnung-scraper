@@ -206,7 +206,7 @@ module.exports = class WgGesuchtScraper extends AbstractScraper {
         adresse
       };
     } catch (ex) {
-      console.log("CATCHED error while scraping item", this.id, url, ex);
+      console.log("CAUGHT error while scraping item", this.id, url, ex);
       result.gone = true;
       if (result.removed == null) {
         result.removed = new Date();
