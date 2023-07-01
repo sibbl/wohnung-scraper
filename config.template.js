@@ -111,13 +111,13 @@ module.exports = async () => {
         },
         free_from: {
           min: "now",
-          max: DateTime.local()
+          max: DateTime.utc()
             .startOf("month")
             .plus({ months: 6 })
             .toISODate()
         },
         age: {
-          min: DateTime.local()
+          min: DateTime.utc()
             .startOf("month")
             .plus({ months: -6 })
             .toISODate(),
@@ -142,13 +142,13 @@ module.exports = async () => {
         },
         free_from: {
           min: "now",
-          max: DateTime.local()
+          max: DateTime.utc()
             .startOf("month")
             .plus({ months: 3 })
             .toISODate()
         },
         age: {
-          min: DateTime.local()
+          min: DateTime.utc()
             .startOf("month")
             .plus({ months: -3 })
             .toISODate(),

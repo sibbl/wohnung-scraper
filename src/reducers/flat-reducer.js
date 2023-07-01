@@ -3,6 +3,9 @@ import {
   GET_FLATS,
   GET_FLATS_SUCCESS,
   GET_FLATS_FAILURE,
+  GET_ALL_FLATS,
+  GET_ALL_FLATS_SUCCESS,
+  GET_ALL_FLATS_FAILURE,
   SET_PREVIEWED_FLAT,
   UNSET_PREVIEWED_FLAT,
   SET_SELECTED_FLAT,
@@ -22,7 +25,8 @@ const initialState = {
   visibleFlatIds: null,
   selectedFlatId: null,
   previewedFlatId: null,
-  filters: null
+  filters: null,
+  allFlatsLoaded: false
 };
 
 const getVisibleFlatIds = ({ flats, filters }) => {
@@ -32,6 +36,10 @@ const getVisibleFlatIds = ({ flats, filters }) => {
 
   return Object.entries(flats)
     .filter(([, flat]) => {
+      if(!flat.latitude || !flat.longitude) {
+        return false;
+      }
+
       if (filters.showOnlyFavs && !flat.favorite) {
         return false;
       }
@@ -96,6 +104,27 @@ export const flatReducer = (state = initialState, action) => {
         return;
 
       case GET_FLATS_FAILURE:
+        draftState.isWorking = false;
+        draftState.error = action.error;
+        return;
+
+      case GET_ALL_FLATS:
+        draftState.isWorking = true;
+        draftState.error = null;
+        return;
+
+      case GET_ALL_FLATS_SUCCESS:
+        draftState.isWorking = false;
+        draftState.error = null;
+        draftState.flats = action.flats;
+        draftState.allFlatsLoaded = true;
+        draftState.visibleFlatIds = getVisibleFlatIds({
+          flats: action.flats,
+          filters: state.filters
+        });
+        return;
+
+      case GET_ALL_FLATS_FAILURE:
         draftState.isWorking = false;
         draftState.error = action.error;
         return;

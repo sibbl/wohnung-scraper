@@ -4,6 +4,10 @@ export const GET_FLATS = "GET_FLATS";
 export const GET_FLATS_SUCCESS = "GET_FLATS_SUCCESS";
 export const GET_FLATS_FAILURE = "GET_FLATS_FAILURE";
 
+export const GET_ALL_FLATS = "GET_ALL_FLATS";
+export const GET_ALL_FLATS_SUCCESS = "GET_ALL_FLATS_SUCCESS";
+export const GET_ALL_FLATS_FAILURE = "GET_ALL_FLATS_FAILURE";
+
 export const SET_PREVIEWED_FLAT = "SET_PREVIEWED_FLAT";
 export const UNSET_PREVIEWED_FLAT = "UNSET_PREVIEWED_FLAT";
 
@@ -13,7 +17,7 @@ export const UNSET_SELECTED_FLAT = "UNSET_SELECTED_FLAT";
 export const SET_FLAT_FILTERS = "SET_FLAT_FILTERS";
 
 export const getFlats = () => {
-  return async dispatch => {
+  return async (dispatch) => {
     dispatch({ type: GET_FLATS });
 
     try {
@@ -27,22 +31,46 @@ export const getFlats = () => {
   };
 };
 
-export const setPreviewedFlat = ({ flatId }) => dispatch => {
-  if (flatId != null) {
-    dispatch({ type: SET_PREVIEWED_FLAT, flatId });
-  } else {
-    dispatch({ type: UNSET_PREVIEWED_FLAT });
-  }
+export const getAllFlats = () => {
+  return async (dispatch) => {
+    dispatch({ type: GET_ALL_FLATS });
+
+    try {
+      const flats = await getFlatsFromApi({ all: true });
+
+      dispatch({ type: GET_ALL_FLATS_SUCCESS, flats });
+    } catch (error) {
+      console.error(error);
+      dispatch({ type: GET_ALL_FLATS_FAILURE, error });
+    }
+  };
 };
 
-export const setSelectedFlat = ({ flatId }) => dispatch => {
-  if (flatId != null) {
-    dispatch({ type: SET_SELECTED_FLAT, flatId });
-  } else {
-    dispatch({ type: UNSET_SELECTED_FLAT });
-  }
-};
+export const setPreviewedFlat =
+  ({ flatId }) =>
+  (dispatch) => {
+    if (flatId != null) {
+      dispatch({ type: SET_PREVIEWED_FLAT, flatId });
+    } else {
+      dispatch({ type: UNSET_PREVIEWED_FLAT });
+    }
+  };
 
-export const setFlatFilters = filters => dispatch => {
+export const setSelectedFlat =
+  ({ flatId }) =>
+  (dispatch) => {
+    if (flatId != null) {
+      dispatch({ type: SET_SELECTED_FLAT, flatId });
+    } else {
+      dispatch({ type: UNSET_SELECTED_FLAT });
+    }
+  };
+
+export const setFlatFilters = (filters) => (dispatch, getState) => {
   dispatch({ type: SET_FLAT_FILTERS, filters });
+
+  const state = getState();
+  if (filters.hideInactive === false && state.flat.allFlatsLoaded === false) {
+    dispatch(getAllFlats());
+  }
 };

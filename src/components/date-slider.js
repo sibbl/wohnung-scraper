@@ -24,7 +24,7 @@ const DateSlider = ({
 
   const isDateEqual = (date1, date2) => date1.hasSame(date2, "day");
   const isDateToday = date =>
-    isDateEqual(date, DateTime.local().startOf("day"));
+    isDateEqual(date, DateTime.utc().startOf("day"));
 
   const onChangeMapped = value =>
     onChange({ min: mapping[value.min], max: mapping[value.max] });

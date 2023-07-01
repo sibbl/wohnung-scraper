@@ -15,7 +15,6 @@ export default function MapnificientLayer({
   const mapnificientPositionRef = useRef(null);
 
   useEffect(() => {
-    console.log("mapnificent add");
     const mapnificent = new Mapnificent(map, config, {
       dataPath: `https://cdn.jsdelivr.net/gh/mapnificent/mapnificent_cities/${config.cityid}/`,
       baseurl: "./lib/mapnificient/"
@@ -25,7 +24,6 @@ export default function MapnificientLayer({
     map.on("viewreset", mapnificent.redraw);
     map.on("zoomend", mapnificent.redraw);
     return () => {
-      console.log("mapnificent remove");
       mapnificent.destroy();
     };
   }, [map, config]);

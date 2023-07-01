@@ -1,7 +1,7 @@
 import axios from "axios";
 
-export const getFlats = async () => {
-  const { data } = await axios.get("/data");
+export const getFlats = async ({ all } = {}) => {
+  const { data } = await axios.get("/data", { params: { all } });
   return data;
 };
 
